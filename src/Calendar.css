@@ -1,0 +1,179 @@
+/* -------------------------------
+   📘 폰트 설정
+--------------------------------*/
+@font-face {
+  font-family: '온글잎 공부잘하자나';
+  src: url('../src/온글잎 공부잘하자나.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* -------------------------------
+   📘 기본 구조
+--------------------------------*/
+body {
+  margin: 0;
+  background-color: #f8f9fc;
+  font-family: '온글잎 공부잘하자나', sans-serif;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------
+   📘 헤더 영역
+--------------------------------*/
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #dbeafe;
+  padding: 10px 20px;
+}
+
+.header-logo {
+  height: 50px;
+}
+
+.header-title {
+  font-size: 26px;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+.header-icons img {
+  width: 35px;
+  height: 35px;
+  margin-left: 15px;
+}
+
+/* -------------------------------
+   📘 캘린더 전체 영역
+--------------------------------*/
+.calendar-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 0;
+}
+
+/* -------------------------------
+   📘 React Calendar 기본 스타일
+--------------------------------*/
+.react-calendar {
+  border: none;
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 800px;
+  padding: 20px;
+}
+
+.react-calendar__tile {
+  position: relative; /* ✅ 점(dot) 기준 위치 */
+  border-radius: 8px;
+  transition: 0.2s;
+  padding: 18px 0;
+  border: none;
+  background: none;
+}
+
+.react-calendar__tile:enabled:hover {
+  background: #e0f2fe;
+}
+
+/* 오늘 날짜 강조 */
+.react-calendar__tile--now {
+  background: #dbeafe;
+  border-radius: 8px;
+}
+
+/* 선택된 날짜 */
+.react-calendar__tile--active {
+  background: #93c5fd;
+  color: #fff;
+  border-radius: 8px;
+}
+
+/* -------------------------------
+   📘 일정 색상 점 표시
+--------------------------------*/
+.dot-container {
+  position: absolute;
+  bottom: 4px; /* 날짜 숫자 바로 밑 */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 3px; /* 여러 일정일 때 간격 */
+}
+
+.event-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0,0,0,0.15);
+}
+
+/* 일정 카테고리별 색상 */
+.event-dot.hospital { background-color: #ef3838; }  /* 병원 - 빨강 */
+.event-dot.shopping { background-color: #9b59b6; }  /* 쇼핑 - 보라 */
+.event-dot.grooming { background-color: #e91e63; }  /* 미용 - 핑크 */
+.event-dot.birthday { background-color: #f1c40f; }  /* 생일 - 노랑 */
+.event-dot.walk { background-color: #2ecc71; }      /* 산책 - 초록 */
+.event-dot.other { background-color: #95a5a6; }     /* 기타 - 회색 */
+
+/* -------------------------------
+   📘 일정 목록 영역
+--------------------------------*/
+.schedule-list {
+  margin-top: 25px;
+  width: 90%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.schedule-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.schedule-category {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: white;
+}
+
+/* 카테고리 색상 */
+.schedule-category.hospital { background-color: #ef3838; }
+.schedule-category.shopping { background-color: #9b59b6; }
+.schedule-category.grooming { background-color: #e91e63; }
+.schedule-category.birthday { background-color: #f1c40f; color: black; }
+.schedule-category.walk { background-color: #2ecc71; }
+.schedule-category.other { background-color: #95a5a6; }
+
+/* -------------------------------
+   📘 푸터
+--------------------------------*/
+.footer {
+  background-color: #dbeafe;
+  padding: 10px;
+  text-align: center;
+  color: #1e3a8a;
+  font-size: 14px;
+  margin-top: auto;
+}
