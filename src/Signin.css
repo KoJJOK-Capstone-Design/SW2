@@ -13,6 +13,8 @@
   background-color: #e0f2ff; /* 연한 파란색 배경 */
   position: relative;
   overflow: hidden;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* 배경의 발바닥 무늬 스타일 */
