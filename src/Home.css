@@ -76,7 +76,6 @@
   text-align: center;
   padding: 0 20px;
 }
-<<<<<<< HEAD
 
 .title {
   margin: 0 0 32px;
@@ -86,8 +85,6 @@
   color: #0f172a;
   white-space: nowrap;
 }  
-=======
->>>>>>> ab41785348b684f51a58319b0266b3dc2921b5d5
 .home .title {
   margin: 0 0 32px;
   font-size: 60px;
@@ -98,7 +95,6 @@
 
 .subtitle {
   margin: 0 auto 32px;
-<<<<<<< HEAD
   max-width: 640px;
   color: var(--muted);
   font-size: 20px;
@@ -111,8 +107,6 @@
   display: inline-block;
   padding: 15px 80px;
   border-radius: 1000px;
-=======
->>>>>>> ab41785348b684f51a58319b0266b3dc2921b5d5
   width: 640px;
   height: 24px;
   color: var(--muted);
@@ -129,14 +123,11 @@
   background: rgba(169, 195, 230, 0.4);
   color: #036CFF;
   font-size: 30px;
-<<<<<<< HEAD
   white-space: nowrap;
 }
 
 .footer {
   background: #f5fdff;
-=======
->>>>>>> ab41785348b684f51a58319b0266b3dc2921b5d5
 }
 
 .footer {
