@@ -21,9 +21,9 @@ export default function Home() {
 
           <nav className="menu">
             <a href="/activity">활동</a>
-            <a href="#health">건강</a>
-            <a href="#calendar">캘린더</a>
-            <a href="#community">커뮤니티</a>
+            <a href="/health">건강</a>
+            <a href="/calendar">캘린더</a>
+            <a href="/community">커뮤니티</a>
           </nav>
           <nav className="menulink">
             <a href="/signup">회원가입</a>
@@ -102,11 +102,6 @@ export default function Home() {
     </div>
   </div>
 </footer>
-<<<<<<< HEAD
 </div>
-=======
-
-    </div>
->>>>>>> ab41785348b684f51a58319b0266b3dc2921b5d5
   );
 }
