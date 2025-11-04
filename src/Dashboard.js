@@ -62,10 +62,10 @@ export default function Dashboard() {
           </div>
 
           <nav className="menu">
-            <a href="#activity">활동</a>
-            <a href="#health">건강</a>
-            <a href="#calendar">캘린더</a>
-            <a href="#community">커뮤니티</a>
+            <a href="/activity">활동</a>
+            <a href="/health">건강</a>
+            <a href="/calendar">캘린더</a>
+            <a href="/community">커뮤니티</a>
           </nav>
 
           <nav className="menuicon">
