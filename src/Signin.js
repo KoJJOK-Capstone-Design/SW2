@@ -12,17 +12,19 @@ function Signin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await axios.post('/api/auth/Signin', {
-        id: form.id,
+      const res = await axios.post('http://127.0.0.1:8000/api/v1/users/login', {
+        // 백엔드 스펙에 맞게 username/email로 변경
+        username: form.id,
         password: form.password,
       });
 
-      if (res.data?.token) localStorage.setItem('token', res.data.token);
+      const token = res.data?.token || res.data?.access || res.data?.accessToken;
+      if (token) localStorage.setItem('token', token);
 
-      window.location.href = '/main.js';
+      window.location.href = '/main'; // 라우트로 이동
     } catch (err) {
+      console.error(err);
       alert('아이디 또는 비밀번호를 확인해 주세요.');
     }
   };
@@ -41,7 +43,6 @@ function Signin() {
           <div className="input-group">
             <input
               type="text"
-              id="id"
               name="id"
               placeholder="아이디"
               value={form.id}
@@ -54,7 +55,6 @@ function Signin() {
           <div className="input-group">
             <input
               type="password"
-              id="password"
               name="password"
               placeholder="비밀번호"
               value={form.password}
@@ -64,13 +64,11 @@ function Signin() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="sign-in-button"
-            disabled={!form.id || !form.password}
-          >
+          <button type="submit" className="sign-in-button" disabled={!form.id || !form.password}>
             Login
           </button>
+
+          {/* 라우터를 쓰고 있다면 <Link to="/signup">가 더 안전 */}
           <p className="signup-link">
             <a href="/signup">계정 만들기</a>
           </p>
