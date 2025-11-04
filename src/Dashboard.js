@@ -206,30 +206,32 @@ export default function Dashboard() {
                   최근 1개월간 <b className="text--green">0.1kg 증가</b>했어요.
                 </span>
               </div>
-              <div className="chart">
-                <div className="chart__grid" />
-                <svg
-                  viewBox="0 0 100 60"
-                  preserveAspectRatio="none"
-                  className="chart__svg"
-                  aria-hidden
-                >
-                  <defs>
-                    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0" stopColor="#3b82f6" />
-                      <stop offset="1" stopColor="#60a5fa" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M5,45 C20,30 35,40 50,28 C65,18 80,26 95,20"
-                    fill="none"
-                    stroke="url(#lineGrad)"
-                    strokeWidth="2.2"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="95" cy="20" r="1.8" fill="#3b82f6" />
-                </svg>
+              <div className="dashboard">
+                <div className="chart">
+                  <div className="chart__grid" />
+                  <svg
+                    viewBox="0 0 100 60"
+                    preserveAspectRatio="none"
+                    className="chart__svg"
+                    aria-hidden
+                  >
+                    <defs>
+                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stopColor="#3b82f6" />
+                        <stop offset="1" stopColor="#60a5fa" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M5,45 C20,30 35,40 50,28 C65,18 80,26 95,20"
+                      fill="none"
+                      stroke="url(#lineGrad)"
+                      strokeWidth="2.2"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="95" cy="20" r="1.8" fill="#3b82f6" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
