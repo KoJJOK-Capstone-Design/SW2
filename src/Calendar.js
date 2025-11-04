@@ -1,3 +1,4 @@
+/* 라이브러리, 컴포넌트, 이미지, CSS import */
 import React, { useState } from "react";
 import {
   FaPlus,
@@ -10,9 +11,9 @@ import {
 } from "react-icons/fa";
 import ReactCalendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import Select from "react-select";
 import "./Calendar.css";
 
-/* 이미지 import */
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
 import editIcon from "./img/Edit_fill.png";
@@ -21,111 +22,172 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-const categoryDetails = {
-  hospital: { icon: <FaClinicMedical />, text: "[병원/약]" },
-  shopping: { icon: <FaShoppingCart />, text: "[쇼핑]" },
-  grooming: { icon: <FaCut />, text: "[미용]" },
-  birthday: { icon: <FaBirthdayCake />, text: "[생일]" },
-  walk: { icon: <FaTree />, text: "[산책/나들이]" },
-  other: { icon: <FaCircle />, text: "[기타]" },
+/* 📅 모달 내에서 사용하는 커스텀 DatePicker */
+const CustomDatePicker = ({ value, onChange }) => {
+  const today = new Date();
+  const [current, setCurrent] = useState(value ? new Date(value) : new Date());
+
+  const year = current.getFullYear();
+  const month = current.getMonth();
+
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  const startDay = start.getDay();
+  const totalDays = end.getDate();
+
+  const days = [];
+  for (let i = 0; i < startDay; i++) days.push(null);
+  for (let i = 1; i <= totalDays; i++) days.push(i);
+
+  const formatDate = (y, m, d) =>
+    `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+  const isToday = (d) =>
+    d &&
+    d === today.getDate() &&
+    month === today.getMonth() &&
+    year === today.getFullYear();
+
+  const isSelected = (d) =>
+    value && new Date(value).getDate() === d && new Date(value).getMonth() === month;
+
+  return (
+    <div className="custom-datepicker">
+      <div className="calendar-header">
+        <button onClick={() => setCurrent(new Date(year, month - 1, 1))}>‹</button>
+        <span>{year}년 {month + 1}월</span>
+        <button onClick={() => setCurrent(new Date(year, month + 1, 1))}>›</button>
+      </div>
+
+      <div className="calendar-days">
+        {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
+          <div key={d} className="calendar-day-header">{d}</div>
+        ))}
+
+        {days.map((d, i) => (
+          <div
+            key={i}
+            className={`calendar-date ${d ? "" : "empty"} ${isToday(d) ? "today" : ""} ${
+              isSelected(d) ? "selected" : ""
+            }`}
+            onClick={() => {
+              if (!d) return;
+              onChange(formatDate(year, month, d));
+            }}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
-// 날짜 포맷 함수
-function formatDate(dateObj) {
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const d = String(dateObj.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+/* 📌 Date → YYYY-MM-DD 포맷 함수 */
+function formatYMD(d) {
+  if (!d) return "";
+  const date = typeof d === "string" ? new Date(d) : d;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
+/* 📆 메인 Calendar 컴포넌트 */
 export default function Calendar() {
   const [date, setDate] = useState(new Date());
-  const [schedules, setSchedules] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-
-  const [newItemText, setNewItemText] = useState("");
-  const [newItemDate, setNewItemDate] = useState("");
-  const [newItemCategory, setNewItemCategory] = useState("");
+  const [events, setEvents] = useState([]);
+  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({ text: "", date: "", category: "" });
 
-  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const categoryMeta = {
+    병원: { color: "#BFC8D7", icon: <FaClinicMedical /> },
+    약: { color: "#E2D2D2", icon: <FaClinicMedical /> },
+    쇼핑: { color: "#E3E2B4", icon: <FaShoppingCart /> },
+    미용: { color: "#A2B59F", icon: <FaCut /> },
+    생일: { color: "#E8E7D2", icon: <FaBirthdayCake /> },
+    "산책/나들이": { color: "#C9BA9B", icon: <FaTree /> },
+    기타: { color: "#D2D5B8", icon: <FaCircle /> },
+  };
 
-  const handleAddClick = () => {
+  const selectedDateStr = formatYMD(date);
+  const dayEvents = events.filter((e) => e.date === selectedDateStr);
+
+  const tileContent = ({ date: tileDate, view }) => {
+    if (view !== "month") return null;
+    const dStr = formatYMD(tileDate);
+    const dayEv = events.filter((e) => e.date === dStr);
+    if (!dayEv.length) return null;
+    return (
+      <div className="event-dots">
+        {dayEv.slice(0, 4).map((ev, i) => (
+          <span
+            key={i}
+            className="event-dot"
+            title={`${ev.category}: ${ev.text}`}
+            style={{ backgroundColor: ev.color }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const openAddForm = () => {
     setEditingId(null);
-    setNewItemText("");
-    setNewItemDate(formatDate(date));
-    setNewItemCategory("");
-    setShowModal(true);
+    setForm({ text: "", date: selectedDateStr, category: "" });
+    setShowForm(true);
   };
 
-  const handleEditClick = (item) => {
-    setEditingId(item.id);
-    setNewItemText(item.text);
-    setNewItemDate(item.date);
-    setNewItemCategory(item.category);
-    setShowModal(true);
+  const openEditForm = (ev) => {
+    setEditingId(ev.id);
+    setForm({ text: ev.text, date: ev.date, category: ev.category });
+    setShowForm(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  const closeForm = () => {
+    setShowForm(false);
     setEditingId(null);
-    setNewItemText("");
-    setNewItemDate("");
-    setNewItemCategory("");
+    setForm({ text: "", date: "", category: "" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSave = (e) => {
     e.preventDefault();
+    if (!form.text || !form.date || !form.category) {
+      alert("일정 내용/날짜/카테고리를 모두 입력해주세요.");
+      return;
+    }
+
+    const meta = categoryMeta[form.category] || categoryMeta["기타"];
     if (editingId) {
-      setSchedules((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? { ...item, text: newItemText, date: newItemDate, category: newItemCategory }
-            : item
+      setEvents((prev) =>
+        prev.map((it) =>
+          it.id === editingId
+            ? { ...it, text: form.text, date: form.date, category: form.category, color: meta.color }
+            : it
         )
       );
     } else {
-      const newItem = {
+      const newEv = {
         id: Date.now(),
-        text: newItemText,
-        date: newItemDate,
-        category: newItemCategory,
+        text: form.text,
+        date: form.date,
+        category: form.category,
+        color: meta.color,
       };
-      setSchedules((prev) => [...prev, newItem]);
+      setEvents((prev) => [...prev, newEv]);
     }
-    handleCloseModal();
+    closeForm();
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("정말 삭제하시겠습니까?")) {
-      setSchedules((prev) => prev.filter((item) => item.id !== id));
-    }
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    setEvents((prev) => prev.filter((e) => e.id !== id));
   };
-
-  // 일정 점 표시
-  const renderEventDot = ({ date, view }) => {
-    if (view === "month") {
-      const dateStr = formatDate(date);
-      const events = schedules.filter((s) => s.date === dateStr);
-      if (events.length > 0) {
-        return (
-          <div className="dot-container">
-            {events.map((e, idx) => (
-              <div key={idx} className={`event-dot ${e.category}`}></div>
-            ))}
-          </div>
-        );
-      }
-    }
-    return null;
-  };
-
-  const selectedDateStr = formatDate(date);
-  const filteredSchedules = schedules.filter((s) => s.date === selectedDateStr);
 
   return (
     <div className="calendar-page">
-      {/* 헤더 */}
+      {/* 상단 네비게이션 */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
@@ -145,100 +207,119 @@ export default function Calendar() {
         </div>
       </header>
 
-      {/* 본문 */}
+      {/* 메인 달력 영역 */}
       <main className="calendar-main">
-        <div className="calendarBox">
+        <div className="calendar-container">
           <ReactCalendar
             onChange={setDate}
             value={date}
             locale="ko-KR"
-            formatDay={(locale, date) => date.getDate().toString()}
-            tileContent={renderEventDot}
-            formatShortWeekday={(locale, date) => dayLabels[date.getDay()]}
+            formatDay={(locale, d) => d.getDate().toString()}
+            tileContent={tileContent}
+            next2Label={null}
+            prev2Label={null}
           />
-          <button className="walk-fab" onClick={handleAddClick}>
-            <FaPlus className="walk-fab-plus" />
-          </button>
-        </div>
-
-        {filteredSchedules.length > 0 ? (
-          filteredSchedules.map((item) => (
-            <div className="scheduleItem" key={item.id}>
-              <div className={`iconCircle category-${item.category || "other"}`}>
-                {categoryDetails[item.category]?.icon || <FaCircle />}
-              </div>
-              <div className="scheduleContent">
-                <div className="scheduleType">
-                  {categoryDetails[item.category]?.text || "[기타]"}
+          <section className="event-section">
+            <h3>{date.getMonth() + 1}월 {date.getDate()}일 일정</h3>
+            {dayEvents.length ? (
+              dayEvents.map((ev) => (
+                <div className="event-item" key={ev.id}>
+                  <div className="event-icon" style={{ backgroundColor: ev.color }}>
+                    {categoryMeta[ev.category]?.icon || <FaCircle />}
+                  </div>
+                  <div className="event-content">
+                    <strong>[{ev.category}]</strong> {ev.text}
+                  </div>
+                  <div className="icon-btn-img" style={{ display: "flex", gap: 8 }}>
+                    <button className="icon-btn" onClick={() => openEditForm(ev)}>
+                      <img className="icon-img" src={editIcon} alt="edit" />
+                    </button>
+                    <button className="icon-btn" onClick={() => handleDelete(ev.id)}>
+                      <img className="icon-img" src={trashIcon} alt="delete" />
+                    </button>
+                  </div>
                 </div>
-                <div className="scheduleText">{item.text}</div>
-                <div className="scheduleDateDisplay">{item.date}</div>
-              </div>
-              <div className="scheduleActions">
-                <button className="icon-btn edit" onClick={() => handleEditClick(item)}>
-                  <img src={editIcon} alt="edit" className="icon-img" />
-                </button>
-                <button className="icon-btn delete" onClick={() => handleDelete(item.id)}>
-                  <img src={trashIcon} alt="delete" className="icon-img" />
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="schedule-empty">선택한 날짜에 일정이 없습니다.</div>
-        )}
+              ))
+            ) : (
+              <p className="no-event">등록된 일정이 없습니다.</p>
+            )}
+            <button className="add-btn" onClick={openAddForm}>
+              <FaPlus />
+            </button>
+          </section>
+        </div>
       </main>
+
+      {/* 🧩 모달 */}
+      {showForm && (
+        <div className="modal-overlay" onClick={closeForm}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
+            <form onSubmit={handleSave}>
+              <label>일정 내용</label>
+              <input
+                type="text"
+                value={form.text}
+                onChange={(e) => setForm({ ...form, text: e.target.value })}
+                placeholder="예: 심장사상충 약 먹는 날"
+              />
+
+              <label>날짜</label>
+              <CustomDatePicker
+                value={form.date}
+                onChange={(newDate) => setForm({ ...form, date: newDate })}
+              />
+
+              <label>카테고리</label>
+              <Select
+                placeholder="선택하세요"
+                options={[
+                  { value: "병원", label: "병원 / 약" },
+                  { value: "쇼핑", label: "쇼핑" },
+                  { value: "미용", label: "미용" },
+                  { value: "생일", label: "생일" },
+                  { value: "산책/나들이", label: "산책/나들이" },
+                  { value: "기타", label: "기타" },
+                ]}
+                value={form.category ? { value: form.category, label: form.category } : null}
+                onChange={(option) => setForm({ ...form, category: option ? option.value : "" })}
+              />
+
+              <div className="form-buttons">
+                <button type="button" onClick={closeForm}>취소</button>
+                <button type="submit">저장</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 푸터 */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
             <div className="logo-stack">
-              <img src={logoGray} alt="" className="paw-bg" aria-hidden />
+              <img src={logoGray} alt="" className="paw-bg" />
               <span className="wordmark">KoJJOK</span>
             </div>
 
             <div className="grid">
-              <div className="col">
-                <h3>Hyeona Kim</h3>
-                <p>UI/UX Design</p>
-                <a href="https://github.com/ouskxk" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                  ouskxk
-                </a>
-              </div>
-              <div className="col">
-                <h3>Jiun Ko</h3>
-                <p>Front-End Dev</p>
-                <a href="https://github.com/suerte223" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                  suerte223
-                </a>
-              </div>
-              <div className="col">
-                <h3>Seungbeom Han</h3>
-                <p>Front-End Dev</p>
-                <a href="https://github.com/hsb9838" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                  hsb9838
-                </a>
-              </div>
-              <div className="col">
-                <h3>Munjin Yang</h3>
-                <p>Back-End Dev</p>
-                <a href="https://github.com/munjun0608" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                  munjun0608
-                </a>
-              </div>
-              <div className="col">
-                <h3>Youngbin Kang</h3>
-                <p>Back-End Dev</p>
-                <a href="https://github.com/0bini" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                  0bini
-                </a>
-              </div>
+              {[
+                ["Hyeona Kim", "UI/UX Design", "ouskxk"],
+                ["Jiun Ko", "Front-End Dev", "suerte223"],
+                ["Seungbeom Han", "Front-End Dev", "hsb9838"],
+                ["Munjin Yang", "Back-End Dev", "munjun0608"],
+                ["Youngbin Kang", "Back-End Dev", "0bini"],
+              ].map(([name, role, id]) => (
+                <div className="col" key={id}>
+                  <h3>{name}</h3>
+                  <p>{role}</p>
+                  <a href={`https://github.com/${id}`} className="github-link">
+                    <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                    {id}
+                  </a>
+                </div>
+              ))}
             </div>
 
             <div className="tech-stack">

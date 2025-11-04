@@ -230,6 +230,12 @@ textarea#notes {
 .profile-upload {
   display: flex;
   justify-content: center;
+  padding-top: 30px;
+}
+
+.profile-pic {
+  width: 150px;
+  height: 150px;
   margin-bottom: 20px;
 }
 
@@ -309,4 +315,28 @@ textarea#notes {
 
 .footer__col--stack .footer__stack {
   font-weight: 700;
+}
+
+/* 요청하신 :hover 효과 
+  마우스를 올렸을 때 적용됩니다.
+*/
+.newfamily-form input[type="text"]:hover,
+.newfamily-form input[type="date"]:hover,
+.newfamily-form input[type="number"]:hover,
+.newfamily-form textarea:hover {
+  border-color: #3d7eff; /* 파란색 테두리 */
+  outline: none; /* 기본 아웃라인 제거 */
+  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1); /* 연한 파란색 그림자 효과 */
+}
+
+/* :focus 효과 (추가 권장)
+  요소가 선택(클릭)되었을 때도 동일한 효과를 적용하여 사용자 경험을 향상시킵니다.
+*/
+.newfamily-form input[type="text"]:focus,
+.newfamily-form input[type="date"]:focus,
+.newfamily-form input[type="number"]:focus,
+.newfamily-form textarea:focus {
+  border-color: #3d7eff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1);
 }
