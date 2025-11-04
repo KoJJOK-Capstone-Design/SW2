@@ -1,19 +1,4 @@
-/* -------------------------------
-   📅 캘린더 전체 중앙 정렬
---------------------------------*/
-.calendar-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30px 0;
-  background-color: #ffffff;
-}
-
-.calendar-container {
-  width: 700px;
-  text-align: center;
-}
-
+/* 웹 폰트('온글잎 공부잘하자나') 정의 */
 @font-face {
   font-family: '온글잎 공부잘하자나';
   src: url('../src/온글잎 공부잘하자나.ttf') format('truetype');
@@ -21,1128 +6,699 @@
   font-style: normal;
 }
 
-.home {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  min-height: 100vh;
+/* body 태그 기본 스타일 */
+body {
+  margin: 0;
+  font-family: '온글잎 공부잘하자나', sans-serif;
+  background-color: #f9fbfd;
+  color: #222;
 }
 
+/* 네비게이션(헤더) */
+
+/* 헤더 .nav 기본 스타일 */
+.nav {
+  width: 100%;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* 헤더 내부 정렬 (flex 사용) */
 .nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  background-color: white;
   padding: 20px 40px;
-  box-sizing: border-box;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* 메인 레이아웃: 캘린더 중앙 정렬, 컨테이너 */
 
-.paw {
-  width: 105px;
-  height: 105px;
-}
-
-.brand-text {
-  font-family: '온글잎 공부잘하자나';
-  font-size: 100px;
-  font-weight: lighter;
-  color: #2A2929;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  letter-spacing: .2px;
-}
-
-.menu a {
-  margin-left: 28px;
-  text-decoration: none;
-  color: #6b7280;
-  font-size: 24px;
-}
-
-.menu a:hover {
-  color: #5D5D5D;
-}
-
-.menulink a {
-  margin-right: 30px;
-  margin-left: 28px;
-  text-decoration: none;
-  color: #6b7280;
-  font-size: 24px;
-}
-
-.menulink a:hover {
-  color: #5D5D5D;
-}
-
-
-/* -------------------------------
-   📘 React Calendar 기본 스타일
---------------------------------*/
-.react-calendar {
-  border: none;
-  background-color: #fff;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  padding: 20px;
-  width: 100%;
-  max-width: 700px;
-}
-
-.react-calendar__tile {
-  height: 60px;
-}
-
-/* 📦 캘린더와 일정 전체 컨테이너 (가로 배치) */
-.calendar-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 40px; /* 캘린더와 일정 사이 여백 */
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* 📅 캘린더 박스 */
-.calendar-box {
-  flex: 1; /* 일정 섹션과 공간 비슷하게 */
-  max-width: 700px; /* 캘린더 최대 폭 */
-  min-width: 500px; /* 너무 찌부되지 않게 최소 폭 설정 */
-}
-
-/* 🗓️ 캘린더 자체 */
-.react-calendar {
-  width: 100%;
-  height: auto;
-}
-
-
-/* -------------------------------
-   📅 메인 캘린더 영역 스타일
---------------------------------*/
+/* 메인 컨텐츠 영역(calendar-main) 스타일 */
 .calendar-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 0;
-  background-color: #f9fbfd;
-  min-height: calc(100vh - 250px);
+  padding: 60px 20px;
+  min-height: calc(100vh - 250px); /* 최소 높이 확보 */
 }
 
+/* 캘린더와 일정 목록을 감싸는 전체 컨테이너 */
 .calendar-container {
-  background: #ffffff;
-  border-radius: 25px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  padding: 40px 60px;
-  width: 2300px;
-  text-align: center;
-}
-
-/* -------------------------------
-   📘 React Calendar 꾸미기 (수정 후)
---------------------------------*/
-.react-calendar {
-  border: none;
   width: 100%;
-  max-width: 550px;
-  background-color: #fff;
-  border-radius: 15px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  padding: 25px;
-  font-family: '온글잎 공부잘하자나', sans-serif;
+  max-width: 1200px;
+  display: flex;
+  gap: 40px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+  align-items: flex-start;
 }
 
-/* 📅 상단 네비게이션 */
+/* 왼쪽 캘린더 영역 (calendar-box) */
+.calendar-box {
+  flex: 1 1 600px;
+  max-width: 700px;
+  min-width: 380px;
+}
+
+/* 오른쪽 일정 목록 영역 (event-section) */
+.event-section {
+  width: 600px;
+  max-width: 46%;
+  background: #f6f9ff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  box-sizing: border-box;
+  height: 550px;
+  position: relative;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+/* react-calendar 기본 스타일 */
+
+/* react-calendar 컴포넌트 전체적인 스타일 */
+.react-calendar {
+  width: 100%;
+  height: 550px;
+  background: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 22px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+/* 달력 헤더 (월/년, 화살표) */
 .react-calendar__navigation {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
-.react-calendar .react-calendar__navigation__label {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #487bec;
-}
-/* 📅 상단 월 표시 회색 배경 제거 */
-.react-calendar__navigation__label {
-  background: none !important;
-}
-
-/* hover, 클릭 시 회색 되는 기본 효과 제거 */
-.react-calendar__navigation button:enabled:hover,
-.react-calendar__navigation button:enabled:focus,
-.react-calendar__navigation button:enabled:active {
-  background: none !important;
-  color: #4b7bec !important;
-  outline: none !important;
-}
-
-/* 📅 요일 밑줄 제거 */
-.react-calendar__month-view__weekdays__weekday abbr {
-  text-decoration: none !important;
-  border: none !important;
-  color: #000000 !important; /* 요일 색상 통일 */
-}
-
+/* 달력 헤더 버튼 (좌우 화살표) */
 .react-calendar__navigation button {
-  color: #4b7bec;
-  font-weight: 600;
-  font-size: 18px;
   background: none;
   border: none;
-  cursor: pointer;
-}
-
-/* 📅 화살표 버튼 */
-.react-calendar__navigation__arrow {
-  font-size: 2rem !important;
-  font-weight: bold;
   color: #4b7bec;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, color 0.2s ease;
+  font-size: 25px;
+  cursor: pointer;
 }
 
-.react-calendar__navigation__arrow:hover {
-  color: #3867d6;
-  transform: scale(1.2);
-}
-
-/* 📅 요일 라벨 */
-.react-calendar__month-view__weekdays {
+/* 달력 헤더 (월/년 텍스트) */
+.react-calendar__navigation__label {
+  flex: 1;
   text-align: center;
+  color: #487bec;
+  font-weight: 700;
+  font-size: 1.5rem;
+  background: none !important;
+}
+
+/* 요일 표시줄 (일, 월, 화...) */
+.react-calendar__month-view__weekdays {
+  display: flex;
+  gap: 0;
+  margin-bottom: 8px;
   font-weight: 500;
   color: #888;
-  text-transform: uppercase;
-  font-size: 1.2rem;
-  border-bottom: none !important;
+  font-size: 1.05rem;
+  justify-content: space-between;
 }
 
-/* 📅 날짜 셀 */
+/* 각 요일 텍스트 */
+.react-calendar__month-view__weekdays__weekday {
+  flex: 1;
+  text-align: center;
+  color: #888;
+}
+
+/* 일요일(첫 번째 요일) 색상 */
+.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
+  color: #e74c3c !important; 
+  text-decoration: none;
+}
+/* 토요일(일곱 번째 요일) 색상 */
+.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
+  color: #4b7bec !important; 
+  text-decoration: none;
+}
+/* 요일 abbr 태그 밑줄 제거 */
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+/* 날짜 타일(1, 2, 3...) 기본 스타일 */
 .react-calendar__tile {
-  height: 70px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 68px;
   border-radius: 10px;
-  font-size: 1.5rem;
-  background: transparent; /* none → transparent */
-  color: #222;
-  transition: background-color 0s, color 0s; /* 즉시 적용, 깜빡임 방지 */
-}
-
-/* hover 시 회색 배경 제거 */
-.react-calendar__tile:hover {
   background: transparent;
-  transform: none;
-}
-
-/* 📅 선택된 날짜(파란색 유지) */
-.react-calendar__tile--active {
-  background-color: #ebf1ff !important;
-  border-radius: 10px;
+  color: #222;
+  font-size: 1.2rem;
+  padding-top: 6px;
+  box-sizing: border-box;
   transition: none;
 }
 
-
-/* 📅 오늘 날짜 */
-.react-calendar__tile--now {
-  background: transparent;
-  color: #222;
+/* 날짜 숫자(abbr 태그) 스타일 */
+.react-calendar__tile abbr {
+  display: block;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-size: 1.2rem;
 }
 
-/* -------------------------------
-   📅 요일 순서 한국식으로 (일~토)
---------------------------------*/
-.react-calendar__month-view__weekdays {
-  display: flex;
-  flex-direction: row;
-}
-
-/* 원래는 월요일이 첫 번째 → 일요일이 앞으로 오게 재정렬 */
-.react-calendar__month-view__weekdays__weekday:nth-child(7) {
-  order: -1; /* 일요일을 맨 앞으로 이동 */
-}
-
-/* -------------------------------
-   📅 요일 순서 한국식 (일~토)
-   + 일요일 빨간색 / 토요일 파란색
---------------------------------*/
-.react-calendar__month-view__weekdays {
-  display: flex;
-  flex-direction: row;
-}
-
-/* 일요일을 맨 앞으로 이동 */
-.react-calendar__month-view__weekdays__weekday:nth-child(7) {
-  order: -1; /* 일요일이 맨 앞 */
-}
-
-/* 📆 일요일 글자 빨간색 */
-.react-calendar__month-view__weekdays__weekday:nth-child(1),
+/* 달력의 일요일 날짜 색상 */
 .react-calendar__month-view__days__day:nth-child(7n + 1) {
-  color: #e74c3c !important; /* 빨강 */
+  color: #e74c3c;
 }
-
-/* 📆 토요일 글자 파란색 */
-.react-calendar__month-view__weekdays__weekday:nth-child(7),
+/* 달력의 토요일 날짜 색상 */
 .react-calendar__month-view__days__day:nth-child(7n) {
-  color: #4b7bec !important; /* 파랑 */
+  color: #4b7bec;
 }
 
-/* ===============================
-   📆 연도/연대 보기 + 월 보기 스타일 수정
-================================*/
-
-/* 📆 연도 보기 (1월~12월) */
-.react-calendar__year-view__months {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr);
-  justify-items: center;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 📆 각 월 버튼 */
-.react-calendar__year-view__months__month {
+/* 선택된 날짜 타일 스타일 */
+.react-calendar__tile--active {
+  background-color: #ebf1ff !important;
+  color: #4b7bec !important;
   border-radius: 10px;
-  background: transparent;
-  font-size: 1rem !important; /* ✅ 글씨 크기 통일 */
-  color: #222;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  height: 60px;
-  width: 80px; /* ✅ 크기 균일하게 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* ===============================
-   📆 연도/연대 보기 스타일 수정
-================================*/
+/* 오늘 날짜 타일 스타일 */
+.react-calendar__tile--now {
+  color: #222 !important;
+  outline: none;
+  box-shadow: none;
+}
 
-/* 1️⃣ 10년 단위 보기 (연도 선택 시) */
+/* 타일 포커스 시 아웃라인 제거 */
+.react-calendar__tile:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* 이전/다음 달 날짜 흐리게 처리 */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #b5b5b5 !important;
+  opacity: 0.8;
+}
+
+/* 연도/월/연대 뷰 (헤더 클릭 시) */
+
+/* 연/월 선택 그리드 레이아웃 */
+.react-calendar__year-view__months,
 .react-calendar__decade-view__years {
   display: grid !important;
   grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
   justify-items: center;
   align-items: center;
-  gap: 10px;
 }
 
-/* 2️⃣ 세기 단위 보기 (연대 선택 시) */
-.react-calendar__century-view__decades {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr);
-  justify-items: center;
+/* 연/월 선택 버튼 스타일 */
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year {
+  width: 84px;
+  height: 60px;
+  display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-/* 3️⃣ 기본 타일 (연도·연대) 스타일 */
-.react-calendar__decade-view__years__year,
-.react-calendar__century-view__decades__decade {
+  justify-content: center;
   border-radius: 10px;
   background: transparent;
-  font-size: 1.2rem;
-  color: #222;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  height: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* hover 시 효과 */
-.react-calendar__decade-view__years__year:hover,
-.react-calendar__century-view__decades__decade:hover {
-  background-color: #ebf1ff;
-  color: #4b7bec;
-  cursor: pointer;
-}
-
-/* 선택된 연도 / 연대 */
-.react-calendar__tile--active {
-  background-color: #dbe4ff !important;
-  color: #4b7bec !important;
-}
-
-/* 클릭 중 효과 제거 */
-.react-calendar__tile:enabled:active {
-  background: #ebf1ff !important;
-  color: #4b7bec !important;
-}
-
-/* ===============================
-   📆 네비게이션 (상단 제목 영역)
-================================*/
-.react-calendar__navigation {
-  justify-content: space-between;
-  align-items: center;
-}
-
-.react-calendar__navigation__label {
-  flex-grow: 1;
-  text-align: center;
-  color: #487bec;
-  font-size: 1.5rem; /* ✅ 글자 크기 줄임 */
-  font-weight: 700;
-}
-
-/* hover 시 효과 제거 */
-.react-calendar__navigation__label:hover {
-  background: none !important;
-  color: #3867d6 !important;
-}
-
-/* hover 시 */
-.react-calendar__year-view__months__month:hover {
-  background-color: #ebf1ff;
-  color: #4b7bec;
-  cursor: pointer;
-}
-
-/* 선택된 월 */
-.react-calendar__tile--active {
-  background-color: #dbe4ff !important;
-  color: #4b7bec !important;
-}
-
-/* -------------------------------
-   📘 일정 리스트 섹션
---------------------------------*/
-.event-section {
-  position: relative;
-  background: #f6f9ff;
-  border-radius: 18px;
-  width : 500px;
-  height : 500px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-}
-
-.event-section h3 {
-  font-size: 1.5rem;
-  color: #2a2929;
-  margin: 30px 0px;
-}
-
-.event-item {
-  display: flex;
-  align-items: center;
-  text-align: left;
-  background: white;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-left: 20px;
-  margin-right: 20px;
-  margin-bottom: 12px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.05);
-  transition: transform 0.15s ease;
-}
-
-.event-item:hover {
-  transform: translateY(-2px);
-}
-
-.event-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 14px;
-  font-size: 1rem;
-}
-
-.event-content {
-  flex: 1;
-  font-size: 1.05rem;
+  font-size: 1.05rem !important;
+  font-weight: 500;
   color: #333;
-}
-
-.edit-icon {
-  color: #7d7d7d;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.edit-icon:hover {
-  color: #4b7bec;
-}
-
-.no-event {
-  text-align: center;
-  color: #777;
-  margin-top: 25px;
-  font-size: 1.1rem;
-}
-
-/* -------------------------------
-   ➕ 일정 추가 버튼 (Floating)
---------------------------------*/
-.add-btn {
-  position: absolute;
-  bottom: 25px;
-  right: 25px;
-  background-color: #4b7bec;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transition: 0.2s;
-}
-
-.add-btn:hover {
-  transform: scale(1.05);
-  background-color: #3867d6;
-}
-
-
-/* 추가 버튼 */
-.add-btn {
-  position: absolute;
-  bottom: 20px;
-  right: 25px;
-  background-color: #4b7bec;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 55px;
-  height: 55px;
-  font-size: 1.4rem;
-  cursor: pointer;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-}
-
-.modal-overlay {
-  position: fixed; /* ✅ 화면 기준으로 고정 */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center; /* 가로 중앙 */
-  align-items: center; /* 세로 중앙 */
-  z-index: 9999; /* 위로 올리기 */
-}
-
-.modal {
-  top : 20%;
-  left : 40%;
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 0px 25px;
-  width: 400px;
-  height: 500px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-  justify-content: center; /* 내부 내용도 세로 중앙 */
-  animation: fadeIn 0.25s ease;
-}
-
-#calender-add {
-    font-size: 30px;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #222;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-/* -------------------------------
-🧾 폼
---------------------------------*/
-.modal form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: stretch; /* ✅ 양쪽 정렬 */
-}
-
-.modal label {
-  font-weight: 600;
-  font-size: 14px;
-  color: #444;
-  margin-top: 4px;
-}
-
-.modal input,
-.modal select {
-  border: 1.5px solid #d0d7e2;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  transition: 0.2s ease;
-  background-color: #fff;
-/* =========================================================
-   🏠 기본 구조 및 폰트 설정
-========================================================= */
-@font-face {
-  font-family: '온글잎 공부잘하자나';
-  src: url('../src/온글잎 공부잘하자나.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-body {
-  font-family: '온글잎 공부잘하자나', sans-serif;
-  background-color: #f9fbfd;
-  margin: 0;
-}
-
-.home {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* =========================================================
-   🧭 네비게이션 바
-========================================================= */
-.nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background-color: white;
-  padding: 20px 40px;
   box-sizing: border-box;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* 연/월 선택 버튼 호버(hover) 효과 */
+.react-calendar__year-view__months__month:hover,
+.react-calendar__decade-view__years__year:hover {
+  background-color: #f0f3ff;
+  color: #4b7bec;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.paw {
-  width: 105px;
-  height: 105px;
-}
+/* CustomDatePicker 관련 스타일 (모달 내부) */
 
-.brand-text {
-  font-size: 100px;
-  color: #2a2929;
-  font-weight: lighter;
-  margin-top: 20px;
-  letter-spacing: 0.2px;
-}
-
-.menu a,
-.menulink a {
-  text-decoration: none;
-  color: #6b7280;
-  font-size: 24px;
-  margin: 0 28px;
-  transition: color 0.2s;
-}
-
-.menu a:hover,
-.menulink a:hover {
-  color: #5d5d5d;
-}
-
-/* =========================================================
-   📅 캘린더 전체 레이아웃
-========================================================= */
-.calendar-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #f9fbfd;
-  padding: 60px 0;
-  min-height: calc(100vh - 250px);
-}
-
-.calendar-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 40px;
+.custom-date-picker {
+  position: relative;
   width: 100%;
-  max-width: 1200px;
-  background: #fff;
-  border-radius: 25px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 40px 60px;
+}
+.custom-date-picker input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  background-color: #fff;
+  transition: 0.2s;
+}
+.custom-date-picker input:hover {
+  border-color: #4a70a9;
+}
+
+.calendar-popup {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 260px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  z-index: 10;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.calendar-day {
   text-align: center;
+  padding: 8px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.calendar-day:hover {
+  background: #4a70a9;
+  color: white;
 }
 
-/* =========================================================
-   📘 React Calendar 기본 스타일
-========================================================= */
-.react-calendar {
-  border: none;
-  width: 100%;
-  max-width: 550px;
-  background: #fff;
-  border-radius: 15px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  padding: 25px;
-}
-
-/* 📅 상단 네비게이션 */
-.react-calendar__navigation {
+/* ============================
+   📅 요일 한글화 (일~토)
+============================ */
+.react-calendar__month-view__weekdays {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  font-weight: 600;
+  color: #666;
+  font-size: 1rem;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  visibility: hidden; /* 기존 영어 숨기기 */
+  position: relative;
+}
+
+.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr::after {
+  content: "일";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #e74c3c;
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(2) abbr::after {
+  content: "월";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(3) abbr::after {
+  content: "화";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(4) abbr::after {
+  content: "수";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(5) abbr::after {
+  content: "목";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(6) abbr::after {
+  content: "금";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr::after {
+  content: "토";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #3b82f6;
+}
+
+
+/* 헤더(연도, 월) 스타일 */
+.react-calendar__navigation__label {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #304ffe;
 }
 
 .react-calendar__navigation__label {
-  flex-grow: 1;
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #487bec;
-  background: none !important;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #304ffe;
+  justify-content: center;
 }
 
-.react-calendar__navigation__label:hover {
-  color: #3867d6 !important;
+/* 일요일 빨간색, 토요일 파란색 */
+.react-calendar__month-view__days__day:nth-child(7n + 1) {
+  color: #f44336; /* 일요일 */
+}
+.react-calendar__month-view__days__day:nth-child(7n) {
+  color: #1976d2; /* 토요일 */
 }
 
-/* 📅 네비게이션 버튼 */
-.react-calendar__navigation button {
-  color: #4b7bec;
-  font-size: 18px;
+
+/* CustomDatePicker 컴포넌트(모달 안 달력)의 컨테이너 */
+.custom-datepicker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  width: 280px; /* 너비 고정 (모달 크기에 맞게 조절됨) */
+  font-family: "Pretendard", sans-serif; /* 폰트 재정의 */
+}
+
+/* 모달 달력 헤더 (월/년, 화살표) */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+/* 모달 달력 헤더 버튼 */
+.calendar-header button {
   background: none;
   border: none;
+  font-size: 18px;
+  color: #555;
   cursor: pointer;
 }
-
-.react-calendar__navigation__arrow {
-  font-size: 2rem;
-  font-weight: bold;
-  transition: transform 0.2s ease;
+.calendar-header button:hover {
+  color: #007bff;
 }
 
-.react-calendar__navigation__arrow:hover {
-  transform: scale(1.2);
-  color: #3867d6;
+/* 모달 달력 날짜 그리드 */
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  width: 100%;
 }
 
-/* =========================================================
-   📆 월/주/요일/날짜 뷰
-========================================================= */
-/* 📅 요일 스타일 */
-.react-calendar__month-view__weekdays__weekday abbr {
-  text-decoration: none !important;
-  color: #000 !important;
-}
-
-.react-calendar__month-view__weekdays {
-  display: flex;
-  flex-direction: row;
-  font-size: 1.2rem;
-  color: #888;
-  text-transform: uppercase;
+/* 모달 달력 요일 (일, 월, 화...) */
+.calendar-day-header {
   text-align: center;
-  font-weight: 500;
+  font-weight: bold;
+  color: #555;
+  font-size: 14px;
 }
 
-/* 📆 한국식 요일 순서 (일~토) */
-.react-calendar__month-view__weekdays__weekday:nth-child(7) {
-  order: -1;
-}
-
-/* 📆 일요일 빨강 / 토요일 파랑 */
-.react-calendar__month-view__weekdays__weekday:nth-child(1),
-.react-calendar__month-view__days__day:nth-child(7n + 1) {
-  color: #e74c3c !important;
-}
-
-.react-calendar__month-view__weekdays__weekday:nth-child(7),
-.react-calendar__month-view__days__day:nth-child(7n) {
-  color: #4b7bec !important;
-}
-
-/* 📅 날짜 타일 */
-.react-calendar__tile {
-  height: 70px;
-  border-radius: 10px;
-  font-size: 1.5rem;
-  color: #222;
-  background: transparent;
-  transition: none;
-}
-
-.react-calendar__tile:hover {
-  background: transparent;
-}
-
-/* 📅 선택된 날짜 */
-.react-calendar__tile--active {
-  background-color: #ebf1ff !important;
-  color: #4b7bec !important;
-}
-
-/* 📅 오늘 날짜 */
-.react-calendar__tile--now {
-  background: transparent;
-  color: #222;
-}
-
-/* =========================================================
-   📆 연도/연대/월 선택 뷰
-========================================================= */
-/* 연도 보기 (1월~12월) */
-.react-calendar__year-view__months,
-.react-calendar__decade-view__years,
-.react-calendar__century-view__decades {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  justify-items: center;
-  align-items: center;
-}
-
-/* 각 월 / 연도 / 연대 타일 */
-.react-calendar__year-view__months__month,
-.react-calendar__decade-view__years__year,
-.react-calendar__century-view__decades__decade {
-  border-radius: 10px;
-  background: transparent;
-  font-size: 1rem;
-  color: #222;
-  height: 60px;
-  width: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.react-calendar__year-view__months__month:hover,
-.react-calendar__decade-view__years__year:hover,
-.react-calendar__century-view__decades__decade:hover {
-  background-color: #ebf1ff;
-  color: #4b7bec;
+/* 모달 달력 날짜 타일 */
+.calendar-date {
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 8px;
   cursor: pointer;
+  transition: 0.2s, color 0.2s;
+}
+.calendar-date:hover {
+  background: #f1f3f5;
 }
 
-/* =========================================================
-   🗓️ 일정 리스트 섹션
-========================================================= */
-.event-section {
-  position: relative;
-  background: #f6f9ff;
-  border-radius: 18px;
-  width: 500px;
-  height: 500px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+/* 모달 달력 '오늘' 날짜 */
+.calendar-date.today {
+  border: 1px solid #007bff;
+  color: #007bff;
+  font-weight: bold;
 }
 
+/* 모달 달력 '선택된' 날짜 */
+.calendar-date.selected {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+/* 모달 달력 빈 날짜 (이전/다음 달) */
+.calendar-date.empty {
+  background: transparent;
+  cursor: default;
+}
+
+/* 일정 점(타일 밑 작은 동그라미) */
+
+/* 일정 점들(dots)을 감싸는 컨테이너 */
+.event-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%); /* 중앙 정렬 */
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 클릭 방해 금지 */
+}
+
+/* 개별 일정 점(dot) 스타일 */
+.event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.9); /* 흰색 테두리 */
+}
+
+/* 일정 리스트 카드, 아이콘, 액션 버튼 등 (오른쪽 영역) */
+
+/* 일정 목록(event-section)의 제목 */
 .event-section h3 {
-  font-size: 1.5rem;
-  color: #2a2929;
-  margin: 30px 0;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 18px;
+  font-size: 25px;
+  color: #222;
 }
 
+/* 등록된 일정이 없을 때 표시되는 텍스트 */
+.no-event {
+  text-align: center;
+  color: #888;
+  margin-top: 60px;
+  font-size: 1.1rem;
+}
+
+/* 개별 일정 항목(카드) */
 .event-item {
   display: flex;
   align-items: center;
-  background: white;
+  gap: 12px;
+  background: #fff;
+  padding: 12px 14px;
   border-radius: 12px;
-  padding: 14px 18px;
-  margin: 0 20px 12px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.15s ease;
+  margin: 10px 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+  justify-content: space-between; /* 양 끝 정렬 */
 }
 
-.event-item:hover {
-  transform: translateY(-2px);
-}
-
+/* 일정 카테고리 아이콘 (동그라미) */
 .event-icon {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  color: white;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-right: 14px;
-  font-size: 1rem;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
 }
 
-.event-content {
-  flex: 1;
-  font-size: 1.05rem;
-  color: #333;
-}
-
-.edit-icon {
-  color: #7d7d7d;
+/* 수정/삭제 아이콘 버튼 */
+.icon-btn {
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.edit-icon:hover {
-  color: #4b7bec;
+/* 수정/삭제 아이콘 이미지 */
+.icon-img {
+  width: 18px;
+  height: 18px;
+  filter: none;
+  opacity: 0.9;
 }
 
-.no-event {
-  text-align: center;
-  color: #777;
-  margin-top: 25px;
-  font-size: 1.1rem;
+/* 수정/삭제 버튼 컨테이너 (오른쪽 정렬) */
+.icon-btn-img {
+  margin-left: auto; /* 자동으로 오른쪽 끝으로 밀기 */
+  display: flex;
+  gap: 8px;
 }
 
-/* =========================================================
-   ➕ 일정 추가 버튼 (Floating)
-========================================================= */
+/* 플로팅 추가 버튼 (오른쪽 하단 +) */
+
 .add-btn {
   position: absolute;
-  bottom: 25px;
-  right: 25px;
-  background-color: #4b7bec;
-  color: white;
-  border: none;
+  bottom: 22px;
+  right: 22px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  width: 55px;
-  height: 55px;
-  font-size: 1.4rem;
+  background: #4b7bec;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(75,123,236,0.25);
   cursor: pointer;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-  transition: 0.2s;
+}
+.add-btn SVG {
+  width : 30px;
+  height: 30px;
 }
 
-.add-btn:hover {
-  transform: scale(1.05);
-  background-color: #3867d6;
-}
+/* 모달 */
 
-/* =========================================================
-   🪟 모달창
-========================================================= */
+/* 일정 추가 / 수정 모달 */
+/* 모달 뒷 배경 (어둡게 처리) */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.modal {
-  background: #fff;
-  border-radius: 20px;
-  padding: 25px;
-  width: 400px;
-  height: 500px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.25s ease;
-}
-
-.modal h2 {
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #222;
-}
-
-/* ✏️ 모달 폼 */
-.modal form {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal label {
-  font-weight: 600;
-  font-size: 14px;
-  color: #444;
-}
-
-.modal input,
-.modal select {
-  border: 1.5px solid #d0d7e2;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  transition: 0.2s ease;
-}
-
-.modal input:focus,
-.modal select:focus {
-  border-color: #3d7eff;
-  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1);
-  outline: none;
-}
-
-/* 버튼 그룹 */
-.form-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.form-buttons button {
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s ease;
-}
-
-.form-buttons button[type="button"] {
-  background-color: #e5e9f2;
-  color: #333;
-}
-
-.form-buttons button[type="button"]:hover {
-  background-color: #d5dae6;
-}
-
-.form-buttons button[type="submit"] {
-  background-color: #3d7eff;
-  color: #fff;
-}
-
-.form-buttons button[type="submit"]:hover {
-  background-color: #2d6afc;
-}
-
-/* =========================================================
-   🦶 푸터
-========================================================= */
-.footer {
-  background: #e7f5f9;
-  border-top: 1px solid #fff;
-  margin-top: auto;
-}
-
-.footer__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 24px;
-}
-
-.footer__brand {
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  justify-content: center;
 }
 
-.footer__logo {
-  font-weight: 900;
-  font-size: 28px;
+/* 모달 창 본체 */
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 800px; /* 모달 높이 (내용에 따라 조절 필요) */
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
 }
 
-.footer__grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
+/* 폼, 버튼 */
+.modal form { display:flex; flex-direction:column; gap:12px; }
+.modal input, .modal select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #d0d7e2;
+  font-size: 14px;
 }
 
-.footer__col {
-  text-align: center;
-}
-
-.footer__role {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.footer__name {
-  font-weight: 700;
+/* react-select가 아닌 기본 select 태그에 대한 스타일 */
+.modal select {
+  width: 100%;
+  padding: 10px 36px 10px 12px; /* 오른쪽 여백 늘리기 */
+  border: 1.8px solid #ddd;
+  border-radius: 8px;
   font-size: 13px;
-}
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  appearance: none; /* 브라우저 기본 화살표 숨기기 */
+  background: url("data:image/svg+xml;utf8,<svg fill='gray' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 12px center;
+  background-color: #fff;
 }
 
-.modal input:hover,
-.modal select:hover {
-  border-color: #3d7eff;
+/* custom-date-input 클래스 스타일 (현재 코드에서는 사용되지 않음) */
+.custom-date-input {
+  width: 100%;
+  border: 1.8px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 1rem;
   outline: none;
+}
+.custom-date-input:focus {
+  border-color: #3d7eff;
   box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1);
 }
 
-/* -------------------------------
-🎯 버튼
---------------------------------*/
-.form-buttons {
-  display: flex;
-  justify-content: center; /* ✅ 가운데 정렬 */
-  gap: 12px;
-  margin-top: 20px;
-}
+/* 모달 폼 버튼 (취소, 저장) */
+.form-buttons { display:flex; gap:12px; justify-content:center; margin-top:10px; }
+.form-buttons button { padding: 8px 18px; border-radius:8px; border:none; cursor:pointer; }
+.form-buttons button[type="submit"] { background:#3d7eff; color:#fff; }
+.form-buttons button[type="button"] { background:#e5e9f2; color:#222; }
 
-.form-buttons button {
-  padding: 8px 20px;
+/* 모달 입력창 포커스 효과 */
+.modal input[type="text"],
+.modal input[type="date"],
+.modal select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.8px solid #ddd;
   border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s ease;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.form-buttons button[type="button"] {
-  background-color: #e5e9f2;
-  color: #333;
+/* 마우스 올리거나 포커스 시 효과 */
+/* react-select는 이 스타일 대신 자체 'styles' prop을 사용합니다. */
+.modal input[type="text"]:focus,
+.modal input[type="date"]:focus,
+.modal select:hover,
+.modal input[type="text"]:focus,
+.modal input[type="date"]:focus,
+.modal select:focus {
+  border-color: #3d7eff; /* 파란색 테두리 */
+  outline: none; /* 기본 아웃라인 제거 */
+  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1); /* 연한 파란색 그림자 */
 }
 
-.form-buttons button[type="button"]:hover {
-  background-color: #d5dae6;
-}
 
-.form-buttons button[type="submit"] {
-  background-color: #3d7eff;
-  color: #fff;
-}
-
-.form-buttons button[type="submit"]:hover {
-  background-color: #2d6afc;
+/* 반응형: 작은 화면에서 캘린더/일정 세로 스택 */
+@media (max-width: 920px) {
+  .calendar-container {
+    flex-direction: column;
+    padding: 26px;
+    gap: 20px;
+  }
+  .event-section { width: 100%; height: auto; }
+  .calendar-box { max-width: 100%; min-width: 0; }
 }
 
 /* 푸터 */
