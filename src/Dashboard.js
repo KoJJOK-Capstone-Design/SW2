@@ -72,35 +72,22 @@ export default function Dashboard() {
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => {
-                  setShowBellPopup((v) => !v);
-                  setShowChatPopup(false);
-                }}
+                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
               >
                 <img src={bell} alt="알림 아이콘" className="icon" />
               </button>
               {showBellPopup && (
-                <div className="popup">
-                  <p>📢 새 알림이 없습니다.</p>
-                </div>
+                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
               )}
             </div>
 
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => {
-                  setShowChatPopup((v) => !v);
-                  setShowBellPopup(false);
-                }}
+                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
               >
-                <img src={chat} alt="채팅 아이콘" className="icon" />
+                <a href="./chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
               </button>
-              {showChatPopup && (
-                <div className="popup">
-                  <p>💬 새로운 메시지가 없습니다.</p>
-                </div>
-              )}
             </div>
           </nav>
         </div>

@@ -86,14 +86,14 @@ body {
   box-sizing: border-box;
 }
 .section--intro { padding-top: 32px; }
-.title { margin: 0; font-size: 50px; font-weight: 900; }
+.title { margin: 0; font-size: 50px; font-weight: 600; }
 .date  { color: #6b7280; margin-top: 4px; font-size: 20px; }
 
 .section__title {
   display: flex; align-items: center; gap: 10px;
-  margin: 0 0 24px; font-size: 35px; font-weight: 800;
+  margin: 0 0 24px; font-size: 35px; font-weight: 500;
 }
-.section__bullet { width: 12px; height: 36px; border-radius: 10px; display: inline-block; }
+.section__bullet { width: 12px; height: 36px; border-radius: 10px; display: inline-block; font-weight: 500; }
 .section__bullet--blue { background: #1e90ff; }
 
 /******************************************
@@ -108,9 +108,9 @@ body {
  * 5) Todo Card
  ******************************************/
 .todolist {
-  font-size: 35px; font-weight: 800;
+  font-size: 35px; font-weight: 500;
   padding-top: 10px; padding-bottom: 20px;
-  margin: 0 20px;
+  margin: 0 40px;
 }
 .card--todo {
   padding: 16px 0 12px;
@@ -187,7 +187,7 @@ body {
 .event__icon--cart  { background: #ecfeff; }
 .event__icon--steth { background: #fef3c7; }
 .event__body  { flex: 1; }
-.event__title { font-weight: 700; font-size: 15px; }
+.event__title { font-weight: 600; font-size: 15px; }
 .event__date  { color: #64748b; font-size: 13px; margin-top: 3px; }
 .event__badge { font-size: 12px; padding: 6px 10px; border-radius: 999px; }
 .event__badge--soft   { background: #eef6ff; color: #3467ff; }
@@ -255,7 +255,7 @@ body {
   box-shadow: 0 4px 10px rgba(15,23,42,.05);
 }
 
-.food-group__title { margin: 0 0 12px; font-size: 18px; font-weight: 800; }
+.food-group__title { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
 .food-group__title--ok { color: #0a7d45; }
 .food-group__title--no { color: #cf1f1f; }
 
@@ -272,7 +272,7 @@ body {
 }
 .food-card--ok { background: #edfdf3; border-color: #d7f1df; }
 .food-card--no { background: #fff1f1; border-color: #ffd8d8; }
-.food-card__name { font-weight: 700; margin-bottom: 6px; }
+.food-card__name { font-weight: 600; margin-bottom: 6px; }
 .food-card__note { color: #64748b; font-size: 13px; }
 
 .badge {
@@ -292,8 +292,8 @@ body {
 .footer__grid  { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
 .footer__col   { text-align: center; }
 .footer__role  { color: #64748b; font-size: 12px; }
-.footer__name  { font-weight: 700; font-size: 13px; }
-.footer__col--stack .footer__stack { font-weight: 700; }
+.footer__name  { font-weight: 600; font-size: 13px; }
+.footer__col--stack .footer__stack { font-weight: 600; }
 
 /******************************************
  * 9) Responsive
