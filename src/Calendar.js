@@ -23,7 +23,7 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-/* 📅 모달 내에서 사용하는 커스텀 DatePicker */
+/* 📅 커스텀 달력 (모달 내부용) */
 const CustomDatePicker = ({ value, onChange }) => {
   const today = new Date();
   const [current, setCurrent] = useState(value ? new Date(value) : new Date());
@@ -56,13 +56,17 @@ const CustomDatePicker = ({ value, onChange }) => {
     <div className="custom-datepicker">
       <div className="calendar-header">
         <button onClick={() => setCurrent(new Date(year, month - 1, 1))}>‹</button>
-        <span>{year}년 {month + 1}월</span>
+        <span>
+          {year}년 {month + 1}월
+        </span>
         <button onClick={() => setCurrent(new Date(year, month + 1, 1))}>›</button>
       </div>
 
       <div className="calendar-days">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-          <div key={d} className="calendar-day-header">{d}</div>
+          <div key={d} className="calendar-day-header">
+            {d}
+          </div>
         ))}
 
         {days.map((d, i) => (
@@ -84,7 +88,7 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-/* 📌 Date → YYYY-MM-DD 포맷 함수 */
+/* 📌 Date → YYYY-MM-DD */
 function formatYMD(d) {
   if (!d) return "";
   const date = typeof d === "string" ? new Date(d) : d;
@@ -101,6 +105,7 @@ export default function Calendar() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ text: "", date: "", category: "" });
+  const [closing, setClosing] = useState(false); // ✅ fade-out 제어
 
   const categoryMeta = {
     병원: { color: "#BFC8D7", icon: <FaClinicMedical /> },
@@ -134,6 +139,7 @@ export default function Calendar() {
     );
   };
 
+  /* 🔹 폼 관련 핸들러들 */
   const openAddForm = () => {
     setEditingId(null);
     setForm({ text: "", date: selectedDateStr, category: "" });
@@ -147,9 +153,13 @@ export default function Calendar() {
   };
 
   const closeForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setForm({ text: "", date: "", category: "" });
+    setClosing(true);
+    setTimeout(() => {
+      setShowForm(false);
+      setClosing(false);
+      setEditingId(null);
+      setForm({ text: "", date: "", category: "" });
+    }, 250);
   };
 
   const handleSave = (e) => {
@@ -198,7 +208,9 @@ export default function Calendar() {
           <nav className="menu">
             <a href="/activity">활동</a>
             <a href="/health">건강</a>
-            <a href="/calendar" className="active">캘린더</a>
+            <a href="/calendar" className="active">
+              캘린더
+            </a>
             <a href="/community">커뮤니티</a>
           </nav>
           <nav className="menulink">
@@ -208,7 +220,7 @@ export default function Calendar() {
         </div>
       </header>
 
-      {/* 메인 달력 영역 */}
+      {/* 메인 캘린더 */}
       <main className="calendar-main">
         <div className="calendar-container">
           <ReactCalendar
@@ -221,7 +233,9 @@ export default function Calendar() {
             prev2Label={null}
           />
           <section className="event-section">
-            <h3>{date.getMonth() + 1}월 {date.getDate()}일 일정</h3>
+            <h3>
+              {date.getMonth() + 1}월 {date.getDate()}일 일정
+            </h3>
             {dayEvents.length ? (
               dayEvents.map((ev) => (
                 <div className="event-item" key={ev.id}>
@@ -251,44 +265,84 @@ export default function Calendar() {
         </div>
       </main>
 
-      {/* 🧩 모달 */}
+      {/* 모달 */}
       {showForm && (
-        <div className="modal-overlay" onClick={closeForm}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-overlay ${closing ? "closing" : ""}`}>
+          <div className={`modal ${closing ? "closing" : ""}`}>
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
             <form onSubmit={handleSave}>
-              <label class="date">일정 내용</label>
-              <input
-                type="text"
-                value={form.text}
-                onChange={(e) => setForm({ ...form, text: e.target.value })}
-                placeholder="예: 심장사상충 약 먹는 날"
-              />
+              <div className="modal-left">
+                <CustomDatePicker
+                  value={form.date}
+                  onChange={(newDate) => setForm({ ...form, date: newDate })}
+                />
+              </div>
 
-              <label class="date">날짜</label>
-              <CustomDatePicker
-                value={form.date}
-                onChange={(newDate) => setForm({ ...form, date: newDate })}
-              />
+              <div className="modal-right">
+                <label>일정 내용</label>
+                <input
+                  type="text"
+                  value={form.text}
+                  onChange={(e) => setForm({ ...form, text: e.target.value })}
+                  placeholder="예: 심장사상충 약 먹는 날"
+                />
 
-              <label class="date">카테고리</label>
-              <Select
-                placeholder="선택하세요"
-                options={[
-                  { value: "병원", label: "병원 / 약" },
-                  { value: "쇼핑", label: "쇼핑" },
-                  { value: "미용", label: "미용" },
-                  { value: "생일", label: "생일" },
-                  { value: "산책/나들이", label: "산책/나들이" },
-                  { value: "기타", label: "기타" },
-                ]}
-                value={form.category ? { value: form.category, label: form.category } : null}
-                onChange={(option) => setForm({ ...form, category: option ? option.value : "" })}
-              />
+                <label>카테고리</label>
+                <Select
+                  classNamePrefix="react-select"
+                  placeholder="선택하세요"
+                  options={[
+                    { value: "병원", label: "병원 / 약" },
+                    { value: "쇼핑", label: "쇼핑" },
+                    { value: "미용", label: "미용" },
+                    { value: "생일", label: "생일" },
+                    { value: "산책/나들이", label: "산책/나들이" },
+                    { value: "기타", label: "기타" },
+                  ]}
+                  value={
+                    form.category ? { value: form.category, label: form.category } : null
+                  }
+                  onChange={(option) =>
+                    setForm({ ...form, category: option ? option.value : "" })
+                  }
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      fontSize: "16px",
+                      borderRadius: "10px",
+                      borderColor: state.isFocused ? "#4b7bec" : "#d3d3d3",
+                      boxShadow: state.isFocused
+                        ? "0 0 5px rgba(75, 123, 236, 0.3)"
+                        : "none",
+                      minHeight: "48px",
+                      letterSpacing: "0.5px",
+                      lineHeight: "1.6",
+                      paddingLeft: "6px",
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      fontSize: "16px",
+                      color: "#999",
+                      letterSpacing: "0.5px",
+                      lineHeight: "1.6",
+                      paddingLeft: "2px",
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      fontSize: "16px",
+                      color: "#333",
+                      letterSpacing: "0.5px",
+                      lineHeight: "1.6",
+                    }),
+                  }}
+                />
 
-              <div className="form-buttons">
-                <button type="button" onClick={closeForm}>취소</button>
-                <button type="submit">저장</button>
+                <div className="form-buttons">
+                  <button type="button" onClick={closeForm}>
+                    취소
+                  </button>
+                  <button type="submit">저장</button>
+                </div>
               </div>
             </form>
           </div>
@@ -303,7 +357,6 @@ export default function Calendar() {
               <img src={logoGray} alt="" className="paw-bg" />
               <span className="wordmark">KoJJOK</span>
             </div>
-
             <div className="grid">
               {[
                 ["Hyeona Kim", "UI/UX Design", "ouskxk"],
@@ -322,7 +375,6 @@ export default function Calendar() {
                 </div>
               ))}
             </div>
-
             <div className="tech-stack">
               <h3>TECH STACK</h3>
               <img src={reactpic} alt="React Logo" className="react-icon" />

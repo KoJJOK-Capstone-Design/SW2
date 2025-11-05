@@ -475,87 +475,224 @@ body {
 /* ------------------------------- 
  * 📘 11. 모달 (Modal)
  * ------------------------------- */
+
+/* 🩵 모달 전체 어두운 배경 */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 9999;
+  background: rgba(192, 192, 192, 0.155);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .modal {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 500px;
-  height: 750px;
   background: #fff;
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
+  border-radius: 20px;
+  padding: 35px 40px;
+  width: 750px;
+  height: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
+.modal h2 {
+  text-align: center;
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 50px;
+  padding-top : 40px;
+}
+
+/* ✨ 가로 레이아웃 */
 .modal form {
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 50px; /* 간격 조금 더 여유 */
+  width: 100%;
+  height: auto;
+  padding: 10px 0;
 }
 
+/* 왼쪽: 캘린더 */
+.modal-left {
+  flex: 1.1; /* 왼쪽(달력) 비율 살짝 줄임 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scale(1.1); /* 달력 크기 키움 */
+}
+
+/* 폼 전체 공통 폰트 적용 */
+.modal-right {
+  flex: 1.3; /* 오른쪽 더 넓게 */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 40px; /* 아래로 내림 */
+  gap: 18px; /* 입력창 간격 */
+  font-size: 16px; /* ✅ 폼 내 기본 글씨 크기 통일 */
+  color: #333; /* ✅ 텍스트 색상 통일 */
+}
+
+/* 입력창, 셀렉트 */
 .modal input[type="text"],
-.modal input[type="date"],
 .modal select {
   width: 100%;
-  padding: 10px 12px;
-  border: 1.8px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.modal select {
-  appearance: none;
-  background: url("data:image/svg+xml;utf8,<svg fill='gray' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 12px center;
-  background-color: #fff;
-}
-
-/* 폼 요소 포커스 효과 */
-.modal input[type="text"]:focus,
-.modal input[type="date"]:focus,
-.modal select:hover,
-.modal select:focus {
-  border-color: #3d7eff;
+  padding: 14px 16px;
+  font-size: inherit; /* ✅ 부모 폰트 상속 */
+  border-radius: 10px;
+  border: 1px solid #d3d3d3;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1);
+  transition: 0.2s;
 }
 
+/* placeholder 스타일 */
+input::placeholder,
+textarea::placeholder {
+  color: #999;
+  opacity: 1;
+  font-size: inherit; /* ✅ placeholder 글씨 크기 폼과 동일 */
+  font-family: inherit;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+/* select (드롭다운) */
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background-color: white;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23999" height="18" viewBox="0 0 24 24" width="18"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+}
+
+/* select 기본값 (placeholder 느낌 줄 때) */
+select:invalid {
+  color: #999;
+}
+
+/* 버튼 영역 */
 .form-buttons {
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  margin-top:10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 25px;
 }
 
 .form-buttons button {
-  padding: 8px 18px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px; /* ✅ 버튼 글씨도 통일 */
+  cursor: pointer;
 }
-.form-buttons button[type="submit"] {
-  background:#3d7eff;
-  color:#fff;
+
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
+
+
+/* DatePicker 컨테이너 */
+.modal .react-calendar {
+  width: 100% !important;
+  margin: 0 auto;
+  border-radius: 14px;
+  border: 1px solid #e3e3e3;
+  box-shadow: none;
+  background: #fff;
+}
+
+/* react-select */
+.modal .Select__control {
+  border-radius: 8px;
+  border: 1px solid #d3d3d3 !important;
+  box-shadow: none !important;
+}
+.modal .Select__control:hover {
+  border-color: #4b7bec !important;
+}
+
+/* 버튼 영역 */
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.form-buttons button {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
 .form-buttons button[type="button"] {
-  background:#e5e9f2;
-  color:#222;
+  background: #f1f1f1;
+  color: #333;
+}
+
+.form-buttons button[type="submit"] {
+  background: #4b7bec;
+  color: white;
+}
+
+.form-buttons button:hover {
+  transform: scale(1.02);
+}
+
+/* 등장 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ------------------------------- 
