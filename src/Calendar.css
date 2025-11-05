@@ -111,7 +111,12 @@ body {
   background: #fff;
   border: none; /* main 브랜치 스타일 */
   border-radius: 14px;
+<<<<<<< HEAD
   padding: 22px; /* main 브랜치 스타일 */
+=======
+  margin-left: 30px;
+  padding : 30px;
+>>>>>>> 46fcf3c (캘린더 페이지 구현)
   box-sizing: border-box;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
@@ -357,6 +362,22 @@ body {
  * 📘 10. 일정 목록 (Event List)
  * (main 브랜치 스타일 및 주석 기준)
  * ------------------------------- */
+<<<<<<< HEAD
+=======
+/* (A) .event-section 기반 스타일 */
+.event-section {
+  width: 600px;
+  max-width: 46%;
+  background: #f6f9ff;
+  border-radius: 16px;
+  margin-right: 30px;
+  box-sizing: border-box;
+  height: 550px;
+  position: relative;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+>>>>>>> 46fcf3c (캘린더 페이지 구현)
 .event-section h3 {
   text-align: center;
   margin-top: 10px; /* main 브랜치 스타일 */
