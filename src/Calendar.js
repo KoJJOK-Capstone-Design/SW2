@@ -12,6 +12,7 @@ import {
 import ReactCalendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Select from "react-select";
+import "./Dashboard.css";
 import "./Calendar.css";
 
 import logoBlue from "./img/logo_blue.png";
@@ -256,21 +257,21 @@ export default function Calendar() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
             <form onSubmit={handleSave}>
-              <label>일정 내용</label>
+              <label class="date">일정 내용</label>
               <input
                 type="text"
                 value={form.text}
                 onChange={(e) => setForm({ ...form, text: e.target.value })}
                 placeholder="예: 심장사상충 약 먹는 날"
               />
-
-              <label>날짜</label>
+              
+              <label class="date">날짜</label>
               <CustomDatePicker
                 value={form.date}
                 onChange={(newDate) => setForm({ ...form, date: newDate })}
               />
-
-              <label>카테고리</label>
+              
+              <label class="date">카테고리</label>
               <Select
                 placeholder="선택하세요"
                 options={[
