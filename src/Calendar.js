@@ -271,7 +271,6 @@ export default function Calendar() {
           <div className={`modal ${closing ? "closing" : ""}`}>
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
             <form onSubmit={handleSave}>
-<<<<<<< HEAD
               <div className="modal-left">
                 <CustomDatePicker
                   value={form.date}
@@ -366,8 +365,6 @@ export default function Calendar() {
                 value={form.category ? { value: form.category, label: form.category } : null}
                 onChange={(option) => setForm({ ...form, category: option ? option.value : "" })}
               />
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
-
                 <div className="form-buttons">
                   <button type="button" onClick={closeForm}>
                     취소
