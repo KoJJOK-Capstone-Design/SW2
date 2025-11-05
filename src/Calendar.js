@@ -264,13 +264,13 @@ export default function Calendar() {
                 onChange={(e) => setForm({ ...form, text: e.target.value })}
                 placeholder="예: 심장사상충 약 먹는 날"
               />
-
+              
               <label class="date">날짜</label>
               <CustomDatePicker
                 value={form.date}
                 onChange={(newDate) => setForm({ ...form, date: newDate })}
               />
-
+              
               <label class="date">카테고리</label>
               <Select
                 placeholder="선택하세요"
