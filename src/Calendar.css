@@ -111,12 +111,9 @@ body {
   background: #fff;
   border: none; /* main 브랜치 스타일 */
   border-radius: 14px;
-<<<<<<< HEAD
   margin-left: 30px;
   padding : 30px;
-=======
   padding: 22px; /* main 브랜치 스타일 */
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
   box-sizing: border-box;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
@@ -362,7 +359,6 @@ body {
  * 📘 10. 일정 목록 (Event List)
  * (main 브랜치 스타일 및 주석 기준)
  * ------------------------------- */
-<<<<<<< HEAD
 /* (A) .event-section 기반 스타일 */
 .event-section {
   width: 600px;
@@ -376,8 +372,6 @@ body {
   box-shadow: 0 3px 10px rgba(0,0,0,0.04);
 }
 
-=======
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
 .event-section h3 {
   text-align: center;
   margin-top: 10px; /* main 브랜치 스타일 */
@@ -525,7 +519,6 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-<<<<<<< HEAD
   background: #fff;
   border-radius: 20px;
   padding: 35px 40px;
@@ -546,19 +539,7 @@ body {
   padding-top : 40px;
 }
 
-/* ✨ 가로 레이아웃 */
-=======
-  width: 400px;
-  height: 800px;
-  background: #fff;
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
-}
-
 /* 폼, 버튼 */
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
 .modal form {
   display: flex;
   flex-direction: row;
@@ -569,7 +550,6 @@ body {
   padding: 10px 0;
 }
 
-<<<<<<< HEAD
 /* 왼쪽: 캘린더 */
 .modal-left {
   flex: 1.1; /* 왼쪽(달력) 비율 살짝 줄임 */
@@ -592,13 +572,10 @@ body {
 }
 
 /* 입력창, 셀렉트 */
-=======
 /* (main 브랜치) 모달 입력창 기본 스타일 */
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
 .modal input[type="text"],
 .modal select {
   width: 100%;
-<<<<<<< HEAD
   padding: 14px 16px;
   font-size: inherit; /* ✅ 부모 폰트 상속 */
   border-radius: 10px;
@@ -649,15 +626,6 @@ select:invalid {
 }
 
 /* 버튼 영역 */
-=======
-  padding: 10px 12px;
-  border: 1.8px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
 /* (main 브랜치) 기본 select 태그 스타일 */
 .modal select {
   appearance: none;
@@ -676,7 +644,6 @@ select:invalid {
 }
 
 /* (main 브랜치) 모달 폼 버튼 */
->>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
 .form-buttons {
   display: flex;
   justify-content: flex-end;
