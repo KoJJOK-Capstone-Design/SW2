@@ -132,11 +132,52 @@ body {
 .todo__checkbox { width: 16px; height: 16px; }
 .todo__text { font-size: 14px; }
 .todo__text.is-done { color: #94a3b8; text-decoration: line-through; }
-.todo__remove {
-  width: 24px; height: 24px; border-radius: 6px;
-  border: 1px solid #e2e8f0; background: #fff; cursor: pointer;
+/* 아이콘 버튼(동일 동작 복제) */
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .15s ease;
 }
-.todo__remove:hover { background: #f8fafc; }
+.icon-btn:hover { transform: translateY(-1px); }
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,120,255,.2);
+  border-radius: 8px;
+}
+
+/* PNG/SVG 아이콘을 회색→파랑으로 */
+.icon-img{
+  width: 20px;
+  height: 20px;
+  display: block;
+  opacity: .65;
+  filter: brightness(0) saturate(100%)
+          invert(77%) sepia(0%) saturate(0%) hue-rotate(0deg)
+          brightness(93%) contrast(87%);
+  transition: filter .2s ease, opacity .2s ease, transform .15s ease;
+}
+.icon-btn:hover .icon-img,
+.icon-btn:focus-visible .icon-img{
+  opacity: 1;
+  transform: translateY(-1px);
+  filter: brightness(0) saturate(100%)
+          invert(19%) sepia(99%) saturate(5460%) hue-rotate(206deg)
+          brightness(98%) contrast(103%); /* #036CFF 근사 */
+}
+
+/* (옵션) 크기 변형 */
+.icon-btn--sm { width: 28px; height: 28px; }
+.icon-btn--lg { width: 40px; height: 40px; }
+.icon-btn--sm .icon-img { width: 18px; height: 18px; }
+.icon-btn--lg .icon-img { width: 24px; height: 24px; }
 
 .todo__add {
   display: flex; align-items: center; gap: 8px;
