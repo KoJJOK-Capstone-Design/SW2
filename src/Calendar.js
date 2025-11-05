@@ -271,6 +271,7 @@ export default function Calendar() {
           <div className={`modal ${closing ? "closing" : ""}`}>
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
             <form onSubmit={handleSave}>
+<<<<<<< HEAD
               <div className="modal-left">
                 <CustomDatePicker
                   value={form.date}
@@ -336,6 +337,36 @@ export default function Calendar() {
                     }),
                   }}
                 />
+=======
+              <label class="date">일정 내용</label>
+              <input
+                type="text"
+                value={form.text}
+                onChange={(e) => setForm({ ...form, text: e.target.value })}
+                placeholder="예: 심장사상충 약 먹는 날"
+              />
+              
+              <label class="date">날짜</label>
+              <CustomDatePicker
+                value={form.date}
+                onChange={(newDate) => setForm({ ...form, date: newDate })}
+              />
+              
+              <label class="date">카테고리</label>
+              <Select
+                placeholder="선택하세요"
+                options={[
+                  { value: "병원", label: "병원 / 약" },
+                  { value: "쇼핑", label: "쇼핑" },
+                  { value: "미용", label: "미용" },
+                  { value: "생일", label: "생일" },
+                  { value: "산책/나들이", label: "산책/나들이" },
+                  { value: "기타", label: "기타" },
+                ]}
+                value={form.category ? { value: form.category, label: form.category } : null}
+                onChange={(option) => setForm({ ...form, category: option ? option.value : "" })}
+              />
+>>>>>>> 36c9d4dc71273ef73d7c5b766333da9e60f1c3eb
 
                 <div className="form-buttons">
                   <button type="button" onClick={closeForm}>
