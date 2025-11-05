@@ -7,7 +7,6 @@ import NewFamily from './NewFamily'
 import Activity from './Activity';
 import Calendar from './Calendar';
 import Chat from './Chat';
-import Calendar from './Calendar';
 export default function App(){
   return (
     <BrowserRouter>
@@ -22,7 +21,6 @@ export default function App(){
         <Route path="/activity" element={<Activity />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/Chat" element={<Chat />} />
-        <Route path="/Calendar" element={<Calendar />} />
       </Routes>
     </BrowserRouter>
   );
