@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from "react";
 import "./Dashboard.css";
+import "./Activity.css";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
 import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
-import trash from "./img/Trash.png";
+import trashIcon from "./img/Trash_2.png";
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
 import circle from "./img/circle.png";
@@ -41,8 +42,7 @@ export default function Dashboard() {
   const toggleTask = (id) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
 
-  const removeTask = (id) =>
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const removeTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
 
   const addTask = () => {
     const text = newTask.trim();
@@ -86,7 +86,7 @@ export default function Dashboard() {
                 className="icon-btn"
                 onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
               >
-                <a href="./chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
               </button>
             </div>
           </nav>
@@ -129,12 +129,13 @@ export default function Dashboard() {
                     </span>
                   </label>
                   <button
-                    className="todo__remove"
+                    className="icon-btn"
                     onClick={() => removeTask(t.id)}
                     aria-label="삭제"
                     title="삭제"
                   >
-                    <img src={trash} alt="삭제 아이콘" width="20" height="20" />
+                    {/* ✅ 수정: hover 효과 적용을 위해 icon-img 클래스 추가 */}
+                    <img src={trashIcon} alt="삭제 아이콘" className="icon-img" />
                   </button>
                 </li>
               ))}
@@ -276,7 +277,7 @@ export default function Dashboard() {
               <span className="wordmark">KoJJOK</span>
             </div>
 
-            <div className="grid">
+          <div className="grid">
               <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
