@@ -1,0 +1,363 @@
+/*
+=================================
+✅ Health.js 전체 스타일
+=================================
+*/
+
+.health-page {
+  /* 페이지 전체 배경색이 필요하다면 여기에 추가 */
+  /* background-color: #f9f9f9; */
+}
+
+.health-container {
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px 0;
+  font-family: "Pretendard", sans-serif;
+  color: #222;
+  padding-bottom: 120px; /* 푸터와의 간격 */
+}
+
+.health-info {
+  margin-top: 40px;
+  margin-bottom: 90px;
+}
+
+/* 건강 정보 섹션 제목 스타일 (h2) */
+.health-info h2.hw { /* .hw 클래스를 사용하는 h2로 한정 */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem; /* 24px */
+  color: #111;
+  margin-bottom: 20px;
+}
+
+/* 건강 정보 제목 앞 파란색 막대 (꾸밈 요소) */
+.health-info h2.hw::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: #2573f8; /* 사용자 지정 파란색 */
+  border-radius: 3px;
+}
+
+/* 건강 정보 그리드 ('냥냥님의 건강 정보') */
+.info-grid {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 0;
+  gap: 50px;
+  margin: 20px 100px;
+}
+
+.info-grid div {
+  display: flex;
+  flex-direction: row;
+  gap: 80px;
+  font-size: 1rem;
+}
+
+.info-grid div span {
+  font-weight: 500;
+  color: #515151;
+}
+
+/* 체중 그래프 영역 */
+.graph-box {
+  border: 1px solid #e5e5e5;
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  color: #888;
+}
+
+/*
+=================================
+✅ [신규] 최근 건강 기록 (동적)
+=================================
+*/
+
+/* --- 헤더: "최근 건강 기록" h2 + "+" 버튼 --- */
+.health-header {
+  display: flex;
+  justify-content: space-between; /* 양쪽 끝으로 정렬 */
+  align-items: center;
+  margin-bottom: 16px; /* 탭과의 간격 */
+}
+
+/* h2 제목은 .health-info h2.hw 스타일을 공통으로 사용 */
+
+/* --- + 버튼 --- */
+.add-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #2573f8; /* 사용자 지정 파란색 */
+  color: white;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.add-button:hover {
+  background-color: #1c5edb; /* hover 시 조금 더 진한 파란색 */
+}
+
+/* --- 탭 메뉴 --- */
+.health-tabs {
+  display: flex;
+  gap: 16px; /* 탭 사이 간격 */
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee; /* 하단 구분선 */
+}
+
+.health-tabs button {
+  background: none;
+  border: none;
+  font-size: 1rem; /* 16px */
+  padding: 8px 4px;
+  cursor: pointer;
+  color: #888; /* 비활성 탭 색상 */
+  margin-bottom: -1px; /* 하단 border와 겹치게 */
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+/* 활성화된 탭 스타일 */
+.health-tabs button.active {
+  color: #2573f8; /* 사용자 지정 파란색 */
+  font-weight: 600; /* semi-bold */
+  border-bottom-color: #2573f8;
+}
+
+/* --- 건강 기록 목록 (ul) --- */
+.health-record-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* 항목 사이 간격 */
+}
+
+/* --- 개별 기록 항목 (li) --- */
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #f4f6fb; /* 사용자가 기존에 쓰던 배경색 */
+  border-radius: 10px;
+  gap: 16px; /* 아이콘, 내용, 상세정보 사이 간격 */
+}
+
+/* --- 아이콘 (동그라미) --- */
+.record-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0; /* 크기 고정 */
+  background-color: #e0e7ff; /* 연한 파란색 배경 */
+  color: #2573f8; /* 아이콘 색상 */
+}
+
+/* 아이콘별로 다른 색상 */
+.record-item[data-type="visit"] .record-icon { background-color: #ffe4e6; color: #d93025; }
+.record-item[data-type="vax"] .record-icon   { background-color: #e0e7ff; color: #2573f8; }
+.record-item[data-type="med"] .record-icon   { background-color: #fff4e0; color: #f29900; }
+
+/* --- 내용 (제목, 위치) --- */
+.record-content {
+  flex-grow: 1; /* 남는 공간을 모두 차지 */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.record-title {
+  font-size: 1.05rem; /* 17px */
+  font-weight: 600;
+  color: #111;
+}
+
+.record-location {
+  font-size: 0.9rem; /* 14px */
+  color: #555;
+}
+
+/* =================================
+✅ [최종 수정] 상세정보 (날짜, 버튼)
+=================================
+*/
+.record-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* 오른쪽 정렬 */
+  gap: 8px; /* 날짜와 버튼 그룹 사이 간격 */
+  flex-shrink: 0; /* 크기 고정 */
+}
+
+.record-date {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* --- 수정/삭제 버튼 그룹 --- */
+.record-actions {
+  display: flex;
+  gap: 4px; /* 수정/삭제 버튼 사이 간격 */
+  margin-top: 4px; /* 날짜와 버튼 그룹 사이 간격 */
+}
+
+/* --- 수정/삭제 버튼 공통 (<button> 태그) --- */
+.record-actions button {
+  background: none; /* 투명 */
+  border: none;
+  cursor: pointer;
+  font-size: 18px; /* 아이콘 크기에 영향 (만약 SVG라면) */
+  padding: 6px; /* 클릭 영역 확보 */
+  border-radius: 4px;
+  /* 버튼에 배경색 호버를 주고 싶으면 여기 추가 */
+  transition: background-color 0.2s;
+}
+
+/* --- 🌟 PNG 아이콘 (<img> 태그) 공통 --- */
+.icon-img {
+  width: 18px; /* 아이콘 크기 */
+  height: 18px;
+  display: block;
+  opacity: 0.7; /* 기본 상태: 살짝 연하게 */
+
+  /* [핵심] 기본 '회색' 필터 (이미지 참조) */
+  filter: brightness(0) saturate(100%) 
+          invert(88%) sepia(0%) saturate(234%) 
+          hue-rotate(221deg) brightness(91%) contrast(85%); /* 연한 회색 #cccccc */
+
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+/* 🌟 수정 버튼(.edit-btn)에 마우스를 올렸을 때 */
+.record-actions .edit-btn:hover .icon-img {
+  opacity: 1;
+  /* [핵심] 요청하신 #90a6e7 근사치 파란색 필터 */
+  filter: brightness(0) saturate(100%) 
+          invert(69%) sepia(26%) saturate(1478%) 
+          hue-rotate(192deg) brightness(92%) contrast(86%);
+}
+
+/* 🌟 삭제 버튼(.delete-btn)에 마우스를 올렸을 때 */
+.record-actions .delete-btn:hover .icon-img {
+  opacity: 1;
+  /* [핵심] 진한 회색 #888888 필터 */
+  filter: brightness(0) saturate(100%) 
+          invert(58%) sepia(0%) saturate(1%) 
+          hue-rotate(149deg) brightness(91%) contrast(89%);
+}
+
+/* (선택사항) 버튼 호버 시 배경색도 살짝 주기 */
+.record-actions .edit-btn:hover {
+  background-color: #f2f6ff;
+}
+.record-actions .delete-btn:hover {
+  background-color: #f5f5f5; /* 회색 배경 */
+}
+/* =================================
+✅ [최종 수정 완료]
+=================================
+*/
+
+
+/* --- 기록이 없을 때 --- */
+.no-records {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+}
+
+
+/*
+=================================
+✅ 건강 이상 징후 체크리스트
+=================================
+*/
+
+/* 증상 선택 버튼 그리드 */
+.symptom-grid {
+  display: grid;
+  padding: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* 증상 버튼 기본 스타일 */
+.symptom-grid button {
+  padding: 20px 0;
+  width : 280px;
+  margin-left:20px;
+  border: 1px solid #d3d3d3;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Pretendard", sans-serif;
+  font-size: 1rem;
+}
+
+/* 증상 버튼 hover 효과 */
+.symptom-grid button:hover {
+  background: #f2f6ff;
+  border-color: #a0bffd;
+}
+
+/* 선택된 증상 버튼 스타일 */
+.symptom-grid button.selected {
+  background: #2573f8;
+  color: white;
+  border-color: #2573f8;
+  font-weight: 500;
+}
+
+/* 🔍 AI 분석 버튼 */
+.analyze-btn {
+  margin-top: 20px;
+  padding: 12px 0;
+  width: 100%;
+  background: #2573f8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.analyze-btn:hover {
+  background: #1c5edb;
+}
+
+/*
+=================================
+✅ 푸터 (중복 제거)
+=================================
+*/
+
+.footer {
+  margin-top: 80px;
+  /* (푸터 스타일은 이미 다른 파일에 있을 수 있으므로 생략) */
+}
