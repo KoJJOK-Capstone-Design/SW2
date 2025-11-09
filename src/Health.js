@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./Health.css";
 
-/* 이미지 import */
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
 import editIcon from "./img/Edit_fill.png";
@@ -10,17 +9,39 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
+// ✅ [추가 1] Chart.js 라이브러리 import
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+// ✅ [추가 2] Chart.js에 필요한 기능 등록
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 // --- 초기 더미 데이터 ---
 const initialRecords = [
   // (필요시 여기에 초기 데이터를 추가하세요)
 ];
 
-// ✅ [수정 1] 부모로부터 user와 pet 데이터를 props로 받음
+// ✅ [수정] 부모로부터 user와 pet 데이터를 props로 받음
 const Health = ({ user, pet }) => {
-  /* 기존 상태 */
+  /* --- 기존 상태들 --- */
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
-
-  /* 건강 기록 상태 (가짜 데이터용) */
   const [records, setRecords] = useState(initialRecords);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -43,10 +64,94 @@ const Health = ({ user, pet }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null); 
 
+  /* AI 분석 결과 상태 */
+  const [analysisResult, setAnalysisResult] = useState(null); 
+  const [isLoading, setIsLoading] = useState(false);
+
+  /* --- ✅ [추가 3] 그래프용 '가짜' 데이터 (컴포넌트 내부로 이동) --- */
+  const weightData = {
+    labels: ["9월", "10월", "11월", "12월", "1월", "2월", "3월", "4월", "5월"],
+    datasets: [
+      {
+        label: "체중 (kg)",
+        data: [3.20, 3.40, 3.35, 3.50, 3.60, 3.45, 3.50, 3.55, 3.52],
+        
+        /* --- 선 스타일 --- */
+        borderColor: "#4b7bec", // 🔵 선 색상
+        tension: 0.4, // 〰️ 선의 부드러운 정도
+        
+        /* --- 영역 채우기 (그라데이션) --- */
+        fill: true, 
+        backgroundColor: "rgba(75, 123, 236, 0.1)", // 옅은 파란색
+        
+        /* --- 점(포인트) 스타일 --- */
+        pointBackgroundColor: "#fff", // ⚪ 점 배경색 (흰색)
+        pointBorderColor: "#4b7bec", // 🔵 점 테두리색 (파란색)
+        pointBorderWidth: 2, // 점 테두리 두께
+        pointRadius: 5, // 점 크기
+        pointHoverRadius: 7, // 마우스 올렸을 때 점 크기
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true, // 반응형
+    maintainAspectRatio: false, // 👈 .graph-box 높이에 맞게 꽉 차게
+    
+    plugins: {
+      legend: {
+        display: false, // 그래프 위 '체중 (kg)' 라벨 숨기기
+      },
+      /* --- ✅ [수정] 툴팁(설명창) 스타일 --- */
+      tooltip: {
+        enabled: true, // 툴팁 활성화
+        backgroundColor: "#dfebfaff", 
+        titleColor: "#000000ff",     
+        bodyColor: "#0c0c0cff",      
+        padding: 12,            
+        cornerRadius: 8,      
+        borderColor: "#dfebfaff",
+        borderWidth: 3,        
+        
+        // 툴팁 박스에 그림자 추가
+        caretSize: 0, // 툴팁의 뾰족한 꼬리 제거
+        displayColors: false, // 색상 사각형 숨기기
+        boxPadding: 8,
+        
+        // 폰트 설정 (Pretendard가 적용되도록)
+        bodyFont: {
+          size: 14,
+          family: "Pretendard", 
+        },
+        titleFont: {
+          size: 12,
+          family: "Pretendard",
+        }
+      },
+      /* --- ✅ --- */
+    },
+    
+    // --- 축 스타일 ---
+    scales: {
+      y: {
+        min: 3.0, // y축 최소값
+        grid: {
+          color: "#e9e9e9", // 📉 y축 그리드 선 색상
+        },
+      },
+      x: {
+        grid: {
+          display: false, // 👈 x축 그리드 선 숨기기
+        },
+      },
+    }
+  };
+  /* --- ✅ --- */
+
   const symptoms = [
-    "구토", "식사 부진", "식욕 부진", "묽은 변", "과도한 갈증",
-    "피부 발진", "비듬", "탈모", "기력 저하", "수면 증가",
-    "불안 / 공격성", "걸음걸이 이상",
+    "구토", "설사", "식사 부진", "복부 팽만",
+    "과도한 갈증", "피부 발진", "비듬", "탈모",
+    "기력 저하", "수면 증가", "불안 / 공격성", "걸음걸이 이상",
   ];
 
   /* 증상 선택 */
@@ -58,9 +163,7 @@ const Health = ({ user, pet }) => {
     );
   };
 
-  /* --- 가짜(Mock) CRUD 함수들 ---
-    (나중에 이 함수들 내부만 백엔드 API 통신 코드로 바꾸면 됩니다)
-  */
+  /* --- '추가', '수정', '삭제' 모달 관련 함수들 --- */
 
   /* '추가' 모달 열기 */
   const handleAdd = () => {
@@ -76,7 +179,7 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  /* '추가' 모달 저장 */
+  /* '추가' 모달 저장 (가짜) */
   const handleSave = () => {
     if (!newRecord.type || !newRecord.title || !newRecord.location || !newRecord.date) {
       alert("모든 내용을 입력해주세요!");
@@ -118,7 +221,7 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  /* '수정' 모달 저장 */
+  /* '수정' 모달 저장 (가짜) */
   const handleUpdateSave = () => {
     if (!recordToEdit.type || !recordToEdit.title || !recordToEdit.location || !recordToEdit.date) {
       alert("모든 내용을 입력해주세요!");
@@ -153,13 +256,48 @@ const Health = ({ user, pet }) => {
     setRecordToDelete(null);
   };
 
-  /* '삭제' 모달 > '삭제' (실행) */
+  /* '삭제' 모달 > '삭제' (가짜) */
   const handleConfirmDelete = () => {
     if (recordToDelete) {
       setRecords(records.filter((r) => r.id !== recordToDelete));
     }
     setShowDeleteModal(false);
     setRecordToDelete(null);
+  };
+
+
+  /* AI 분석 요청 함수 */
+  const handleAnalyze = async () => {
+    if (selectedSymptoms.length === 0) {
+      alert("먼저 증상을 선택해주세요!");
+      return;
+    }
+    setIsLoading(true); 
+    setAnalysisResult(null);
+
+    const analysisData = {
+      petInfo: {
+        breed: pet ? pet.breed : "반려동물",
+        age: pet ? pet.age : "알 수 없음",
+      },
+      symptoms: selectedSymptoms,
+    };
+    
+    // --- (시연용) 가짜 백엔드 응답 (2초 딜레이) ---
+    setTimeout(() => {
+      const fakeResponse = {
+        illness_name: "복합적 문제",
+        illness_details: `선택하신 '${selectedSymptoms.join(", ")}' 증상은 급성 위장염의 가능성을 시사합니다. 소화기관의 염증으로 인해 발생할 수 있으며, 탈수 증상으로 이어질 수 있어 주의가 필요합니다.`,
+        recommendations: [
+          "유산균을 급여하고 식단을 점검해주세요.",
+          "탈수 방지를 위해 수분 섭취에 신경써주세요.",
+          "편안한 환경에서 충분히 쉴 수 있도록 해주세요.",
+          "다른 증상이 동반되거나 24시간 내 호전되지 않으면 수의사와 상담하세요."
+        ]
+      };
+      setAnalysisResult(fakeResponse); 
+      setIsLoading(false);
+    }, 1500);
   };
 
   /* 필터링 */
@@ -241,10 +379,10 @@ const Health = ({ user, pet }) => {
                 )}
               </div>
               <label>제목</label>
-              <input type="text" name="title" placeholder="예: 종합 백신 5차"
+              <input type="text" name="title" placeholder="예 : 종합 백신 5차"
                 value={recordToEdit.title} onChange={handleEditChange} required />
               <label>장소 / 약 이름</label>
-              <input type="text" name="location" placeholder="예: 멍냥 동물 병원"
+              <input type="text" name="location" placeholder="예 : 멍냥 동물 병원"
                 value={recordToEdit.location} onChange={handleEditChange} required />
               <label>날짜</label>
               <input type="date" name="date" placeholder="연도-월-일"
@@ -258,7 +396,7 @@ const Health = ({ user, pet }) => {
         </div>
       )}
 
-      {/* --- '삭제 확인' 모달 UI --- */}
+      {/* --- '삭제 확인' 모달 UI  --- */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
           <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
@@ -290,7 +428,6 @@ const Health = ({ user, pet }) => {
             <a href="/community">커뮤니티</a>
           </nav>
           <nav className="menulink">
-            {/* ✅ [수정 2] 로그인한 유저 닉네임 표시 (예시) */}
             {user ? (
               <span className="welcome-msg">{user.nickname}님</span>
             ) : (
@@ -306,26 +443,27 @@ const Health = ({ user, pet }) => {
       {/* --- 건강 컨텐츠 --- */}
       <div className="health-container">
 
-        {/* ✅ [수정 3] 'pet' prop에서 펫 정보와 닉네임을 가져와서 표시 */}
+        {/* 펫 정보 (props로 받음) */}
         <section className="health-info">
-          {/* user.nickname 님'의 'pet.name' 건강 정보 */}
           <h2 className="hw">{pet ? pet.name : '반려동물'}님의 건강 정보</h2>
           <div className="info-grid">
             <div><span>품종</span><b>{pet ? pet.breed : '미입력'}</b></div>
             <div><span>현재 체중</span><b>{pet ? pet.weight : '미입력'}</b></div>
             <div><span>나이</span><b>{pet ? pet.age : '미입력'}</b></div>
             <div><span>BCS</span><b>{pet ? pet.bcs : '미입력'}</b></div>
+
           </div>
         </section>
 
-        {/* 체중 그래프 placeholder */}
+        {/* --- ✅ [수정] 체중 변화 그래프 --- */}
         <section className="health-info">
           <h2 className="hw">체중 변화 그래프</h2>
           <div className="graph-box">
-            <p>그래프 자리</p>
+            {/* "그래프 자리" p 태그 대신 <Line> 컴포넌트 삽입 */}
+            <Line options={chartOptions} data={weightData} />
           </div>
         </section>
-
+        
         {/* --- 건강 기록 목록 --- */}
         <section className="health-info">
           <div className="health-header">
@@ -389,10 +527,10 @@ const Health = ({ user, pet }) => {
           </ul>
         </section>
         
-        {/* 증상 체크 */}
+        {/* --- 증상 체크 --- */}
         <section className="health-info">
           <h2 className="hw">건강 이상 징후 체크리스트</h2>
-          <p>반려동물에게 해당하는 증상을 선택하세요.</p>
+          <p>반려동물에게 해당하는 증상을 모두 선택하고 AI 분석 버튼을 눌러주세요.</p>
 
           <div className="symptom-grid">
             {symptoms.map((symptom) => (
@@ -406,11 +544,38 @@ const Health = ({ user, pet }) => {
             ))}
           </div>
 
-          <button className="analyze-btn">AI 분석하기</button>
+          <button 
+            className="analyze-btn" 
+            onClick={handleAnalyze} 
+            disabled={isLoading}
+          >
+            {isLoading ? "분석 중..." : "AI 분석하기"}
+          </button>
         </section>
+
+        {/* --- AI 분석 결과 섹션 --- */}
+        {analysisResult && (
+          <section className="ai-result-section">
+            <h2 className="hw">AI 분석 결과</h2>
+            
+            <div className="result-box danger">
+              <span className="box-title">의심 질환 : {analysisResult.illness_name}</span>
+              <p>{analysisResult.illness_details}</p>
+            </div>
+            
+            <div className="result-box info">
+              <span className="box-title">권장 대처 방안</span>
+              <ul>
+                {analysisResult.recommendations.map((action, index) => (
+                  <li key={index}>{action}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* 푸터 */}
+      {/* --- 푸터 --- */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
