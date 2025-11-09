@@ -1,7 +1,7 @@
 /* 라이브러리, 컴포넌트, 이미지, CSS import */
 import React, { useState } from "react";
 import {
-  FaPlus,
+  // FaPlus, // ✅ [수정] CSS로 그리기 위해 제거
   FaClinicMedical,
   FaShoppingCart,
   FaCut,
@@ -11,19 +11,19 @@ import {
 } from "react-icons/fa";
 import ReactCalendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import Select from "react-select";
+import Select from "react-select"; // react-select import
 import "./Dashboard.css";
 import "./Calendar.css";
 
 import logoBlue from "./img/logo_blue.png";
-import logoGray from "./img/logo_gray.png";
+import logoGray from "./img/logo_gray.png"; // [수정] 경로가 imgimg로 되어있어 img로 변경
 import editIcon from "./img/Edit_fill.png";
 import trashIcon from "./img/Trash_2.png";
 import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-/* 📅 모달 내에서 사용하는 커스텀 DatePicker */
+/* 📅 커스텀 달력 (모달 내부용) */
 const CustomDatePicker = ({ value, onChange }) => {
   const today = new Date();
   const [current, setCurrent] = useState(value ? new Date(value) : new Date());
@@ -40,6 +40,9 @@ const CustomDatePicker = ({ value, onChange }) => {
   for (let i = 0; i < startDay; i++) days.push(null);
   for (let i = 1; i <= totalDays; i++) days.push(i);
 
+  /* --- 모든 달을 6줄(42칸)로 강제 고정 --- */
+  while (days.length < 42) days.push(null); 
+  
   const formatDate = (y, m, d) =>
     `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
@@ -55,14 +58,18 @@ const CustomDatePicker = ({ value, onChange }) => {
   return (
     <div className="custom-datepicker">
       <div className="calendar-header">
-        <button onClick={() => setCurrent(new Date(year, month - 1, 1))}>‹</button>
-        <span>{year}년 {month + 1}월</span>
-        <button onClick={() => setCurrent(new Date(year, month + 1, 1))}>›</button>
+        <button type="button" onClick={() => setCurrent(new Date(year, month - 1, 1))}>‹</button>
+        <span>
+          {year}년 {month + 1}월
+        </span>
+        <button type="button" onClick={() => setCurrent(new Date(year, month + 1, 1))}>›</button>
       </div>
 
       <div className="calendar-days">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-          <div key={d} className="calendar-day-header">{d}</div>
+          <div key={d} className="calendar-day-header">
+            {d}
+          </div>
         ))}
 
         {days.map((d, i) => (
@@ -84,7 +91,7 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-/* 📌 Date → YYYY-MM-DD 포맷 함수 */
+/* 📌 Date → YYYY-MM-DD */
 function formatYMD(d) {
   if (!d) return "";
   const date = typeof d === "string" ? new Date(d) : d;
@@ -101,6 +108,12 @@ export default function Calendar() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ text: "", date: "", category: "" });
+  const [closing, setClosing] = useState(false); 
+
+  /* --- ✅ [추가] 삭제 모달 상태 --- */
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
+  /* --- ✅ --- */
 
   const categoryMeta = {
     병원: { color: "#BFC8D7", icon: <FaClinicMedical /> },
@@ -134,6 +147,7 @@ export default function Calendar() {
     );
   };
 
+  /* 🔹 폼 관련 핸들러들 */
   const openAddForm = () => {
     setEditingId(null);
     setForm({ text: "", date: selectedDateStr, category: "" });
@@ -147,9 +161,13 @@ export default function Calendar() {
   };
 
   const closeForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setForm({ text: "", date: "", category: "" });
+    setClosing(true);
+    setTimeout(() => {
+      setShowForm(false);
+      setClosing(false);
+      setEditingId(null);
+      setForm({ text: "", date: "", category: "" });
+    }, 250); 
   };
 
   const handleSave = (e) => {
@@ -181,10 +199,25 @@ export default function Calendar() {
     closeForm();
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  /* --- ✅ [수정] 삭제 관련 핸들러들 --- */
+  const handleDeleteClick = (id) => {
+    setRecordToDelete(id);
+    setShowDeleteModal(true);
   };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setRecordToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (recordToDelete) {
+      setEvents((prev) => prev.filter((e) => e.id !== recordToDelete));
+    }
+    setShowDeleteModal(false);
+    setRecordToDelete(null);
+  };
+  /* --- ✅ --- */
 
   return (
     <div className="calendar-page">
@@ -198,7 +231,9 @@ export default function Calendar() {
           <nav className="menu">
             <a href="/activity">활동</a>
             <a href="/health">건강</a>
-            <a href="/calendar" className="active">캘린더</a>
+            <a href="/calendar" className="active">
+              캘린더
+            </a>
             <a href="/community">커뮤니티</a>
           </nav>
           <nav className="menulink">
@@ -208,7 +243,7 @@ export default function Calendar() {
         </div>
       </header>
 
-      {/* 메인 달력 영역 */}
+      {/* 메인 캘린더 */}
       <main className="calendar-main">
         <div className="calendar-container">
           <ReactCalendar
@@ -221,7 +256,9 @@ export default function Calendar() {
             prev2Label={null}
           />
           <section className="event-section">
-            <h3>{date.getMonth() + 1}월 {date.getDate()}일 일정</h3>
+            <h3>
+              {date.getMonth() + 1}월 {date.getDate()}일 일정
+            </h3>
             {dayEvents.length ? (
               dayEvents.map((ev) => (
                 <div className="event-item" key={ev.id}>
@@ -235,7 +272,8 @@ export default function Calendar() {
                     <button className="icon-btn" onClick={() => openEditForm(ev)}>
                       <img className="icon-img" src={editIcon} alt="edit" />
                     </button>
-                    <button className="icon-btn" onClick={() => handleDelete(ev.id)}>
+                    {/* ✅ [수정] 삭제 버튼 클릭 핸들러 변경 */}
+                    <button className="icon-btn" onClick={() => handleDeleteClick(ev.id)}>
                       <img className="icon-img" src={trashIcon} alt="delete" />
                     </button>
                   </div>
@@ -244,56 +282,94 @@ export default function Calendar() {
             ) : (
               <p className="no-event">등록된 일정이 없습니다.</p>
             )}
-            <button className="add-btn" onClick={openAddForm}>
-              <FaPlus />
-            </button>
+            
+            {/* ✅ [수정] FaPlus 아이콘 제거 */}
+            <button className="add-btn" onClick={openAddForm}></button>
+            
           </section>
         </div>
       </main>
 
-      {/* 🧩 모달 */}
+      {/* --- '추가/수정' 모달 --- */}
       {showForm && (
-        <div className="modal-overlay" onClick={closeForm}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-overlay ${closing ? "closing" : ""}`} onClick={closeForm}>
+          <div className={`modal ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
+            
             <form onSubmit={handleSave}>
-              <label class="date">일정 내용</label>
-              <input
-                type="text"
-                value={form.text}
-                onChange={(e) => setForm({ ...form, text: e.target.value })}
-                placeholder="예: 심장사상충 약 먹는 날"
-              />
               
-              <label class="date">날짜</label>
-              <CustomDatePicker
-                value={form.date}
-                onChange={(newDate) => setForm({ ...form, date: newDate })}
-              />
-              
-              <label class="date">카테고리</label>
-              <Select
-                placeholder="선택하세요"
-                options={[
-                  { value: "병원", label: "병원 / 약" },
-                  { value: "쇼핑", label: "쇼핑" },
-                  { value: "미용", label: "미용" },
-                  { value: "생일", label: "생일" },
-                  { value: "산책/나들이", label: "산책/나들이" },
-                  { value: "기타", label: "기타" },
-                ]}
-                value={form.category ? { value: form.category, label: form.category } : null}
-                onChange={(option) => setForm({ ...form, category: option ? option.value : "" })}
-              />
+              {/* ✅ [수정] 2단 레이아웃 CSS 클래스 이름 통일 */}
+              <div className="modal-calendar-layout">
+                
+                <div className="modal-calendar-left"> 
+                  <label className="date">날짜</label>
+                  <CustomDatePicker
+                    value={form.date}
+                    onChange={(newDate) => setForm({ ...form, date: newDate })}
+                  />
+                </div>
+
+                <div className="modal-calendar-right">
+                  <label className="date">일정 내용</label>
+                  <input
+                    type="text"
+                    value={form.text}
+                    onChange={(e) => setForm({ ...form, text: e.target.value })}
+                    placeholder="예: 심장사상충 약 먹는 날"
+                  />
+                  
+                  <label className="date">카테고리</label>
+                  <Select
+                    classNamePrefix="react-select" 
+                    placeholder="선택하세요"
+                    options={[
+                      { value: "병원", label: "병원 / 약" },
+                      { value: "쇼핑", label: "쇼핑" },
+                      { value: "미용", label: "미용" },
+                      { value: "생일", label: "생일" },
+                      { value: "산책/나들이", label: "산책/나들이" },
+                      { value: "기타", label: "기타" },
+                    ]}
+                    value={
+                      form.category ? { value: form.category, label: form.category } : null
+                    }
+                    onChange={(option) =>
+                      setForm({ ...form, category: option ? option.value : "" })
+                    }
+                  />
+                </div>
+              </div> 
+              {/* 2단 레이아웃 끝 */}
 
               <div className="form-buttons">
-                <button type="button" onClick={closeForm}>취소</button>
-                <button type="submit">저장</button>
+                <button type="button" className="cancel" onClick={closeForm}>취소</button>
+                <button type="submit" className="save">저장</button>
               </div>
             </form>
           </div>
         </div>
       )}
+      
+      {/* --- ✅ [수정] '삭제 확인' 모달 (return 안으로 이동) --- */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={handleCancelDelete}>
+          {/* Health.js와 동일한 CSS 클래스 사용 */}
+          <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
+            <h2>정말 삭제하시겠습니까?</h2>
+            <p className="delete-confirm-text">이 기록은 복구할 수 없습니다.</p>
+            <div className="form-buttons">
+              <button type="button" className="btn-cancel" onClick={handleCancelDelete}>
+                취소
+              </button>
+              <button type="button" className="btn-delete-confirm" onClick={handleConfirmDelete}>
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- ✅ --- */}
+
 
       {/* 푸터 */}
       <footer className="footer">
@@ -303,7 +379,6 @@ export default function Calendar() {
               <img src={logoGray} alt="" className="paw-bg" />
               <span className="wordmark">KoJJOK</span>
             </div>
-
             <div className="grid">
               {[
                 ["Hyeona Kim", "UI/UX Design", "ouskxk"],
@@ -322,7 +397,6 @@ export default function Calendar() {
                 </div>
               ))}
             </div>
-
             <div className="tech-stack">
               <h3>TECH STACK</h3>
               <img src={reactpic} alt="React Logo" className="react-icon" />
