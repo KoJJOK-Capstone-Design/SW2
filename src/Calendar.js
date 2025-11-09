@@ -1,7 +1,5 @@
-/* 라이브러리, 컴포넌트, 이미지, CSS import */
 import React, { useState } from "react";
 import {
-  // FaPlus, // ✅ [수정] CSS로 그리기 위해 제거
   FaClinicMedical,
   FaShoppingCart,
   FaCut,
@@ -11,12 +9,12 @@ import {
 } from "react-icons/fa";
 import ReactCalendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import Select from "react-select"; // react-select import
+import Select from "react-select";
 import "./Dashboard.css";
 import "./Calendar.css";
 
 import logoBlue from "./img/logo_blue.png";
-import logoGray from "./img/logo_gray.png"; // [수정] 경로가 imgimg로 되어있어 img로 변경
+import logoGray from "./img/logo_gray.png"; 
 import editIcon from "./img/Edit_fill.png";
 import trashIcon from "./img/Trash_2.png";
 import githubpic from "./img/github.png";
@@ -91,7 +89,7 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-/* 📌 Date → YYYY-MM-DD */
+/* Date → YYYY-MM-DD */
 function formatYMD(d) {
   if (!d) return "";
   const date = typeof d === "string" ? new Date(d) : d;
@@ -101,7 +99,7 @@ function formatYMD(d) {
   return `${y}-${m}-${day}`;
 }
 
-/* 📆 메인 Calendar 컴포넌트 */
+/* 메인 Calendar 컴포넌트 */
 export default function Calendar() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
@@ -110,10 +108,10 @@ export default function Calendar() {
   const [form, setForm] = useState({ text: "", date: "", category: "" });
   const [closing, setClosing] = useState(false); 
 
-  /* --- ✅ [추가] 삭제 모달 상태 --- */
+  /* 삭제 모달 상태 */
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
-  /* --- ✅ --- */
+
 
   const categoryMeta = {
     병원: { color: "#BFC8D7", icon: <FaClinicMedical /> },
@@ -147,7 +145,7 @@ export default function Calendar() {
     );
   };
 
-  /* 🔹 폼 관련 핸들러들 */
+  /*  폼 관련 핸들러들 */
   const openAddForm = () => {
     setEditingId(null);
     setForm({ text: "", date: selectedDateStr, category: "" });
@@ -199,7 +197,7 @@ export default function Calendar() {
     closeForm();
   };
 
-  /* --- ✅ [수정] 삭제 관련 핸들러들 --- */
+  /* 삭제 관련 핸들러들 */
   const handleDeleteClick = (id) => {
     setRecordToDelete(id);
     setShowDeleteModal(true);
@@ -217,7 +215,6 @@ export default function Calendar() {
     setShowDeleteModal(false);
     setRecordToDelete(null);
   };
-  /* --- ✅ --- */
 
   return (
     <div className="calendar-page">
@@ -272,7 +269,7 @@ export default function Calendar() {
                     <button className="icon-btn" onClick={() => openEditForm(ev)}>
                       <img className="icon-img" src={editIcon} alt="edit" />
                     </button>
-                    {/* ✅ [수정] 삭제 버튼 클릭 핸들러 변경 */}
+
                     <button className="icon-btn" onClick={() => handleDeleteClick(ev.id)}>
                       <img className="icon-img" src={trashIcon} alt="delete" />
                     </button>
@@ -283,7 +280,6 @@ export default function Calendar() {
               <p className="no-event">등록된 일정이 없습니다.</p>
             )}
             
-            {/* ✅ [수정] FaPlus 아이콘 제거 */}
             <button className="add-btn" onClick={openAddForm}></button>
             
           </section>
@@ -297,8 +293,6 @@ export default function Calendar() {
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
             
             <form onSubmit={handleSave}>
-              
-              {/* ✅ [수정] 2단 레이아웃 CSS 클래스 이름 통일 */}
               <div className="modal-calendar-layout">
                 
                 <div className="modal-calendar-left"> 
@@ -339,21 +333,19 @@ export default function Calendar() {
                   />
                 </div>
               </div> 
-              {/* 2단 레이아웃 끝 */}
+
 
               <div className="form-buttons">
-                <button type="button" className="cancel" onClick={closeForm}>취소</button>
                 <button type="submit" className="save">저장</button>
+                <button type="button" className="cancel" onClick={closeForm}>취소</button>
               </div>
             </form>
           </div>
         </div>
       )}
       
-      {/* --- ✅ [수정] '삭제 확인' 모달 (return 안으로 이동) --- */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
-          {/* Health.js와 동일한 CSS 클래스 사용 */}
           <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
             <h2>정말 삭제하시겠습니까?</h2>
             <p className="delete-confirm-text">이 기록은 복구할 수 없습니다.</p>
@@ -368,7 +360,6 @@ export default function Calendar() {
           </div>
         </div>
       )}
-      {/* --- ✅ --- */}
 
 
       {/* 푸터 */}

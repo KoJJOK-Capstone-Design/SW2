@@ -390,8 +390,9 @@ body {
 
 /* [수정] 플로팅 추가 버튼 (CSS로 그리기) */
 .add-btn {
-  top : 350px;
-  margin-left : 300px;
+  position: absolute; /* 👈 'relative'가 아닌 'absolute'로 변경 */
+  bottom: 22px;     /* 👈 'top' 대신 'bottom' (하단 기준) */
+  right: 22px;      /* 👈 'margin-left' 대신 'right' (오른쪽 기준) */
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -399,7 +400,6 @@ body {
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
-  position: relative; /* 가상 요소의 기준점 */
 }
 
 /* + 버튼 가로 막대 */
@@ -452,28 +452,18 @@ body {
 .calendar-page .modal {
   position: absolute; 
   width: 700px;   /* 👈 원하시는 800px */
-  height: 700px;  /* 👈 원하시는 500px */
+  height: 650px;  /* 👈 원하시는 500px */
   background: #fff;
   border-radius: 18px;
   padding: 35px 40px; 
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   box-sizing: border-box;
-  animation: modalSlideUp 0.3s ease;
-}
-
-/* 닫힐 때 애니메이션 */
-.calendar-page .modal-overlay.closing,
-.calendar-page .modal.closing {
-  opacity: 0;
-  transform: scale(0.97);
-  transition: all 0.25s ease;
 }
 
 /* 모달 제목 */
 .calendar-page .modal h2 {
   text-align: center;
   color: #333;
-  font-size: 2rem;
   font-weight: 700;
   margin-top: 0; 
 }
@@ -488,7 +478,6 @@ body {
 /* 모달 2단 레이아웃 */
 .calendar-page .modal-calendar-layout {
   display: flex;
-  margin-left:40px;
   gap: 30px; 
   margin-bottom: 20px; 
 }
@@ -541,7 +530,6 @@ body {
 .calendar-page .form-buttons {
   display:flex;
   gap:12px;
-  margin-left: 150px;
   justify-content:center;
 }
 .calendar-page .form-buttons button {
@@ -550,21 +538,29 @@ body {
   border:none;
   cursor:pointer;
   font-size: 16px; 
-  transition: transform 0.2s ease;
-}
-.calendar-page .form-buttons button:hover {
-  transform: scale(1.03);
 }
 
 .calendar-page .form-buttons button.save,
 .calendar-page .form-buttons button[type="submit"] {
   background:#3d7eff;
+  height:35px;
+  font-size: 13px;
   color:#fff;
+  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  line-height: 35px; 
+  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
+  padding: 0 18px; 
 }
 .calendar-page .form-buttons button.cancel,
 .calendar-page .form-buttons button[type="button"] {
   background:#e5e9f2;
+  height:35px;
+  font-size: 13px;
   color:#222;
+  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  line-height: 35px; 
+  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
+  padding: 0 18px; 
 }
 
 /* react-select 라이브러리 스타일 덮어쓰기 */
@@ -600,13 +596,6 @@ body {
   font-weight: 600;
 }
 
-/* 삭제 모달 부제목 (하늘색 박스) */
-.calendar-page .modal-delete-confirm .delete-confirm-text {
-  text-align: center;
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 24px;
-}
 
 /* 삭제 모달 버튼 정렬 */
 .calendar-page .modal-delete-confirm .form-buttons {
@@ -619,23 +608,26 @@ body {
 
 /* '취소' 버튼 (Health.js와 동일한 연한 회색) */
 .calendar-page .modal-delete-confirm .form-buttons .btn-cancel {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: #ffffff; /* 👈 Health.js의 연한 회색 */
-  color: #222;       /* 👈 Health.js의 검은색 글씨 */
+  height:35px;
+  font-size: 13px;
+  background: #55555527; 
+  color: #000;      
+  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  line-height: 35px; 
+  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
+  padding: 0 18px; 
 }
 
 /* '삭제' 버튼 (Health.js와 동일한 빨간색) */
 .calendar-page .modal-delete-confirm .form-buttons .btn-delete-confirm {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background : #ff2024; /* 👈 Health.js의 빨간색 */
-  color: #fff;
-  font-weight: 500;
+  background:#ff2024;
+  height:35px;
+  font-size: 13px;
+  color:#fff;
+  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  line-height: 35px; 
+  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
+  padding: 0 18px; 
 }
 .calendar-page .modal-delete-confirm .btn-delete-confirm:hover {
   background: #ff000dc2; /* 👈 Health.js의 호버 색상 */
