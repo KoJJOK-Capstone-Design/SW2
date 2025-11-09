@@ -36,46 +36,52 @@
   border-radius: 3px;
 }
 
-/*  '냥냥님의 건강 정보' 그리드 */
+/* 전체 그리드 (.info-grid) */
 .info-grid {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; 
   padding: 20px 0;
-  gap: 50px;
-  margin: 20px 100px;
+  /* 항목 간의 최소 간격 유지 */
+  gap: 30px; 
 }
 
+/* 개별 정보 블록 (.info-grid div) */
 .info-grid div {
   display: flex;
   flex-direction: row;
-  gap: 80px;
+  /* 라벨과 값 사이의 간격 */
+  gap: 30px; 
+  
   font-size: 1rem;
+  flex-basis: 15%; 
+  min-width: 120px;
 }
 
+/* 라벨 (span) */
 .info-grid div span {
   font-weight: 500;
   color: #515151;
 }
 
+/* '진단하기' 버튼 (선택 사항) */
 .health-info .info-grid .test {
   color: #2573f8;
+  cursor: pointer;
+  font-size: 0.95rem;
 }
+
 /* 체중 그래프 */
-/* --- 체중 그래프 --- */
 .graph-box {
   border: 1px solid #e5e5e5;
   background: #f9f9f9;
   border-radius: 12px;
-  padding: 20px; /* 👈 패딩 60px -> 20px */
+  padding: 20px;
   text-align: center;
   color: #888;
-  
-  /* ✅ [추가] 그래프의 높이를 디자인 시안과 비슷하게 고정 */
   height: 300px; 
-  /* (300px은 예시입니다. 디자인 시안에 맞게 조절하세요) */
 }
-/* --- 최근 건강 기록 --- */
 
+/* --- 최근 건강 기록 --- */
 /* 헤더: "최근 건강 기록" h2 + "+" 버튼 */
 .health-header {
   display: flex;
@@ -332,7 +338,7 @@
   background: #2573f8;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -714,3 +720,4 @@
   list-style: none;
   margin-left: -20px;
 }
+

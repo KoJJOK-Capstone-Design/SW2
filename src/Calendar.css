@@ -1,6 +1,3 @@
-/* ------------------------------- 
- * 📘 1. 폰트 설정 및 전역 스타일
- * ------------------------------- */
 @font-face {
   font-family: '온글잎 공부잘하자나';
   src: url('../src/온글잎 공부잘하자나.ttf') format('truetype');
@@ -22,9 +19,7 @@ body {
   flex-direction: column;
 }
 
-/* ------------------------------- 
- * 📘 2. 헤더 / 네비게이션
- * ------------------------------- */
+
 .nav {
   width: 100%;
   background: #fff;
@@ -37,12 +32,8 @@ body {
   justify-content: space-between;
   padding: 20px 40px;
 }
-/* (참고) .header 스타일은 이 JS 파일에서 사용하지 않으므로 제거 */
 
 
-/* ------------------------------- 
- * 📘 3. 메인 레이아웃 및 컨테이너
- * ------------------------------- */
 .calendar-main {
   display: flex;
   flex-direction: column;
@@ -83,9 +74,6 @@ body {
   box-shadow: 0 3px 10px rgba(0,0,0,0.04);
 }
 
-/* ------------------------------- 
- * 📘 4. React Calendar - 기본
- * ------------------------------- */
 .react-calendar {
   width: 100%;
   height: 550px;
@@ -98,9 +86,7 @@ body {
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
-/* ------------------------------- 
- * 📘 5. React Calendar - 헤더 (년/월)
- * ------------------------------- */
+
 .react-calendar__navigation {
   display: flex;
   align-items: center;
@@ -132,9 +118,7 @@ body {
   background: none !important;
 }
 
-/* ------------------------------- 
- * 📘 6. React Calendar - 요일 (한글화)
- * ------------------------------- */
+
 .react-calendar__month-view__weekdays {
   display: flex;
   justify-content: space-between;
@@ -172,9 +156,6 @@ body {
 .react-calendar__month-view__weekdays__weekday:nth-child(7) abbr::after { content: "토"; color: #3b82f6; }
 
 
-/* ------------------------------- 
- * 📘 7. React Calendar - 날짜 타일
- * ------------------------------- */
 .react-calendar__tile {
   position: relative;
   display: flex;
@@ -217,7 +198,6 @@ body {
 }
 
 .react-calendar__tile--now {
-  color: #222 !important;
   outline: none;
   box-shadow: none;
 }
@@ -232,9 +212,7 @@ body {
   opacity: 0.8;
 }
 
-/* ------------------------------- 
- * 📘 8. React Calendar - 일정 점(Dot)
- * ------------------------------- */
+
 .event-dots {
   position: absolute;
   bottom: 6px;
@@ -254,9 +232,7 @@ body {
   box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
 }
 
-/* ------------------------------- 
- * 📘 9. React Calendar - 연/월/연대 뷰
- * ------------------------------- */
+
 .react-calendar__year-view__months,
 .react-calendar__decade-view__years,
 .react-calendar__century-view__decades {
@@ -312,9 +288,7 @@ body {
 }
 
 
-/* ------------------------------- 
- * 📘 10. 일정 목록 (Event List)
- * ------------------------------- */
+
 .event-section {
   width: 600px;
   max-width: 46%;
@@ -388,11 +362,11 @@ body {
   gap: 8px;
 }
 
-/* [수정] 플로팅 추가 버튼 (CSS로 그리기) */
+/* 플로팅 추가 버튼 (CSS로 그리기) */
 .add-btn {
-  position: absolute; /* 👈 'relative'가 아닌 'absolute'로 변경 */
-  bottom: 22px;     /* 👈 'top' 대신 'bottom' (하단 기준) */
-  right: 22px;      /* 👈 'margin-left' 대신 'right' (오른쪽 기준) */
+  position: absolute; 
+  bottom: 22px;    
+  right: 22px;     
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -428,12 +402,6 @@ body {
   border-radius: 2px;
 }
 
-/* [삭제] .schedule-list, .schedule-card 등 (중복 스타일) */
-/* ------------------------------- 
- * 📘 11. 모달 (Modal)
- * ------------------------------- */
-
-/* [수정] .calendar-page .modal-overlay 로 우선순위 높임 */
 .calendar-page .modal-overlay {
   position: fixed;
   top: 0;
@@ -448,11 +416,10 @@ body {
   animation: modalFadeIn 0.3s ease; 
 }
 
-/* [수정] .calendar-page .modal 로 우선순위 높임 */
 .calendar-page .modal {
   position: absolute; 
-  width: 700px;   /* 👈 원하시는 800px */
-  height: 650px;  /* 👈 원하시는 500px */
+  width: 700px;   
+  height: 650px;  
   background: #fff;
   border-radius: 18px;
   padding: 35px 40px; 
@@ -498,7 +465,7 @@ body {
   gap: 16px; 
 }
 
-/* 모달 내 <label> (JS의 .date 클래스) */
+/* 모달 내 <label> */
 .calendar-page .date { 
   margin-bottom: 6px; 
   font-weight: 600; 
@@ -546,9 +513,7 @@ body {
   height:35px;
   font-size: 13px;
   color:#fff;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
 .calendar-page .form-buttons button.cancel,
@@ -557,9 +522,7 @@ body {
   height:35px;
   font-size: 13px;
   color:#222;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
 
@@ -578,21 +541,19 @@ body {
   font-size: 15px !important;
 }
 
-/* --- [수정] '삭제 확인' 모달 전용 스타일 (Health.css와 동일하게) --- */
-
-/* 삭제 모달 껍데기 (Health.js와 동일한 크기) */
+/* '삭제 확인' 모달 전용 스타일 */
 .calendar-page .modal.modal-delete-confirm {
   width: 400px; 
-  height: 250px; /* 👈 Health.js와 동일하게 250px로 수정 */
-  padding: 24px;  /* 👈 Health.js와 동일하게 24px로 수정 */
+  height: 250px; 
+  padding: 24px;  
 }
 
 /* 삭제 모달 제목 */
 .calendar-page .modal.modal-delete-confirm h2 {
   color: #000000; 
   margin-bottom: 8px;
-  margin-top: 10px; /* [추가] Health.js와 동일한 여백 */
-  font-size: 1.5rem; /* [추가] Health.js와 동일한 폰트 크기 */
+  margin-top: 10px; 
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
@@ -612,30 +573,23 @@ body {
   font-size: 13px;
   background: #55555527; 
   color: #000;      
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
 
-/* '삭제' 버튼 (Health.js와 동일한 빨간색) */
 .calendar-page .modal-delete-confirm .form-buttons .btn-delete-confirm {
   background:#ff2024;
   height:35px;
   font-size: 13px;
   color:#fff;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
+
   padding: 0 18px; 
 }
 .calendar-page .modal-delete-confirm .btn-delete-confirm:hover {
-  background: #ff000dc2; /* 👈 Health.js의 호버 색상 */
+  background: #ff000dc2; 
 }
-
-/* ------------------------------- 
- * 📘 12. 커스텀 날짜 선택기 (모달 내부)
- * ------------------------------- */
 
 .custom-datepicker {
   display: flex;
@@ -685,14 +639,12 @@ body {
     font-size: 14px; 
   }
 
-  /* --- ✅ [수정] 이 부분을 덮어쓰세요 --- */
   .calendar-date { 
     border-radius: 8px; 
     cursor: pointer; 
     transition: 0.2s, color 0.2s; 
     
-    /* [추가] 고정 높이와 flex 중앙 정렬 */
-    height: 32px; /* 👈 고정 높이 (이 값 조절 가능) */
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -712,17 +664,15 @@ body {
     font-weight: bold; 
   }
 
-  /* [수정] 빈 칸은 아예 투명하게 */
   .calendar-date.empty { 
     background: transparent; 
     cursor: default; 
-    color: transparent; /* 글자(null) 안보이게 */
-    pointer-events: none; /* 클릭 방지 */
+    color: transparent; 
+    pointer-events: none; 
   }
   .calendar-date.empty:hover {
     background: transparent;
   }
-  /* --- ✅ 여기까지 --- */
 
   .calendar-days { 
     display: grid; 
@@ -737,23 +687,17 @@ body {
     font-size: 14px; 
   }
 
-  /* --- ✅ [수정] --- */
   .calendar-date { 
     border-radius: 8px; 
     cursor: pointer; 
-    transition: 0.2s, color 0.2s; 
-    
-    /* [삭제] padding: 8px 0; */
-    
-    /* [추가] 고정 높이와 flex 중앙 정렬 */
-    height: 36px; /* 👈 이 값으로 높이 고정 (조절 가능) */
+    transition: 0.2s, color 0.2s;     
+    /* 고정 높이와 flex 중앙 정렬 */
+    height: 36px; 
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px; /* 글꼴 크기 명시 */
+    font-size: 14px; 
   }
-  /* --- ✅ --- */
-
 
   .calendar-date:hover { background: #f1f3f5; }
   .calendar-date.today { 
@@ -769,13 +713,11 @@ body {
   .calendar-date.empty { 
     background: transparent; 
     cursor: default; 
-    /* [추가] 빈 칸의 숫자/hover 효과 제거 */
     color: transparent; 
     pointer-events: none;
   }
-/* ------------------------------- 
- * 📘 1. 반응형 (Responsive)
- * ------------------------------- */
+
+
 @media (max-width: 920px) {
   .calendar-container {
     flex-direction: column;
@@ -807,9 +749,7 @@ body {
   }
 }
 
-/* ------------------------------- 
- * 📘 15. 모달 애니메이션
- * ------------------------------- */
+
 @keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

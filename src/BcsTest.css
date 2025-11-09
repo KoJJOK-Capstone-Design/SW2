@@ -1,0 +1,197 @@
+.bcs-page {
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fbfd; 
+  font-family: '온글잎 공부잘하자나', sans-serif;
+  min-height: 100vh;
+}
+
+.bcs-main-content {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 800px; 
+  margin: 20px auto 80px auto; 
+  padding: 0 20px;
+  box-sizing: border-box; 
+}
+
+.bcs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* --- 타이틀 및 질문 --- */
+.bcs-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem; /* 24px */
+  color: #111;
+}
+
+.bcs-container h2.bcs-title::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: #2573f8;
+  border-radius: 3px;
+}
+
+.bcs-question-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.bcs-question-box h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.bcs-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* --- 선택 옵션 (버튼) --- */
+.bcs-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bcs-option {
+  width: 100%;
+  padding: 14px 16px 14px 10px; 
+  text-align: left;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f8f8;
+  color: #333;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+} 
+/* 선택된 옵션 스타일 */
+.bcs-option.selected {
+  background: #2a5fff2a;
+  border-color: #4b7bec;
+  color: #000000;
+  font-weight: 550;
+  box-shadow: 0 2px 8px rgba(75, 123, 236, 0.1);
+}
+
+.bcs-option:hover:not(.selected) {
+  background: #f0f0f0;
+}
+/* --- [추가] 결과 섹션 스타일 (user_24 에서 가져옴) --- */
+.bcs-result-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  margin-bottom: 30px; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bcs-result-section .result-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.bcs-result-section .result-score {
+  font-size: 3rem; 
+  font-weight: 800;
+  color: #4b7bec; 
+  margin-bottom: 5px;
+  line-height: 1; 
+}
+
+.bcs-result-section .result-text {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.bcs-result-section .result-detail-box {
+  background: #e6f7ff; 
+  border: 1px solid #cceeff;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: left;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px; 
+  box-sizing: border-box; /* [추가] */
+}
+
+.bcs-result-section .box-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1c4b91; 
+  display: block; 
+  margin-bottom: 10px;
+}
+
+.bcs-result-section .result-detail-box p {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.update-bcs-btn {
+  width: 100%;
+  max-width: 500px; 
+  padding: 12px 0px;
+  margin-top: 30px;
+  border: none;
+  border-radius: 10px;
+  background: #2573f8;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: inherit;
+}
+
+.update-bcs-btn:hover {
+  background: #1c5edb;
+}
+
+/* --- 결과 확인 버튼 --- */
+.check-result-btn {
+  width: 100%;
+  padding: 12px 0;
+  margin-top: 30px;
+  border: none;
+  border-radius: 10px;
+  background: #2573f8;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: inherit;
+}
+
+.check-result-btn:hover {
+  background: #1c5edb;
+}
