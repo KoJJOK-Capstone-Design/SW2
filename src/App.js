@@ -5,9 +5,10 @@ import Signup from './Signup';
 import Dashboard from './Dashboard';
 import NewFamily from './NewFamily'
 import Activity from './Activity';
-import Calendar from './Calendar';
-import Chat from './Chat';
-import Health from './Health';
+import Community from './Community';
+import CommunityWrite from "./CommunityWrite";
+import PostDetail from "./PostDetail";  
+import PostEdit from "./PostEdit";       
 
 export default function App(){
   return (
@@ -21,6 +22,10 @@ export default function App(){
         <Route path="/Calendar" element={<Calendar />} />
         <Route path="/NewFamily" element={<NewFamily />} />
         <Route path="/activity" element={<Activity />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/community/write" element={<CommunityWrite />} />
+        <Route path="/community/:id" element={<PostDetail />} />
+        <Route path="/community/:id/edit" element={<PostEdit />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/Chat" element={<Chat />} />
         <Route path="/Health" element={<Health/>} />

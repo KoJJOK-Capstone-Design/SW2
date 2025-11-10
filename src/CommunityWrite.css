@@ -1,0 +1,136 @@
+/* src/CommunityWrite.css */
+/* 기존 스타일 */
+.write-container{
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 100px;
+}
+
+.write-title{ font-size: 32px; font-weight: 800; margin-bottom: 18px; }
+
+.write-form{ display: grid; gap: 14px; }
+
+.write-input{
+  height: 48px; border: 1px solid #e5e7eb; border-radius: 12px;
+  padding: 0 14px; font-size: 16px; background:#fff;
+}
+.write-input:focus{
+  outline: none; border-color: #2578ff; box-shadow: 0 0 0 3px rgba(37,120,255,.12);
+}
+
+.write-textarea{
+  min-height: 260px; border: 1px solid #e5e7eb; border-radius: 12px;
+  padding: 14px; font-size: 16px; resize: vertical; background:#fff;
+}
+.write-textarea:focus{
+  outline: none; border-color: #2578ff; box-shadow: 0 0 0 3px rgba(37,120,255,.12);
+}
+
+/* 버튼 영역 */
+.write-actions{
+  display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;
+}
+.btn{ height: 40px; min-width: 80px; border-radius: 10px; border: none; cursor: pointer; }
+.btn-ghost{ background:#f3f4f6; }
+.btn-ghost:hover{ background:#e5e7eb; }
+.btn-primary{ background:#2578ff; color:#fff; box-shadow: 0 8px 22px rgba(37,120,255,.25); }
+.btn-primary:hover{ filter: brightness(.98); }
+
+/* 사진첨부 블록: 내용 입력칸 왼쪽 아래에 붙도록 */
+/* 사진첨부 영역 (세로 정렬) */
+.write-attach-row {
+  display: flex;
+  flex-direction: column;   /* 세로 방향 */
+  align-items: flex-start;  /* 왼쪽 정렬 */
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* 사진 첨부 글자 */
+.attach-label {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+/* 파일 선택 + 파일 이름 표시를 한 줄로 */
+.attach-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 파일 선택 버튼 스타일 유지 */
+.attach-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  background: #2578ff;            /* 등록 버튼과 동일한 색 */
+  color: #ffffff;                 /* 글자 흰색 */
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 6px 14px rgba(37,120,255,0.25); /* 비슷한 그림자 효과 */
+}
+.attach-btn:hover {
+  filter: brightness(0.97);       /* hover 효과도 등록 버튼 느낌 */
+}
+.attach-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* 파일명 표시 */
+.attach-hint {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 오른쪽 미리보기 썸네일 영역 */
+.attach-previews{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 60%;
+  padding: 2px 0;
+}
+.attach-previews img{
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* 수정 화면 – 제목/본문을 넓게 */
+.input-title--wide {
+  height: 56px;
+  font-size: 20px;
+  border-radius: 12px;
+  padding: 0 14px;
+}
+.input-content--wide {
+  min-height: 360px;
+  font-size: 16px;
+  line-height: 1.7;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+
+/* 반응형: 화면이 좁으면 썸네일을 아래로 떨어뜨림 */
+@media (max-width: 640px){
+  .write-attach-row{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .attach-previews{ max-width: 100%; }
+}

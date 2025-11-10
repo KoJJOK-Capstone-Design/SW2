@@ -1,0 +1,307 @@
+/* ============ 레이아웃 베이스 ============ */
+/* 화면 중앙에 지나치게 모이지 않도록 폭을 더 넓힘 */
+.community-container{
+  width:100%;
+  max-width:1400px;      /* 넓이는 유지 */
+  margin:0 auto;
+  padding:50px 60px 100px;  /* ← 이 패딩이 사라지지 않게! */
+  box-sizing:border-box;
+}
+
+/* 상단: 제목 왼쪽 / 검색+글쓰기 오른쪽 */
+.comm-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 56px;                /* 40 → 56: 좌우 영역 간격 넓힘 */
+  margin-bottom: 42px;      /* 30 → 42: 아래 여백 넓힘 */
+  padding-top: 6px;
+}
+
+/* 왼쪽(제목+설명)은 비율상 더 넓게, 오른쪽(검색)은 적당히 */
+.comm-left  { flex: 0 1 62%; min-width: 360px; }
+.comm-right { flex: 0 1 38%; min-width: 380px; display:flex; flex-direction:column; align-items:flex-end; gap:16px; }
+
+/* 제목 타이포 & 간격 */
+.comm-title-lg{
+  font-size: 60px;          /* 56 → 60: 타이틀 존재감 업 */
+  font-weight: 800;
+  line-height: 1.18;
+  margin: 0 0 14px 0;       /* 제목과 설명 사이 여백 */
+}
+.section-sub{ margin-top: 10px; color:#6b7280; }
+
+/* 검색 + 글쓰기 스택 */
+.comm-toolbar{
+  display:flex;
+  flex-direction:column;    /* 검색 위, 버튼 아래 */
+  align-items:flex-end;
+  gap: 14px;                /* 검색창 & 버튼 사이 간격 */
+}
+.search-wrap{ position:relative; width:100%; }
+.search-icon{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  width:18px; height:18px; opacity:.6; pointer-events:none;
+}
+/* 검색창을 조금 더 크게 (넓은 레이아웃과 균형) */
+.search-input{
+  width:100%;
+  height:48px;              /* 44 → 48 */
+  border:1px solid #e5e7eb; border-radius:12px;
+  padding:0 16px 0 42px;    /* 좌측 아이콘 패딩 유지, 좌우 여유 ↑ */
+  font-size:16px;           /* 15 → 16 */
+  background:#fff;
+}
+.search-input:focus{
+  outline:none; border-color:#2578ff; box-shadow:0 0 0 3px rgba(37,120,255,.12);
+}
+
+/* 글쓰기 버튼 */
+.write-btn{
+  align-self:flex-end;
+  display:inline-flex; align-items:center; gap:8px;
+  height:36px;              /* 30 → 36 */
+  padding:0 14px;           /* 0 10 → 0 14 */
+  font-size: 15px;          /* 14 → 15 */
+  border-radius:12px;
+  background:#2578ff; color:#fff; text-decoration:none;
+  box-shadow:0 10px 26px rgba(37,120,255,.28);
+}
+.write-btn:hover{ filter:brightness(.98); }
+.write-icon{ width:18px; height:18px; }
+
+/* ============ 리스트 카드 ============ */
+/* 카드가 너무 좁지 않도록 가로 너비를 컨테이너 폭에 맞춤 */
+.post-card{
+  width:100%;               /* max-width 고정 제거 느낌 */
+  max-width: 1200px;        /* 그래도 과도 확장을 방지하는 상한 */
+  margin: 18px auto 0;
+  background:#fff; border:1px solid #eee; border-radius:14px;
+  padding: 18px 22px;       /* 안쪽 여백 살짝 넓힘 */
+  box-shadow:0 6px 18px rgba(0,0,0,.04);
+}
+.post-title{ font-size:19px; font-weight:700; }
+.post-content{ margin-top:10px; color:#4b5563; }
+.post-meta{ display:flex; justify-content:space-between; margin-top:12px; color:#9ca3af; font-size:13px; }
+.meta-right{ color:#9ca3af; }
+
+/* ============ 페이지네이션 ============ */
+.pager{
+  display:flex; gap:10px; justify-content:center; align-items:center;
+  margin:30px 0 0;
+}
+.pager-btn, .pager-num{
+  height:34px; min-width:34px; padding:0 12px;
+  border-radius:8px; border:1px solid #e5e7eb;
+  background:#fff; cursor:pointer; color:#6b7280; font-size:14px;
+}
+.pager-btn:hover, .pager-num:hover{ border-color:#c7d2fe; }
+.pager-btn:focus, .pager-num:focus{ outline:none; box-shadow:0 0 0 3px rgba(37,120,255,.12); }
+.pager-btn:disabled{ opacity:.45; cursor:not-allowed; }
+.pager-num.is-active{ background:#2578ff; color:#fff; border-color:#2578ff; }
+
+/* ============ 상세뷰 기존 보정(유지) ============ */
+/* 링크로 감싼 카드 기본 스타일 유지 */
+.link-reset{ text-decoration:none; color:inherit; display:block; }
+/* 상단 크럼/프로필/액션 */
+.crumb { display:inline-block; margin-bottom:14px; color:#111827; text-decoration:none; }
+.post-detail-head{ display:flex; align-items:center; gap:14px; margin-bottom:30px; max-width: 1000px; margin-left:auto; margin-right:auto; padding-left: 20px; }
+.avatar{ width:48px; height:48px; border-radius:50%; background:#cfe0ff; }
+.who .name{ font-weight:700; }
+.who .when{ color:#9ca3af; font-size:13px; }
+.post-actions{ margin-left:auto; display:flex; gap:12px; }
+.link-btn{ background:none; border:none; color:#2563eb; cursor:pointer; padding:0; font-size:14px; text-decoration:none; }
+.link-btn:hover{ opacity:.8; text-decoration:none; }
+.link-btn.danger{ color:#ef4444; }
+
+/* 본문 폭 & 타이포 */
+.post-detail-body{ margin-top:40px; padding:0 20px; max-width: 1000px; margin-left:auto; margin-right:auto; }
+.detail-title{ font-size:32px; font-weight:700; margin-bottom:30px; }
+.detail-content{ font-size:18px; line-height:1.8; color:#333; min-height:200px; white-space:pre-line; margin-bottom:40px; }
+
+/* 통계/구분선/댓글 입력 */
+.detail-stats{ margin:30px auto; font-size:16px; color:#555; display:flex; gap:30px; max-width:1000px; padding-left:20px; }
+.divider{ border:none; border-top:1px solid #eee; margin:10px 0 16px; }
+.comment-input-row{ max-width:1000px; margin:20px auto 50px; display:flex; gap:10px; }
+.comment-input{ flex:1; height:44px; padding:10px 15px; border-radius:8px; border:1px solid #ddd; }
+.comment-submit{ min-width:60px; border:none; border-radius:8px; background:#2563eb; color:#fff; font-size:14px; cursor:pointer; }
+
+/* ============ 삭제 모달 유지 ============ */
+.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal-card{ width:min(520px, 92vw); background:#fff; border-radius:16px; padding:28px 32px; box-shadow:0 18px 50px rgba(0,0,0,.2); text-align:center; }
+.modal-title{ font-size:28px; font-weight:800; margin:4px 0 8px; }
+.modal-sub{ color:#6b7280; margin-bottom:18px; }
+.modal-actions{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
+.btn{ height:38px; padding:0 16px; border-radius:10px; border:none; cursor:pointer; background:#f3f4f6; color:#111827; }
+.btn-ghost{ background:#eef2ff; }
+.btn-danger{ background:#ef4444; color:#fff; }
+.btn:hover{ filter:brightness(.98); }
+
+/* ====== 상세 페이지 전용 스코프 ====== */
+.post-detail-page .crumb,
+.post-detail-page .post-detail-head,
+.post-detail-page .post-detail-body,
+.post-detail-page .detail-stats,
+.post-detail-page .comment-input-row {
+  max-width: 1100px;         /* 본문 덩어리 폭 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 돌아가기(crumb)도 본문 좌측 라인에 맞춰 살짝 들여쓰기 */
+.post-detail-page .crumb {
+  display: block;
+  margin-bottom: 16px;
+  padding-left: 20px;        /* 프로필/제목 왼쪽 라인과 정렬 */
+}
+
+/* 본문 블록 위쪽 여백(겹치지 않게) */
+.post-detail-page .post-detail-body {
+  margin-top: 40px;
+  padding: 0 20px;           /* 본문 좌우 숨쉬기 */
+}
+
+/* 좋아요/댓글 줄도 같은 폭으로 */
+.post-detail-page .detail-stats {
+  padding-left: 20px;
+}
+
+/* 댓글 입력줄도 같은 폭으로 */
+.post-detail-page .comment-input-row {
+  gap: 10px;
+  margin: 20px auto 50px;
+}
+
+/* 프로필 줄(작성자/시간) */
+.post-detail-page .post-detail-head {
+  padding-left: 20px;
+}
+
+/* 좋아요 · 댓글 아이콘 스타일 */
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  color: #555;
+}
+
+.stat-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.detail-stats .stat-item { display:flex; align-items:center; gap:8px; }
+.stat-icon { width:20px; height:20px; }
+.like-btn { background:transparent; border:0; padding:0; cursor:pointer; }
+.like-btn:hover { opacity:.85; }
+
+/* ----- 통계(좋아요/댓글) 아이콘 정렬 ----- */
+.detail-stats { gap: 22px; }
+.stat-item{
+  display:inline-flex; align-items:center; gap:8px;
+  color:#374151; font-size:15px;
+}
+.stat-icon{ width:18px; height:18px; display:block; }
+.stat-like{
+  border:none; background:transparent; cursor:pointer;
+  padding:0; margin:0;
+}
+
+/* ----- 댓글 리스트 (회색 박스, 정돈된 배치) ----- */
+.comments {
+  max-width: 900px;   /* ✅ 댓글 입력창과 같은 값 */
+  width: 100%;
+  margin: 0 auto;     /* ✅ 중앙 정렬 */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.comment-item{
+  width: 100%;                  /* 그리드 칸 가로 꽉 채우기 */
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #f6f7f9;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.comment-avatar{ width:28px; height:28px; border-radius:50%; background:#0b0720; opacity:.85; }
+.comment-main{ flex:1; display:flex; flex-direction:column; gap:6px; }
+.comment-meta{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  color:#6b7280; font-size:13px;
+}
+.comment-author{ color:#111827; font-weight:600; }
+.comment-when{ color:#9ca3af; }
+.comment-actions{ margin-left:auto; display:inline-flex; gap:10px; }
+.c-action{
+  background:none; border:none; padding:0; cursor:pointer;
+  color:#1d4ed8; font-size:13px;
+}
+.c-action.danger{ color:#ef4444; }
+
+/* 댓글 본문 */
+.comment-text{ color:#222; line-height:1.65; white-space:pre-wrap; }
+
+/* 수정 모드 */
+.comment-editing{ display:flex; flex-direction:column; gap:8px; }
+.comment-editbox{
+  width:100%; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;
+  background:#fff; resize:vertical; min-height:44px;
+}
+.comment-edit-actions{ display:flex; gap:8px; justify-content:flex-end; }
+.c-btn{
+  height:34px; padding:0 12px; border-radius:8px; border:1px solid #e5e7eb;
+  cursor:pointer; background:#fff; color:#111827; font-size:14px;
+}
+.c-btn.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+.c-btn.ghost{ background:#eef2ff; }
+
+.comment-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  max-width: 900px;   /* ✅ 댓글 카드와 동일한 가로 길이 */
+  width: 100%;
+  margin: 20px auto 50px; /* ✅ 중앙 정렬 */
+}
+/* 입력창 */
+.comment-input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0 14px;
+}
+/* 등록 버튼 */
+.comment-submit {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ============ 반응형 ============ */
+@media (max-width: 1280px){
+  .community-container{ max-width:1200px; padding:44px 56px 96px; }
+  .comm-title-lg{ font-size:54px; }
+}
+@media (max-width: 1024px){
+  .community-container{ max-width:940px; padding:40px 28px 90px; }
+  .comm-header{ flex-direction:column; gap:20px; }
+  .comm-left, .comm-right{ flex: 1 1 auto; min-width: 0; }
+  .comm-title-lg{ font-size:42px; }
+}
+@media (max-width: 768px){
+  .comm-title-lg{ font-size:34px; }
+  .comm-right{ width:100%; }
+  .comm-toolbar{ align-items:stretch; }
+  .write-btn{ align-self:flex-end; }
+}
