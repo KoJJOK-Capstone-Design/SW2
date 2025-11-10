@@ -9,6 +9,10 @@ import Community from './Community';
 import CommunityWrite from "./CommunityWrite";
 import PostDetail from "./PostDetail";  
 import PostEdit from "./PostEdit";       
+import Calendar from './Calendar';
+import Chat from './Chat';
+import Health from './Health';
+
 
 export default function App(){
   return (
