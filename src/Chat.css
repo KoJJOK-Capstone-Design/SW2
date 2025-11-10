@@ -3,6 +3,10 @@
    =============================== */
 
 /* ---- 메인 레이아웃 ---- */
+a {
+  text-decoration: none;   /* 밑줄 제거 */
+  color: inherit;          /* 부모 글자색 그대로 상속 (원래 색 유지) */
+}
 .dm {
   max-width: var(--container);
   align-items: center;
