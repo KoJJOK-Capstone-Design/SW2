@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+
+// (아이콘 import 등은 동일)
 import {
   FaClinicMedical,
   FaShoppingCart,
@@ -7,22 +9,30 @@ import {
   FaTree,
   FaCircle,
 } from "react-icons/fa";
-import ReactCalendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+// ReactCalendar import는 이제 필요 없으므로 삭제합니다.
+// import ReactCalendar from "react-calendar";
+// import "react-calendar/dist/Calendar.css";
 import Select from "react-select";
+import { Link } from "react-router-dom";
+// ko import는 이제 CustomDatePicker를 쓰므로 필요 없습니다.
+// import { ko } from 'date-fns/locale';
 import "./Dashboard.css";
-import "./Calendar.css";
+import "./Calendar.css"; // (이 CSS 안에 .event-dots 스타일이 이미 있어야 합니다)
 
+// (이미지 import 등은 동일)
 import logoBlue from "./img/logo_blue.png";
-import logoGray from "./img/logo_gray.png"; 
+import logoGray from "./img/logo_gray.png";
 import editIcon from "./img/Edit_fill.png";
 import trashIcon from "./img/Trash_2.png";
 import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-/* 📅 커스텀 달력 (모달 내부용) */
-const CustomDatePicker = ({ value, onChange }) => {
+/* * 📅 커스텀 달력
+ * [수정됨] 메인 캘린더로 사용하기 위해 'events' prop을 받아 점을 찍도록 수정
+ */
+const CustomDatePicker = ({ value, onChange, events }) => {
+  // 1. 'events' prop 받기
   const today = new Date();
   const [current, setCurrent] = useState(value ? new Date(value) : new Date());
 
@@ -38,9 +48,8 @@ const CustomDatePicker = ({ value, onChange }) => {
   for (let i = 0; i < startDay; i++) days.push(null);
   for (let i = 1; i <= totalDays; i++) days.push(i);
 
-  /* --- 모든 달을 6줄(42칸)로 강제 고정 --- */
-  while (days.length < 42) days.push(null); 
-  
+  while (days.length < 42) days.push(null);
+
   const formatDate = (y, m, d) =>
     `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
@@ -51,18 +60,32 @@ const CustomDatePicker = ({ value, onChange }) => {
     year === today.getFullYear();
 
   const isSelected = (d) =>
-    value && new Date(value).getDate() === d && new Date(value).getMonth() === month;
+    value &&
+    new Date(value).getDate() === d &&
+    new Date(value).getMonth() === month;
 
   return (
     <div className="custom-datepicker">
+      {/* 캘린더 헤더 (변경 없음) */}
       <div className="calendar-header">
-        <button type="button" onClick={() => setCurrent(new Date(year, month - 1, 1))}>‹</button>
+        <button
+          type="button"
+          onClick={() => setCurrent(new Date(year, month - 1, 1))}
+        >
+          ‹
+        </button>
         <span>
           {year}년 {month + 1}월
         </span>
-        <button type="button" onClick={() => setCurrent(new Date(year, month + 1, 1))}>›</button>
+        <button
+          type="button"
+          onClick={() => setCurrent(new Date(year, month + 1, 1))}
+        >
+          ›
+        </button>
       </div>
 
+      {/* 요일 헤더 (변경 없음) */}
       <div className="calendar-days">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
           <div key={d} className="calendar-day-header">
@@ -70,26 +93,48 @@ const CustomDatePicker = ({ value, onChange }) => {
           </div>
         ))}
 
-        {days.map((d, i) => (
-          <div
-            key={i}
-            className={`calendar-date ${d ? "" : "empty"} ${isToday(d) ? "today" : ""} ${
-              isSelected(d) ? "selected" : ""
-            }`}
-            onClick={() => {
-              if (!d) return;
-              onChange(formatDate(year, month, d));
-            }}
-          >
-            {d}
-          </div>
-        ))}
+        {/* --- [수정됨] 날짜 + 이벤트 점 렌더링 --- */}
+        {days.map((d, i) => {
+          // 2. 그날짜(d)에 해당하는 이벤트 찾기
+          const dStr = d ? formatDate(year, month, d) : null;
+          const dayEv =
+            dStr && events ? events.filter((e) => e.date === dStr) : [];
+
+          return (
+            <div
+              key={i}
+              className={`calendar-date ${d ? "" : "empty"} ${
+                isToday(d) ? "today" : ""
+              } ${isSelected(d) ? "selected" : ""}`}
+              onClick={() => {
+                if (!d) return;
+                onChange(formatDate(year, month, d));
+              }}
+            >
+              {d}
+              {/* --- 3. 찾은 이벤트를 점으로 렌더링 --- */}
+              {dayEv.length > 0 && (
+                <div className="event-dots">
+                  {dayEv.slice(0, 4).map((ev, i) => (
+                    <span
+                      key={i}
+                      className="event-dot"
+                      title={`${ev.category}: ${ev.text}`}
+                      style={{ backgroundColor: ev.color }}
+                    />
+                  ))}
+                </div>
+              )}
+              {/* ---------------------------------- */}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
-/* Date → YYYY-MM-DD */
+/* Date → YYYY-MM-DD (변경 없음) */
 function formatYMD(d) {
   if (!d) return "";
   const date = typeof d === "string" ? new Date(d) : d;
@@ -101,18 +146,22 @@ function formatYMD(d) {
 
 /* 메인 Calendar 컴포넌트 */
 export default function Calendar() {
+  // --- [수정됨] user 상태 추가 (예시: null로 초기화) ---
+  const [user, setUser] = useState(null);
+  // ---------------------------------------------
+
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ text: "", date: "", category: "" });
-  const [closing, setClosing] = useState(false); 
+  const [closing, setClosing] = useState(false);
 
-  /* 삭제 모달 상태 */
+  /* 삭제 모달 상태 (변경 없음) */
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
 
-
+  /* 카테고리 메타 (변경 없음) */
   const categoryMeta = {
     병원: { color: "#BFC8D7", icon: <FaClinicMedical /> },
     약: { color: "#E2D2D2", icon: <FaClinicMedical /> },
@@ -126,26 +175,13 @@ export default function Calendar() {
   const selectedDateStr = formatYMD(date);
   const dayEvents = events.filter((e) => e.date === selectedDateStr);
 
-  const tileContent = ({ date: tileDate, view }) => {
-    if (view !== "month") return null;
-    const dStr = formatYMD(tileDate);
-    const dayEv = events.filter((e) => e.date === dStr);
-    if (!dayEv.length) return null;
-    return (
-      <div className="event-dots">
-        {dayEv.slice(0, 4).map((ev, i) => (
-          <span
-            key={i}
-            className="event-dot"
-            title={`${ev.category}: ${ev.text}`}
-            style={{ backgroundColor: ev.color }}
-          />
-        ))}
-      </div>
-    );
-  };
+  /*
+   * [삭제됨] tileContent 함수는 ReactCalendar 전용이므로 삭제합니다.
+   * 이 기능은 CustomDatePicker 내부 로직으로 이동했습니다.
+   */
+  // const tileContent = ({ date: tileDate, view }) => { ... };
 
-  /*  폼 관련 핸들러들 */
+  /* 폼 관련 핸들러들 (변경 없음) */
   const openAddForm = () => {
     setEditingId(null);
     setForm({ text: "", date: selectedDateStr, category: "" });
@@ -165,7 +201,7 @@ export default function Calendar() {
       setClosing(false);
       setEditingId(null);
       setForm({ text: "", date: "", category: "" });
-    }, 250); 
+    }, 250);
   };
 
   const handleSave = (e) => {
@@ -180,7 +216,13 @@ export default function Calendar() {
       setEvents((prev) =>
         prev.map((it) =>
           it.id === editingId
-            ? { ...it, text: form.text, date: form.date, category: form.category, color: meta.color }
+            ? {
+                ...it,
+                text: form.text,
+                date: form.date,
+                category: form.category,
+                color: meta.color,
+              }
             : it
         )
       );
@@ -197,7 +239,7 @@ export default function Calendar() {
     closeForm();
   };
 
-  /* 삭제 관련 핸들러들 */
+  /* 삭제 관련 핸들러들 (변경 없음) */
   const handleDeleteClick = (id) => {
     setRecordToDelete(id);
     setShowDeleteModal(true);
@@ -218,85 +260,122 @@ export default function Calendar() {
 
   return (
     <div className="calendar-page">
-      {/* 상단 네비게이션 */}
+      {/* --- 네비게이션 --- */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
-            <img src={logoBlue} alt="paw logo" className="paw" />
+            <img src={logoBlue} className="paw" alt="logo" />
             <span className="brand-text">멍냥멍냥</span>
           </div>
           <nav className="menu">
             <a href="/activity">활동</a>
-            <a href="/health">건강</a>
-            <a href="/calendar" className="active">
-              캘린더
+            <a href="/health" className="active">
+              건강
             </a>
+            <a href="/calendar">캘린더</a>
             <a href="/community">커뮤니티</a>
           </nav>
           <nav className="menulink">
-            <a href="/signup">회원가입</a>
-            <a href="/signin">로그인</a>
+            {user ? (
+              <span className="welcome-msg">{user.nickname}님</span>
+            ) : (
+              <>
+                <a href="/signup">회원가입</a>
+                <a href="/signin">로그인</a>
+              </>
+            )}
           </nav>
         </div>
       </header>
-
-      {/* 메인 캘린더 */}
+      {/* --- [수정됨] 메인 캘린더 --- */}
       <main className="calendar-main">
         <div className="calendar-container">
-          <ReactCalendar
-            onChange={setDate}
-            value={date}
-            locale="ko-KR"
-            formatDay={(locale, d) => d.getDate().toString()}
-            tileContent={tileContent}
-            next2Label={null}
-            prev2Label={null}
+          {/* 1. 기존의 버그난 ReactCalendar는 완전히 삭제합니다. */}
+          {/* <ReactCalendar
+                ...
+              />
+            */}
+
+          {/* 2. '이벤트 점' 기능이 추가된 CustomDatePicker를 사용합니다. */}
+          <CustomDatePicker
+            value={formatYMD(date)} // Date 객체 -> "YYYY-MM-DD" 문자열
+            onChange={(newDateStr) => {
+              setDate(new Date(newDateStr)); // "YYYY-MM-DD" 문자열 -> Date 객체
+            }}
+            events={events} // 'events' state를 넘겨줘서 점을 찍도록 함
           />
+
+          {/* --- [수정됨] 일정 표시 섹션 --- */}
           <section className="event-section">
             <h3>
               {date.getMonth() + 1}월 {date.getDate()}일 일정
             </h3>
-            {dayEvents.length ? (
-              dayEvents.map((ev) => (
-                <div className="event-item" key={ev.id}>
-                  <div className="event-icon" style={{ backgroundColor: ev.color }}>
-                    {categoryMeta[ev.category]?.icon || <FaCircle />}
-                  </div>
-                  <div className="event-content">
-                    <strong>[{ev.category}]</strong> {ev.text}
-                  </div>
-                  <div className="icon-btn-img" style={{ display: "flex", gap: 8 }}>
-                    <button className="icon-btn" onClick={() => openEditForm(ev)}>
-                      <img className="icon-img" src={editIcon} alt="edit" />
-                    </button>
 
-                    <button className="icon-btn" onClick={() => handleDeleteClick(ev.id)}>
-                      <img className="icon-img" src={trashIcon} alt="delete" />
-                    </button>
+            {/* [추가] 스크롤을 담당할 컨테이너 (개수에 따라 클래스 변경) */}
+            <div
+              className={
+                dayEvents.length >= 5 ? "event-list-scrollable" : "event-list"
+              }
+            >
+              {dayEvents.length ? (
+                dayEvents.map((ev) => (
+                  <div className="event-item" key={ev.id}>
+                    <div
+                      className="event-icon"
+                      style={{ backgroundColor: ev.color }}
+                    >
+                      {categoryMeta[ev.category]?.icon || <FaCircle />}
+                    </div>
+                    <div className="event-content">
+                      <strong>[{ev.category}]</strong> {ev.text}
+                    </div>
+                    <div
+                      className="icon-btn-img"
+                      style={{ display: "flex", gap: 8 }}
+                    >
+                      <button
+                        className="icon-btn"
+                        onClick={() => openEditForm(ev)}
+                      >
+                        <img className="icon-img" src={editIcon} alt="edit" />
+                      </button>
+                      <button
+                        className="icon-btn"
+                        onClick={() => handleDeleteClick(ev.id)}
+                      >
+                        <img className="icon-img" src={trashIcon} alt="delete" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <p className="no-event">등록된 일정이 없습니다.</p>
-            )}
-            
+                ))
+              ) : (
+                <p className="no-event">등록된 일정이 없습니다.</p>
+              )}
+            </div>
+            {/* [추가] 스크롤 컨테이너 끝 */}
+
+            {/* + 버튼은 스크롤 컨테이너 밖에 위치 */}
             <button className="add-btn" onClick={openAddForm}></button>
-            
           </section>
         </div>
       </main>
 
-      {/* --- '추가/수정' 모달 --- */}
+      {/* '추가/수정' 모달 (변경 없음) */}
       {showForm && (
-        <div className={`modal-overlay ${closing ? "closing" : ""}`} onClick={closeForm}>
-          <div className={`modal ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`modal-overlay ${closing ? "closing" : ""}`}
+          onClick={closeForm}
+        >
+          <div
+            className={`modal ${closing ? "closing" : ""}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
-            
             <form onSubmit={handleSave}>
               <div className="modal-calendar-layout">
-                
-                <div className="modal-calendar-left"> 
+                <div className="modal-calendar-left">
                   <label className="date">날짜</label>
+                  {/* 모달에서는 'events' prop을 안 넘겨주면 점이 안 찍힘 (정상) */}
                   <CustomDatePicker
                     value={form.date}
                     onChange={(newDate) => setForm({ ...form, date: newDate })}
@@ -311,10 +390,10 @@ export default function Calendar() {
                     onChange={(e) => setForm({ ...form, text: e.target.value })}
                     placeholder="예: 심장사상충 약 먹는 날"
                   />
-                  
+
                   <label className="date">카테고리</label>
                   <Select
-                    classNamePrefix="react-select" 
+                    classNamePrefix="react-select"
                     placeholder="선택하세요"
                     options={[
                       { value: "병원", label: "병원 / 약" },
@@ -325,69 +404,130 @@ export default function Calendar() {
                       { value: "기타", label: "기타" },
                     ]}
                     value={
-                      form.category ? { value: form.category, label: form.category } : null
+                      form.category
+                        ? { value: form.category, label: form.category }
+                        : null
                     }
                     onChange={(option) =>
                       setForm({ ...form, category: option ? option.value : "" })
                     }
                   />
                 </div>
-              </div> 
-
+              </div>
 
               <div className="form-buttons">
-                <button type="submit" className="save">저장</button>
-                <button type="button" className="cancel" onClick={closeForm}>취소</button>
+                <button type="submit" className="save">
+                  저장
+                </button>
+                <button type="button" className="cancel" onClick={closeForm}>
+                  취소
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      
+
+      {/* 삭제 모달 (변경 없음) */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
-          <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal modal-delete-confirm"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>정말 삭제하시겠습니까?</h2>
             <p className="delete-confirm-text">이 기록은 복구할 수 없습니다.</p>
             <div className="form-buttons">
-              <button type="button" className="btn-cancel" onClick={handleCancelDelete}>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={handleCancelDelete}
+              >
                 취소
               </button>
-              <button type="button" className="btn-delete-confirm" onClick={handleConfirmDelete}>
+              <button
+                type="button"
+                className="btn-delete-confirm"
+                onClick={handleConfirmDelete}
+              >
                 삭제
               </button>
             </div>
           </div>
         </div>
       )}
-
-
       {/* 푸터 */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
             <div className="logo-stack">
-              <img src={logoGray} alt="" className="paw-bg" />
+              <img src={logoGray} alt="" className="paw-bg" aria-hidden />
               <span className="wordmark">KoJJOK</span>
             </div>
+
             <div className="grid">
-              {[
-                ["Hyeona Kim", "UI/UX Design", "ouskxk"],
-                ["Jiun Ko", "Front-End Dev", "suerte223"],
-                ["Seungbeom Han", "Front-End Dev", "hsb9838"],
-                ["Munjin Yang", "Back-End Dev", "munjun0608"],
-                ["Youngbin Kang", "Back-End Dev", "0bini"],
-              ].map(([name, role, id]) => (
-                <div className="col" key={id}>
-                  <h3>{name}</h3>
-                  <p>{role}</p>
-                  <a href={`https://github.com/${id}`} className="github-link">
-                    <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                    {id}
-                  </a>
-                </div>
-              ))}
+              <div className="col">
+                <h3>Hyeona Kim</h3>
+                <p>UI/UX Design</p>
+                <a href="https://github.com/ouskxk" className="github-link">
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
+                  ouskxk
+                </a>
+              </div>
+              <div className="col">
+                <h3>Jiun Ko</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/suerte223" className="github-link">
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
+                  suerte223
+                </a>
+              </div>
+              <div className="col">
+                <h3>Seungbeom Han</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/hsb9838" className="github-link">
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
+                  hsb9838
+                </a>
+              </div>
+              <div className="col">
+                <h3>Munjin Yang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/munjun0608" className="github-link">
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
+                  munjun0608
+                </a>
+              </div>
+              <div className="col">
+                <h3>Youngbin Kang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/0bini" className="github-link">
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
+                  0bini
+                </a>
+              </div>
             </div>
+
             <div className="tech-stack">
               <h3>TECH STACK</h3>
               <img src={reactpic} alt="React Logo" className="react-icon" />
