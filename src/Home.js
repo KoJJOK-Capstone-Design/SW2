@@ -25,6 +25,8 @@ export default function Home() {
             <NavLink to="/health">건강</NavLink>
             <NavLink to="/calendar">캘린더</NavLink>
             <NavLink to="/community">커뮤니티</NavLink>
+
+
           </nav>
 
           <nav className="menulink">
@@ -104,7 +106,6 @@ export default function Home() {
     </div>
   </div>
 </footer>
-
-    </div>
+</div>
   );
 }

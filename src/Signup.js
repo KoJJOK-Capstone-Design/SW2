@@ -18,7 +18,7 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/api/auth/Signup', formData);
+      const res = await axios.post('http://127.0.0.1:8000/api/v1/users/register/→회원가입', formData);
       console.log('회원가입 성공:', res.data);
       alert('회원가입이 성공적으로 완료되었습니다!');
       setFormData({ id: '', password: '', email: '', nickname: '' });

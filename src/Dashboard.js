@@ -1,16 +1,17 @@
 import React, { useMemo, useState } from "react";
-import "./Dashboard.css"; 
-import logoBlue from './img/logo_blue.png';
-import logoGray from './img/logo_gray.png';
-import githubpic from './img/github.png';
-import reactpic from './img/react.png';
-import djangopic from './img/django.png';
-import trash from './img/Trash.png';
-import bell from './img/bell.png';
-import chat from './img/chat.png';
-import circle from './img/circle.png';
-import plusicon from './img/plusicon.png';
+import "./Dashboard.css";
+import "./Activity.css";
 
+import logoBlue from "./img/logo_blue.png";
+import logoGray from "./img/logo_gray.png";
+import githubpic from "./img/github.png";
+import reactpic from "./img/react.png";
+import djangopic from "./img/django.png";
+import trashIcon from "./img/Trash_2.png";
+import bell from "./img/bell.png";
+import chat from "./img/chat.png";
+import circle from "./img/circle.png";
+import plusicon from "./img/plusicon.png";
 
 export default function Dashboard() {
   // 오늘 날짜
@@ -50,61 +51,43 @@ export default function Dashboard() {
     setNewTask("");
   };
 
-  
   return (
     <div className="app">
       {/* 헤더 */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
-            {/* 상단은 파란 로고 */}
             <img src={logoBlue} alt="paw logo" className="paw" />
             <span className="brand-text">멍냥멍냥</span>
           </div>
 
           <nav className="menu">
-            <a href="#activity">활동</a>
-            <a href="#health">건강</a>
-            <a href="#calendar">캘린더</a>
-            <a href="#community">커뮤니티</a>
+            <a href="/activity">활동</a>
+            <a href="/health">건강</a>
+            <a href="/calendar">캘린더</a>
+            <a href="/community">커뮤니티</a>
           </nav>
+
           <nav className="menuicon">
-            {/* 알림 버튼 */}
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => {
-                  setShowBellPopup(!showBellPopup);
-                  setShowChatPopup(false); // 다른 팝업 닫기
-                }}
+                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
               >
                 <img src={bell} alt="알림 아이콘" className="icon" />
               </button>
-
               {showBellPopup && (
-                <div className="popup">
-                  <p>📢 새 알림이 없습니다.</p>
-                </div>
+                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
               )}
             </div>
 
-            {/* 채팅 버튼 */}
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => {
-                  setShowChatPopup(!showChatPopup);
-                  setShowBellPopup(false); // 다른 팝업 닫기
-                }}
+                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
               >
-                <img src={chat} alt="채팅 아이콘" className="icon" />
+                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
               </button>
-
-              {showChatPopup && (
-                <div className="popup">
-                  <p>💬 새로운 메시지가 없습니다.</p>
-                </div>
-              )}
             </div>
           </nav>
         </div>
@@ -141,16 +124,18 @@ export default function Dashboard() {
                       checked={t.done}
                       onChange={() => toggleTask(t.id)}
                     />
-                    <span className={`todo__text ${t.done ? "is-done" : ""}`}>{t.text}</span>
+                    <span className={`todo__text ${t.done ? "is-done" : ""}`}>
+                      {t.text}
+                    </span>
                   </label>
                   <button
-                    className="todo__remove"
+                    className="icon-btn"
                     onClick={() => removeTask(t.id)}
                     aria-label="삭제"
                     title="삭제"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    <img src={trash} alt="삭제 아이콘" width="20" height="20" />
+                    {/* ✅ 수정: hover 효과 적용을 위해 icon-img 클래스 추가 */}
+                    <img src={trashIcon} alt="삭제 아이콘" className="icon-img" />
                   </button>
                 </li>
               ))}
@@ -165,45 +150,77 @@ export default function Dashboard() {
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
               />
               <button className="todo__addbtn" onClick={addTask} aria-label="추가">
-                <img src={circle} alt="버튼 배경" className="circle" />
-                <img src={plusicon} alt="추가 아이콘" className="plus" />
+                <img src={circle} alt="" className="circle" aria-hidden />
+                <img src={plusicon} alt="추가" className="plus" />
               </button>
             </div>
           </div>
         </section>
 
-        {/* 일정 & 체중 추세 일정 가져오는 방법을 몰라서 일단 일정 두 개만 직접 넣음*/}  
-        <section className="section section--grid">
-          <div className="card card--event">
-            <div className="event">
-              <div className="event__icon event__icon--cart" />
-              <div className="event__body">
-                <div className="event__title">사료 세일</div>
-                <div className="event__date">10월 5일</div>
+        {/* 다가오는 일정 & 건강 추세 */}
+        <section className="section">
+          <h2 className="section__title">
+            <span className="section__bullet section__bullet--blue" />
+            다가오는 일정 & 건강 추세
+          </h2>
+
+          {/* 2열 그리드 */}
+          <div className="section--grid">
+            {/* 좌측: 일정 리스트 */}
+            <div className="card card--event">
+              <div className="event">
+                <span className="event__icon event__icon--cart" />
+                <div className="event__body">
+                  <div className="event__title">사료 세일</div>
+                  <div className="event__date">10월 5일</div>
+                </div>
+                <div className="event__badge event__badge--soft">3일 남음</div>
               </div>
-              <div className="event__badge event__badge--soft">3일 남음</div>
+
+              <div className="event">
+                <span className="event__icon event__icon--steth" />
+                <div className="event__body">
+                  <div className="event__title">정기 검진일</div>
+                  <div className="event__date">10월 7일</div>
+                </div>
+                <div className="event__badge event__badge--danger">5일 남음</div>
+              </div>
             </div>
 
-            <div className="event">
-              <div className="event__icon event__icon--steth" />
-              <div className="event__body">
-                <div className="event__title">정기 검진일</div>
-                <div className="event__date">10월 7일</div>
+            {/* 우측: 차트 */}
+            <div className="card card--chart">
+              <div className="chart__header">
+                <span className="chart__caption">
+                  최근 1개월간 <b className="text--green">0.1kg 증가</b>했어요.
+                </span>
               </div>
-              <div className="event__badge event__badge--danger">5일 남음</div>
-            </div>
-          </div>
-
-          <div className="card card--chart">
-            <div className="chart__header">
-              <span className="chart__caption">
-                최근 체중이 <b className="text--green">0.1kg 증가</b>했어요.
-              </span>
-            </div>
-            {/* 실제 차트 라이브러리 연결 전, 자가 스타일 차트 플레이스홀더 */}
-            <div className="chart">
-              <div className="chart__grid" />
-              <div className="chart__line" />
+              <div className="dashboard">
+                <div className="chart">
+                  <div className="chart__grid" />
+                  <svg
+                    viewBox="0 0 100 60"
+                    preserveAspectRatio="none"
+                    className="chart__svg"
+                    aria-hidden
+                  >
+                    <defs>
+                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stopColor="#3b82f6" />
+                        <stop offset="1" stopColor="#60a5fa" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M5,45 C20,30 35,40 50,28 C65,18 80,26 95,20"
+                      fill="none"
+                      stroke="url(#lineGrad)"
+                      strokeWidth="2.2"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="95" cy="20" r="1.8" fill="#3b82f6" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -254,64 +271,63 @@ export default function Dashboard() {
       {/* 푸터 */}
       <footer className="footer">
         <div className="footer-inner">
-            <div className="logo-row">
-
+          <div className="logo-row">
             <div className="logo-stack">
-                <img src={logoGray} alt="" className="paw-bg" aria-hidden />
-                <span className="wordmark">KoJJOK</span>
+              <img src={logoGray} alt="" className="paw-bg" aria-hidden />
+              <span className="wordmark">KoJJOK</span>
             </div>
-            <div className="grid">
-                <div className="col">
+
+          <div className="grid">
+              <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
                 <a href="https://github.com/ouskxk" className="github-link">
-                    <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                    ouskxk
+                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  ouskxk
                 </a>
-                </div>
-                <div className="col">
-                    <h3>Jiun Ko</h3>
-                    <p>Front-End Dev</p>
-                    <a href="https://github.com/suerte223" className="github-link">
-                        <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                        suerte223
-                    </a>
-                </div>
-                <div className="col">
-                    <h3>Seungbeom Han</h3>
-                    <p>Front-End Dev</p>
-                    <a href="https://github.com/hsb9838" className="github-link">
-                        <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                        hsb9838
-                    </a>
-                </div>
-                <div className="col">
-                    <h3>Munjin Yang</h3>
-                    <p>Back-End Dev</p>
-                    <a href="https://github.com/munjun0608" className="github-link">
-                        <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                        munjun0608
-                    </a>
-                </div>
-                <div className="col">
-                    <h3>Youngbin Kang</h3>
-                    <p>Back-End Dev</p>
-                    <a href="https://github.com/0bini" className="github-link">
-                        <img src={githubpic} alt="GitHub Logo" className="github-icon" />
-                        0bini
-                    </a>
-                </div>
+              </div>
+              <div className="col">
+                <h3>Jiun Ko</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/suerte223" className="github-link">
+                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  suerte223
+                </a>
+              </div>
+              <div className="col">
+                <h3>Seungbeom Han</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/hsb9838" className="github-link">
+                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  hsb9838
+                </a>
+              </div>
+              <div className="col">
+                <h3>Munjin Yang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/munjun0608" className="github-link">
+                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  munjun0608
+                </a>
+              </div>
+              <div className="col">
+                <h3>Youngbin Kang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/0bini" className="github-link">
+                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  0bini
+                </a>
+              </div>
             </div>
 
-            {/* 그룹 3: 기술 스택 */}
             <div className="tech-stack">
-                <h3>TECH STACK</h3>
-                <img src={reactpic} alt="React Logo" className="react-icon" />
-                <img src={djangopic} alt="Django Logo" className="django-icon" />
+              <h3>TECH STACK</h3>
+              <img src={reactpic} alt="React Logo" className="react-icon" />
+              <img src={djangopic} alt="Django Logo" className="django-icon" />
             </div>
-            </div>
+          </div>
         </div>
-        </footer>
+      </footer>
     </div>
   );
 }
