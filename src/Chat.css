@@ -56,7 +56,7 @@
 }
 .noti__body { display: flex; flex-direction: column; gap: 6px; }
 .noti__text { display: flex; gap: 6px; align-items: baseline; color: #0f172a; }
-.noti__text b { margin-right: 2px; }
+.noti__text b { width: 70px;; margin-right: 2px; }
 .noti__text span { color: #111827; }
 
 .noti__meta { display: flex; gap: 8px; align-items: center; color: #6b7280; font-size: 12px; }
