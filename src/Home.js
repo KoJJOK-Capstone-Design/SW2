@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import './Home.css';
 import logoBlue from './img/logo_blue.png';
 import logoGray from './img/logo_gray.png';
@@ -20,14 +21,15 @@ export default function Home() {
           </div>
 
           <nav className="menu">
-            <a href="/activity">활동</a>
-            <a href="#health">건강</a>
-            <a href="#calendar">캘린더</a>
-            <a href="#community">커뮤니티</a>
+            <NavLink to="/activity">활동</NavLink>
+            <NavLink to="/health">건강</NavLink>
+            <NavLink to="/calendar">캘린더</NavLink>
+            <NavLink to="/community">커뮤니티</NavLink>
           </nav>
+
           <nav className="menulink">
-            <a href="/signup">회원가입</a>
-            <a href="/signin">로그인</a>
+            <NavLink to="/signup">회원가입</NavLink>
+            <NavLink to="/signin">로그인</NavLink>
           </nav>
         </div>
       </header>

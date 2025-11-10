@@ -4,6 +4,10 @@ import Signin from './Signin';
 import Signup from './Signup';
 import Dashboard from './Dashboard';
 import Activity from './Activity';
+import Community from './Community';
+import CommunityWrite from "./CommunityWrite";
+import PostDetail from "./PostDetail";  
+import PostEdit from "./PostEdit";       
 
 export default function App(){
   return (
@@ -14,6 +18,10 @@ export default function App(){
         <Route path="/Signup" element={<Signup />} />
         <Route path="/Dashboard" element={<Dashboard />} />
         <Route path="/activity" element={<Activity />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/community/write" element={<CommunityWrite />} />
+        <Route path="/community/:id" element={<PostDetail />} />
+        <Route path="/community/:id/edit" element={<PostEdit />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
