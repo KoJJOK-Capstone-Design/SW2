@@ -195,7 +195,6 @@ body {
   background-color: white;
   border-radius: 2px;
 }
-
 /* --- 모달 관련 스타일 --- */
 
 .calendar-page .modal-overlay {
@@ -206,63 +205,89 @@ body {
   height: 100%;
   background: rgba(0, 0, 0, 0.4);
   z-index: 9999;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: modalFadeIn 0.3s ease; 
+
+  animation: modalFadeIn 0.3s ease;
 }
 
+/* ⭐ 중앙 정확히 고정 + flex 영향 제거 */
 .calendar-page .modal {
-  position: absolute; 
-  width: 700px; 
-  height: 650px; 
-  background: #fff;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 700px;
+  height: 650px;
+
+  background: #ffffff;
   border-radius: 18px;
-  padding: 35px 40px; 
+  padding: 5px 40px 35px 40px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   box-sizing: border-box;
+
+  display: flex;            /* 제목 + form 수직 정렬 */
+  flex-direction: column;
+  align-items: flex-center;      /* 제목과 내부 모두 가운데 정렬 */
 }
 
+/* ⭐ 제목을 정확히 맨 위에 정렬 */
 .calendar-page .modal h2 {
+  width: 100%;
   text-align: center;
   color: #333;
   font-weight: 700;
-  margin-top: 0; 
+
+  margin: 0 0 25px 0;   /* 제목 아래 간격 조절 */
+  padding: 0;
 }
 
+/* ⭐ form은 너비를 꽉 채움 */
 .calendar-page .modal form {
-  display: flex;
-  flex-direction: column;
   width: 100%;
-}
-
-.calendar-page .modal-calendar-layout {
-  display: flex;
-  gap: 30px; 
-  margin-bottom: 20px; 
-}
-
-.calendar-page .modal-calendar-left {
-  flex: 1; 
-  min-width: 280px; 
-  margin-left: 20px;
-}
-
-.calendar-page .modal-calendar-right {
-  flex: 1; 
   display: flex;
   flex-direction: column;
-  gap: 16px; 
+  align-items: center;   /* 내부 가로 가운데 정렬 */
 }
 
-.calendar-page .date { 
-  margin-bottom: 6px; 
-  font-weight: 600; 
-  font-size: 15px; 
-  color: #444; 
+/* ⭐ 날짜 / 일정내용 / 카테고리 가로정렬 */
+.calendar-page .modal-calendar-layout {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center; 
+  align-items: flex-start;
+  gap: 40px;              /* 일정한 간격 */
+  margin-bottom: 30px;
+}
+
+/* 왼쪽 달력 */
+.calendar-page .modal-calendar-left {
+  flex: 1;
+  min-width: 260px;
+}
+
+/* 오른쪽 입력란 */
+.calendar-page .modal-calendar-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* label 디자인 통일 */
+.calendar-page .date {
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #444;
   text-align: left;
 }
 
+/* 입력줄 */
 .calendar-page .modal input[type="text"] {
   width: 100%;
   padding: 10px 12px;
@@ -273,25 +298,25 @@ body {
   box-sizing: border-box;
 }
 
-.calendar-page .modal input[type="text"]:focus,
-.calendar-page .react-select__control--is-focused {
-  border-color: #3d7eff !important; 
-  outline: none; 
-  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1) !important; 
+.calendar-page .modal input[type="text"]:focus {
+  border-color: #3d7eff !important;
+  box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1) !important;
 }
 
+/* 버튼 영역 */
 .calendar-page .form-buttons {
   display: flex;
-  gap: 12px;
   justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .calendar-page .form-buttons button {
-  padding: 10px 20px; 
+  padding: 10px 20px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-size: 16px; 
+  font-size: 16px;
 }
 
 .calendar-page .form-buttons button.save,
@@ -300,8 +325,8 @@ body {
   height: 35px;
   font-size: 13px;
   color: #fff;
-  line-height: 35px; 
-  padding: 0 18px; 
+  line-height: 35px;
+  padding: 0 18px;
 }
 
 .calendar-page .form-buttons button.cancel,
@@ -310,8 +335,8 @@ body {
   height: 35px;
   font-size: 13px;
   color: #222;
-  line-height: 35px; 
-  padding: 0 18px; 
+  line-height: 35px;
+  padding: 0 18px;
 }
 
 /* react-select 라이브러리 */
@@ -320,7 +345,7 @@ body {
   border: 1.8px solid #ddd !important;
   border-radius: 8px !important;
   padding: 2px 4px !important;
-  box-shadow: none !important; 
+  box-shadow: none !important;
 }
 
 .calendar-page .react-select__placeholder {
@@ -331,28 +356,27 @@ body {
   font-size: 15px !important;
 }
 
-/* '삭제 확인' 모달 */
+/* 삭제 확인 모달 */
 .calendar-page .modal.modal-delete-confirm {
-  width: 400px; 
-  height: 250px; 
-  padding: 24px; 
+  width: 400px;
+  height: 250px;
+  padding: 24px;
 }
 
 .calendar-page .modal.modal-delete-confirm h2 {
-  color: #000000; 
+  color: #000000;
   margin-bottom: 8px;
-  margin-top: 10px; 
+  margin-top: 10px;
   font-size: 1.5rem;
   font-weight: 600;
-  text-align: center; /* [추가] 제목 가운데 정렬 */
+  text-align: center;
 }
 
-/* [추가] 삭제 모달 부제목 스타일 */
 .calendar-page .modal-delete-confirm .delete-confirm-text {
-  text-align: center; /* [추가] 부제목 가운데 정렬 */
+  text-align: center;
   color: #555;
   font-size: 1rem;
-  margin-bottom: 25px; /* [추가] 버튼과 간격 */
+  margin-bottom: 25px;
 }
 
 .calendar-page .modal-delete-confirm .form-buttons {
@@ -360,16 +384,16 @@ body {
   justify-content: center;
   gap: 12px;
   width: 100%;
-  margin-top: 10px; /* [추가] 텍스트와 간격 */
+  margin-top: 10px;
 }
 
 .calendar-page .modal-delete-confirm .form-buttons .btn-cancel {
   height: 35px;
   font-size: 13px;
-  background: #55555527; 
-  color: #000; 
-  line-height: 35px; 
-  padding: 0 18px; 
+  background: #55555527;
+  color: #000;
+  line-height: 35px;
+  padding: 0 18px;
 }
 
 .calendar-page .modal-delete-confirm .form-buttons .btn-delete-confirm {
@@ -377,13 +401,14 @@ body {
   height: 35px;
   font-size: 13px;
   color: #fff;
-  line-height: 35px; 
-  padding: 0 18px; 
+  line-height: 35px;
+  padding: 0 18px;
 }
 
 .calendar-page .modal-delete-confirm .btn-delete-confirm:hover {
-  background: #ff000dc2; 
+  background: #ff000dc2;
 }
+
 
 
 /* --- CustomDatePicker 관련 스타일 --- */

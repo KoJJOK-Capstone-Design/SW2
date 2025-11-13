@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Home.css";
 import "./Activity.css";
-import { NavLink } from 'react-router-dom';
+import { NavLink } from "react-router-dom";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -72,8 +72,7 @@ export default function Activity() {
       alert("내용(분)을 1 이상의 숫자로 입력해 주세요.");
       return { ok: false };
     }
-    const distanceNum =
-      distanceStr === "" ? null : parseFloat(distanceStr);
+    const distanceNum = distanceStr === "" ? null : parseFloat(distanceStr);
     if (distanceStr !== "" && (Number.isNaN(distanceNum) || distanceNum < 0)) {
       alert("이동 거리(km)는 0 이상의 숫자여야 합니다.");
       return { ok: false };
@@ -167,7 +166,7 @@ export default function Activity() {
             <NavLink to="/calendar">캘린더</NavLink>
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
-          
+
           <nav className="menulink">
             <NavLink to="/signup">회원가입</NavLink>
             <NavLink to="/signin">로그인</NavLink>
@@ -235,7 +234,7 @@ export default function Activity() {
             onClick={() => setShowModal(true)}
           >
             <img src={circleImg} alt="" className="walk-fab-circle" />
-            <img src={plusIcon}  alt="" className="walk-fab-plus" />
+            <img src={plusIcon} alt="" className="walk-fab-plus" />
           </button>
 
           {walks.map((w) => (
@@ -369,11 +368,7 @@ export default function Activity() {
             </div>
 
             <div className="modal-actions">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={closeEdit}
-              >
+              <button type="button" className="btn btn-ghost" onClick={closeEdit}>
                 취소
               </button>
               <button type="submit" className="btn btn-primary">
@@ -392,10 +387,18 @@ export default function Activity() {
             <h3 className="confirm-title">정말 삭제하시겠습니까?</h3>
             <p className="confirm-desc">이 기록은 복구할 수 없습니다.</p>
             <div className="modal-actions">
-              <button type="button" className="btn btn-ghost" onClick={closeConfirm}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={closeConfirm}
+              >
                 취소
               </button>
-              <button type="button" className="btn btn-danger" onClick={confirmDelete}>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={confirmDelete}
+              >
                 삭제
               </button>
             </div>
@@ -417,7 +420,11 @@ export default function Activity() {
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
                 <a href="https://github.com/ouskxk" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   ouskxk
                 </a>
               </div>
@@ -425,7 +432,11 @@ export default function Activity() {
                 <h3>Jiun Ko</h3>
                 <p>Front-End Dev</p>
                 <a href="https://github.com/suerte223" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   suerte223
                 </a>
               </div>
@@ -433,7 +444,11 @@ export default function Activity() {
                 <h3>Seungbeom Han</h3>
                 <p>Front-End Dev</p>
                 <a href="https://github.com/hsb9838" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   hsb9838
                 </a>
               </div>
@@ -441,7 +456,11 @@ export default function Activity() {
                 <h3>Munjin Yang</h3>
                 <p>Back-End Dev</p>
                 <a href="https://github.com/munjun0608" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   munjun0608
                 </a>
               </div>
@@ -449,7 +468,11 @@ export default function Activity() {
                 <h3>Youngbin Kang</h3>
                 <p>Back-End Dev</p>
                 <a href="https://github.com/0bini" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   0bini
                 </a>
               </div>

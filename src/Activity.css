@@ -9,7 +9,7 @@
 
 .section { margin-top: 32px; }
 .section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.section-title h2 { font-size: 16px; }
+.section-title h2 { font-size: 24px; }
 .blue-stick { width: 8px; height: 18px; background: #2578ff; border-radius: 4px; display: inline-block; }
 
 /* 활성 메뉴 표시 */
@@ -29,6 +29,9 @@
 .metric-number { font-size: 22px; font-weight: 700; }
 
 /* ===== Chart ===== */
+/* 라벨 전용 하단 공간을 확보해서
+   0선(=막대 하단) 위에 그리드/막대가 오고,
+   라벨은 그 아래 별도 띠에 놓이도록 구성 */
 .chart {
   position: relative;
   width: 100%;
@@ -38,33 +41,44 @@
   background: #fff;
   border: 1px solid #e9edf2;
   border-radius: 24px;
-  padding: 100px 100px 140px 160px;
+  padding: 100px 100px 120px 160px; /* bottom을 120으로 줄여 라벨 띠 확보 */
   box-sizing: border-box;
   overflow: visible;
 }
+
+/* y축 그리드(숫자 0~70) 범위를 bars와 동일한 바닥(=0선)으로 맞춤 */
 .y-grid {
   position: absolute;
   left: 120px;
   right: 70px;
   top: 90px;
-  bottom: 120px;
+  bottom: 120px; /* 0선 높이 = 바/그리드의 하단 */
   display: flex;
   flex-direction: column-reverse;
   justify-content: space-between;
 }
 .y-row { width: 100%; border-top: 1px solid #eef0f4; position: relative; }
 .y-label { position: absolute; left: -60px; top: -8px; color: #7e7e7e; font-size: 14px; }
+
+/* 막대들도 같은 바닥을 사용 */
 .bars {
   position: absolute;
   left: 120px;
   right: 70px;
   top: 90px;
-  bottom: 120px;
+  bottom: 120px; /* 0선 일치 */
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
 }
-.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+
+.bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative; /* 라벨 절대배치 기준 */
+}
 .bar {
   width: 80px;
   border-radius: 16px 16px 0 0;
@@ -72,7 +86,19 @@
   transition: all .25s ease;
 }
 .bar:hover { background:#9bc2ff; transform: translateY(-6px); }
-.bar-label { margin-top: 12px; color:#7b7b7b; font-size: 15px; text-align:center; }
+
+/* 라벨은 0선 아래로 내려서 별도 띠에 표시 (겹침 방지) */
+.bar-label {
+  position: absolute;
+  bottom: -38px;                 /* 필요시 -34~-42px 사이 미세조정 */
+  left: 50%;
+  transform: translateX(-50%);
+  color: #7b7b7b;
+  font-size: 15px;
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
+}
 
 /* ===== Recent Walk Card ===== */
 .walk-card {
@@ -107,7 +133,7 @@
 }
 .icon-btn:hover { transform: translateY(-1px); }
 
-/* PNG 아이콘을 동일 회색으로 표준화 후 hover에 파랑으로 */
+/* PNG 아이콘 표준화 */
 .icon-img{
   width: 20px; height: 20px; display: block; opacity: .65;
   filter: brightness(0) saturate(100%)
@@ -120,31 +146,26 @@
   opacity: 1; transform: translateY(-1px);
   filter: brightness(0) saturate(100%)
           invert(19%) sepia(99%) saturate(5460%) hue-rotate(206deg)
-          brightness(98%) contrast(103%);  /* #036CFF 근사 */
+          brightness(98%) contrast(103%);
 }
 
-/* ========= 섹션 우상단에 '플러스 버튼 1개만' 고정 ========= */
-/* 섹션을 기준 컨테이너로 */
+/* ========= 섹션 우상단 +버튼 ========= */
 .recent-walks { position: relative; }
-
-/* 섹션 우상단에 + 버튼 고정 */
 .recent-walks .walk-fab{
   position: absolute;
-  top: 12px;          /* 타이틀 라인 옆 */
-  right: 50px;
+  top: 5px;
+  right: 70px;
   width: 30px;
   height: 46px;
   padding: 0;
-  border: 0;          /* 버튼 기본 테두리 제거 */
+  border: 0;
   background: transparent;
   cursor: pointer;
-  line-height: 0;     /* 인라인 간격 제거 → 이미지가 분리돼 보이는 현상 해결 */
+  line-height: 0;
   z-index: 10;
   transition: transform .18s ease;
 }
 .recent-walks .walk-fab:hover { transform: scale(1.05); }
-
-/* 두 이미지를 정확히 겹치기 */
 .recent-walks .walk-fab-circle{
   position: absolute;
   inset: 0;
@@ -163,40 +184,46 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-
-/* 혹시 이미지가 인라인이라 공백 생길 때 대비 */
 .recent-walks .walk-fab img { display: block; }
 
-/* ===== Modal (작고 미니멀한 버전) ===== */
+/* ===== Modal (fixed fullscreen, clean backdrop) ===== */
+/* 중복 정의 제거: 아래 세 블록 한 벌만 유지 */
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  display: grid;
-  place-items: center;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
 }
 .modal-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(1.5px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
 }
 .modal-panel {
   position: relative;
+  z-index: 10000;
   width: min(540px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
   background: #fff;
   border-radius: 18px;
-  border: 1.8px solid #111; /* 검은색 테두리 */
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  border: none; /* 검은 테두리 제거 */
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
   padding: 28px 32px 24px;
-  z-index: 1;
 }
+
+/* 타이틀 */
 .modal-title {
   font-size: 28px;
   font-weight: 800;
   color: #111827;
   margin-bottom: 26px;
 }
+
 .form-field { margin-bottom: 18px; }
 .form-label {
   display: block;
@@ -214,13 +241,13 @@
   font-size: 15px;
   color: #111827;
   background: #fff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 .form-input::placeholder { color: #9ca3af; }
 .form-input:focus {
   outline: none;
   border-color: #2578ff;
-  box-shadow: 0 0 0 3px rgba(37, 120, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(37,120,255,.15);
 }
 .modal-actions {
   display: flex;
@@ -240,119 +267,30 @@
 .btn-ghost:hover { background: #e5e7eb; }
 .btn-primary {
   background: #2578ff; color: #fff;
-  box-shadow: 0 8px 22px rgba(37, 120, 255, 0.25);
+  box-shadow: 0 8px 22px rgba(37,120,255,.25);
 }
 .btn-primary:hover { filter: brightness(0.98); }
 
-/* 삭제 확인 모달 전용 타이포 */
+/* 삭제 확인 모달 전용 */
 .confirm-panel { text-align: center; padding-top: 32px; padding-bottom: 28px; }
 .confirm-title { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 10px; }
 .confirm-desc { font-size: 14px; color: #6b7280; margin: 0 0 18px; }
-
-/* 삭제 버튼 */
-.btn-danger {
-  background: #ef4444;
-  color: #fff;
-  box-shadow: 0 8px 22px rgba(239, 68, 68, 0.25);
-}
-.btn-danger:hover { filter: brightness(0.98); }
-/* 모바일 */
-@media (max-width: 768px) {
-  .icon-btn { width: 28px; height: 28px; }
-  .icon-img { width: 18px; height: 18px; }
-  .walk-actions { gap: 6px; }
-
-  .recent-walks .walk-fab {
-    right: 12px;
-    top: -2px;
-    width: 42px;
-    height: 42px;
-  }
-  .recent-walks .walk-fab-plus { width: 16px; height: 16px; }
-}
-
-/* ===== 삭제 확인 모달 전용 ===== */
-.confirm-panel {
-  text-align: center;
-  padding-top: 32px;
-  padding-bottom: 28px;
-}
-
-.confirm-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0 0 10px;
-}
-
-.confirm-desc {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 18px;
-}
-
 .btn-danger {
   background: #ef4444;
   color: #fff;
   box-shadow: 0 8px 22px rgba(239,68,68,.25);
 }
-
-.btn-danger:hover {
-  filter: brightness(0.98);
-}
-
-
-/* 모달 전체 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-/* 화면 어둡게 (뒤 배경) */
-.modal-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.45); /* 어둡게 */
-  backdrop-filter: blur(3px);
-  z-index: 1001;
-  pointer-events: auto; /* 클릭 방지 */
-}
-
-/* 모달 본체 (실제 창) */
-.modal-panel {
-  position: relative;
-  z-index: 1002;
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  width: 440px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  pointer-events: auto; /* 클릭 가능 */
-}
-
-
+.btn-danger:hover { filter: brightness(0.98); }
 
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
   .activity-container { max-width: 1100px; padding: 40px 36px 80px; }
   .chart { max-width: 100%; }
-  .bars { inset: 0 0 28px 50px; gap: 28px; }
   .bar { width: 52px; }
 }
 @media (max-width: 768px) {
   .activity-container { padding: 28px 20px 60px; }
   .metrics { gap: 40px; }
-  .bars { inset: 0 0 24px 44px; gap: 18px; }
   .bar { width: 40px; }
   .walk-card { max-width: 100%; }
 }
