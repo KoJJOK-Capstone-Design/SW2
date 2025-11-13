@@ -1,6 +1,3 @@
-/* ------------------------------- 
- * 📘 1. 폰트 설정 및 전역 스타일
- * ------------------------------- */
 @font-face {
   font-family: '온글잎 공부잘하자나';
   src: url('../src/온글잎 공부잘하자나.ttf') format('truetype');
@@ -22,9 +19,6 @@ body {
   flex-direction: column;
 }
 
-/* ------------------------------- 
- * 📘 2. 헤더 / 네비게이션
- * ------------------------------- */
 .nav {
   width: 100%;
   background: #fff;
@@ -37,12 +31,7 @@ body {
   justify-content: space-between;
   padding: 20px 40px;
 }
-/* (참고) .header 스타일은 이 JS 파일에서 사용하지 않으므로 제거 */
 
-
-/* ------------------------------- 
- * 📘 3. 메인 레이아웃 및 컨테이너
- * ------------------------------- */
 .calendar-main {
   display: flex;
   flex-direction: column;
@@ -59,7 +48,7 @@ body {
   background: #fff;
   border-radius: 24px;
   padding: 36px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
   align-items: flex-start;
 }
@@ -71,7 +60,7 @@ body {
   min-width: 380px;
 }
 
-/* 오른쪽 일정 목록 영역 */
+/* --- [수정됨] 오른쪽 일정 목록 영역 --- */
 .event-section {
   width: 600px;
   max-width: 46%;
@@ -80,251 +69,14 @@ body {
   box-sizing: border-box;
   height: 550px;
   position: relative;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-}
-
-/* ------------------------------- 
- * 📘 4. React Calendar - 기본
- * ------------------------------- */
-.react-calendar {
-  width: 100%;
-  height: 550px;
-  background: #fff;
-  border: none; 
-  border-radius: 14px;
-  padding: 30px;
-  margin-left: 30px;
-  box-sizing: border-box;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-/* ------------------------------- 
- * 📘 5. React Calendar - 헤더 (년/월)
- * ------------------------------- */
-.react-calendar__navigation {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  margin-right: 30px; 
+  padding-left: 10px; /* [추가] 좌우 패딩 */
+  padding-right: 10px; /* [추가] 좌우 패딩 */
+  
+  /* [추가] h3와 스크롤 영역을 세로로 정렬 */
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.react-calendar__navigation button {
-  background: none;
-  border: none;
-  color: #4b7bec;
-  font-size: 1.5rem; 
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.react-calendar__navigation button:enabled:hover,
-.react-calendar__navigation button:enabled:focus {
-  background-color: #e8f0ff !important;
-  border-radius: 8px;
-}
-
-.react-calendar__navigation__label {
-  flex: 1;
-  text-align: center;
-  color: #487bec;
-  font-weight: 700;
-  font-size: 1.5rem;
-  background: none !important;
-}
-
-/* ------------------------------- 
- * 📘 6. React Calendar - 요일 (한글화)
- * ------------------------------- */
-.react-calendar__month-view__weekdays {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
-  color: #666;
-  font-size: 1rem;
-}
-
-.react-calendar__month-view__weekdays__weekday {
-  flex: 1;
-  text-align: center;
-  color: #888;
-}
-
-.react-calendar__month-view__weekdays__weekday abbr {
-  text-decoration: none;
-  visibility: hidden; 
-  position: relative;
-}
-
-.react-calendar__month-view__weekdays__weekday abbr::after {
-  visibility: visible;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1rem;
-}
-
-.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr::after { content: "일"; color: #e74c3c; }
-.react-calendar__month-view__weekdays__weekday:nth-child(2) abbr::after { content: "월"; }
-.react-calendar__month-view__weekdays__weekday:nth-child(3) abbr::after { content: "화"; }
-.react-calendar__month-view__weekdays__weekday:nth-child(4) abbr::after { content: "수"; }
-.react-calendar__month-view__weekdays__weekday:nth-child(5) abbr::after { content: "목"; }
-.react-calendar__month-view__weekdays__weekday:nth-child(6) abbr::after { content: "금"; }
-.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr::after { content: "토"; color: #3b82f6; }
-
-
-/* ------------------------------- 
- * 📘 7. React Calendar - 날짜 타일
- * ------------------------------- */
-.react-calendar__tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  height: 68px;
-  border-radius: 10px;
-  background: transparent;
-  color: #222;
-  font-size: 1.2rem; 
-  padding-top: 6px;
-  box-sizing: border-box;
-  transition: background-color 0.2s; 
-  border: none; 
-}
-
-.react-calendar__tile abbr {
-  display: block;
-  line-height: 1;
-  margin-bottom: 6px;
-  font-size: 1.2rem;
-}
-
-.react-calendar__tile:enabled:hover {
-  background-color: #e8f0ff !important;
-}
-
-.react-calendar__month-view__days__day:nth-child(7n + 1) {
-  color: #e74c3c;
-}
-.react-calendar__month-view__days__day:nth-child(7n) {
-  color: #4b7bec;
-}
-
-.react-calendar__tile--active {
-  background-color: #ebf1ff !important;
-  color: #4b7bec !important;
-  border-radius: 10px;
-}
-
-.react-calendar__tile--now {
-  color: #222 !important;
-  outline: none;
-  box-shadow: none;
-}
-
-.react-calendar__tile:focus {
-  outline: none;
-  box-shadow: none;
-}
-
-.react-calendar__month-view__days__day--neighboringMonth {
-  color: #b5b5b5 !important;
-  opacity: 0.8;
-}
-
-/* ------------------------------- 
- * 📘 8. React Calendar - 일정 점(Dot)
- * ------------------------------- */
-.event-dots {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.event-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
-}
-
-/* ------------------------------- 
- * 📘 9. React Calendar - 연/월/연대 뷰
- * ------------------------------- */
-.react-calendar__year-view__months,
-.react-calendar__decade-view__years,
-.react-calendar__century-view__decades {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  justify-items: center;
-  align-items: center;
-}
-
-.react-calendar__year-view__months__month,
-.react-calendar__decade-view__years__year {
-  width: 84px;
-  height: 68px; 
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.2s;
-  box-sizing: border-box;
-}
-
-.react-calendar__year-view__months__month:hover,
-.react-calendar__decade-view__years__year:hover {
-  background-color: #e8f0ff !important;
-  color: #4b7bec;
-}
-
-.react-calendar__century-view__decades__decade {
-  width : 150px;
-  height: 68px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.2s;
-}
-
-.react-calendar__century-view__decades__decade:hover {
-  background-color: #e8f0ff !important;
-  width : 150px;
-  color: #4b7bec;
-}
-
-
-/* ------------------------------- 
- * 📘 10. 일정 목록 (Event List)
- * ------------------------------- */
-.event-section {
-  width: 600px;
-  max-width: 46%;
-  background: #f6f9ff;
-  border-radius: 16px;
-  margin-right: 30px;
-  box-sizing: border-box;
-  height: 550px;
-  position: relative;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+  flex-direction: column; 
 }
 
 .event-section h3 {
@@ -333,6 +85,24 @@ body {
   margin-bottom: 18px;
   font-size: 25px;
   color: #222;
+  flex-shrink: 0; /* [추가] 제목 영역이 줄어들지 않도록 설정 */
+}
+
+/* [추가] 5개 미만일 때의 목록 컨테이너 */
+.event-list {
+  flex-grow: 1; /* 남은 공간을 채움 */
+  overflow-y: hidden; /* 스크롤 없음 */
+  min-height: 0; /* [필수] flex-grow가 올바르게 작동하도록 설정 */
+}
+
+/* [추가] 5개 이상일 때의 스크롤 컨테이너 */
+.event-list-scrollable {
+  flex-grow: 1; /* 남은 공간을 채움 */
+  overflow-y: auto; /* 스크롤 자동 생성 */
+  min-height: 0; /* [필수] flex-grow가 올바르게 작동하도록 설정 */
+  
+  /* 스크롤바가 아이템을 가리지 않도록 오른쪽 패딩 추가 */
+  padding-right: 5px; 
 }
 
 .no-event {
@@ -349,8 +119,8 @@ body {
   background: #fff;
   padding: 12px 14px;
   border-radius: 12px;
-  margin: 10px 10px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+  margin: 10px 0; /* [수정] 10px 10px -> 10px 0 (좌우 마진 0) */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
   justify-content: space-between; 
 }
 
@@ -388,11 +158,11 @@ body {
   gap: 8px;
 }
 
-/* [수정] 플로팅 추가 버튼 (CSS로 그리기) */
+/* 플로팅 추가 버튼 (+) */
 .add-btn {
-  position: absolute; /* 👈 'relative'가 아닌 'absolute'로 변경 */
-  bottom: 22px;     /* 👈 'top' 대신 'bottom' (하단 기준) */
-  right: 22px;      /* 👈 'margin-left' 대신 'right' (오른쪽 기준) */
+  position: absolute; 
+  bottom: 0px; 
+  right:-50px; /* [수정] 22px -> 32px (패딩+스크롤바 고려) */
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -402,7 +172,6 @@ body {
   transition: background-color 0.2s;
 }
 
-/* + 버튼 가로 막대 */
 .add-btn::before {
   content: '';
   position: absolute;
@@ -415,7 +184,6 @@ body {
   border-radius: 2px;
 }
 
-/* + 버튼 세로 막대 */
 .add-btn::after {
   content: '';
   position: absolute;
@@ -428,12 +196,8 @@ body {
   border-radius: 2px;
 }
 
-/* [삭제] .schedule-list, .schedule-card 등 (중복 스타일) */
-/* ------------------------------- 
- * 📘 11. 모달 (Modal)
- * ------------------------------- */
+/* --- 모달 관련 스타일 --- */
 
-/* [수정] .calendar-page .modal-overlay 로 우선순위 높임 */
 .calendar-page .modal-overlay {
   position: fixed;
   top: 0;
@@ -448,11 +212,10 @@ body {
   animation: modalFadeIn 0.3s ease; 
 }
 
-/* [수정] .calendar-page .modal 로 우선순위 높임 */
 .calendar-page .modal {
   position: absolute; 
-  width: 700px;   /* 👈 원하시는 800px */
-  height: 650px;  /* 👈 원하시는 500px */
+  width: 700px; 
+  height: 650px; 
   background: #fff;
   border-radius: 18px;
   padding: 35px 40px; 
@@ -460,7 +223,6 @@ body {
   box-sizing: border-box;
 }
 
-/* 모달 제목 */
 .calendar-page .modal h2 {
   text-align: center;
   color: #333;
@@ -468,29 +230,24 @@ body {
   margin-top: 0; 
 }
 
-/* 모달 폼 */
 .calendar-page .modal form {
-  display:flex;
-  flex-direction:column;
+  display: flex;
+  flex-direction: column;
   width: 100%;
 }
 
-/* 모달 2단 레이아웃 */
 .calendar-page .modal-calendar-layout {
   display: flex;
   gap: 30px; 
   margin-bottom: 20px; 
 }
 
-/* 왼쪽 (달력) */
 .calendar-page .modal-calendar-left {
   flex: 1; 
   min-width: 280px; 
-  
   margin-left: 20px;
 }
 
-/* 오른쪽 (내용, 카테고리) */
 .calendar-page .modal-calendar-right {
   flex: 1; 
   display: flex;
@@ -498,7 +255,6 @@ body {
   gap: 16px; 
 }
 
-/* 모달 내 <label> (JS의 .date 클래스) */
 .calendar-page .date { 
   margin-bottom: 6px; 
   font-weight: 600; 
@@ -507,7 +263,6 @@ body {
   text-align: left;
 }
 
-/* 모달 입력창 (input) */
 .calendar-page .modal input[type="text"] {
   width: 100%;
   padding: 10px 12px;
@@ -518,7 +273,6 @@ body {
   box-sizing: border-box;
 }
 
-/* 입력창 포커스 효과 */
 .calendar-page .modal input[type="text"]:focus,
 .calendar-page .react-select__control--is-focused {
   border-color: #3d7eff !important; 
@@ -526,44 +280,41 @@ body {
   box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1) !important; 
 }
 
-/* 모달 폼 버튼 */
 .calendar-page .form-buttons {
-  display:flex;
-  gap:12px;
-  justify-content:center;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
+
 .calendar-page .form-buttons button {
   padding: 10px 20px; 
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
   font-size: 16px; 
 }
 
 .calendar-page .form-buttons button.save,
 .calendar-page .form-buttons button[type="submit"] {
-  background:#3d7eff;
-  height:35px;
+  background: #3d7eff;
+  height: 35px;
   font-size: 13px;
-  color:#fff;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  color: #fff;
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
-  padding: 0 18px; 
-}
-.calendar-page .form-buttons button.cancel,
-.calendar-page .form-buttons button[type="button"] {
-  background:#e5e9f2;
-  height:35px;
-  font-size: 13px;
-  color:#222;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
-  line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
 
-/* react-select 라이브러리 스타일 덮어쓰기 */
+.calendar-page .form-buttons button.cancel,
+.calendar-page .form-buttons button[type="button"] {
+  background: #e5e9f2;
+  height: 35px;
+  font-size: 13px;
+  color: #222;
+  line-height: 35px; 
+  padding: 0 18px; 
+}
+
+/* react-select 라이브러리 */
 .calendar-page .react-select__control {
   font-size: 15px !important;
   border: 1.8px solid #ddd !important;
@@ -571,72 +322,74 @@ body {
   padding: 2px 4px !important;
   box-shadow: none !important; 
 }
+
 .calendar-page .react-select__placeholder {
   color: #999 !important;
 }
+
 .calendar-page .react-select__menu {
   font-size: 15px !important;
 }
 
-/* --- [수정] '삭제 확인' 모달 전용 스타일 (Health.css와 동일하게) --- */
-
-/* 삭제 모달 껍데기 (Health.js와 동일한 크기) */
+/* '삭제 확인' 모달 */
 .calendar-page .modal.modal-delete-confirm {
   width: 400px; 
-  height: 250px; /* 👈 Health.js와 동일하게 250px로 수정 */
-  padding: 24px;  /* 👈 Health.js와 동일하게 24px로 수정 */
+  height: 250px; 
+  padding: 24px; 
 }
 
-/* 삭제 모달 제목 */
 .calendar-page .modal.modal-delete-confirm h2 {
   color: #000000; 
   margin-bottom: 8px;
-  margin-top: 10px; /* [추가] Health.js와 동일한 여백 */
-  font-size: 1.5rem; /* [추가] Health.js와 동일한 폰트 크기 */
+  margin-top: 10px; 
+  font-size: 1.5rem;
   font-weight: 600;
+  text-align: center; /* [추가] 제목 가운데 정렬 */
 }
 
+/* [추가] 삭제 모달 부제목 스타일 */
+.calendar-page .modal-delete-confirm .delete-confirm-text {
+  text-align: center; /* [추가] 부제목 가운데 정렬 */
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 25px; /* [추가] 버튼과 간격 */
+}
 
-/* 삭제 모달 버튼 정렬 */
 .calendar-page .modal-delete-confirm .form-buttons {
   display: flex;
   justify-content: center;
   gap: 12px;
   width: 100%;
-  margin-left:60px;
+  margin-top: 10px; /* [추가] 텍스트와 간격 */
 }
 
-/* '취소' 버튼 (Health.js와 동일한 연한 회색) */
 .calendar-page .modal-delete-confirm .form-buttons .btn-cancel {
-  height:35px;
+  height: 35px;
   font-size: 13px;
   background: #55555527; 
-  color: #000;      
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  color: #000; 
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
 
-/* '삭제' 버튼 (Health.js와 동일한 빨간색) */
 .calendar-page .modal-delete-confirm .form-buttons .btn-delete-confirm {
-  background:#ff2024;
-  height:35px;
+  background: #ff2024;
+  height: 35px;
   font-size: 13px;
-  color:#fff;
-  /* ✅ [추가] 1. line-height를 height와 똑같이 줍니다 */
+  color: #fff;
   line-height: 35px; 
-  /* ✅ [추가] 2. 세로 padding을 0으로 바꿉니다 (가로 패딩은 유지) */
   padding: 0 18px; 
 }
+
 .calendar-page .modal-delete-confirm .btn-delete-confirm:hover {
-  background: #ff000dc2; /* 👈 Health.js의 호버 색상 */
+  background: #ff000dc2; 
 }
 
-/* ------------------------------- 
- * 📘 12. 커스텀 날짜 선택기 (모달 내부)
- * ------------------------------- */
 
+/* --- CustomDatePicker 관련 스타일 --- */
+
+/* * .custom-datepicker (기본 = 메인 캘린더용)
+ */
 .custom-datepicker {
   display: flex;
   flex-direction: column;
@@ -646,136 +399,208 @@ body {
   border: 1.8px solid #eee; 
   padding: 18px;
   width: 100%; 
-    font-family: '온글잎 공부잘하자나', sans-serif; 
-    box-sizing: border-box;
-  }
-  .calendar-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    width: 100%; 
-    font-weight: 600; 
-    font-size: 16px; 
-    margin-bottom: 10px; 
-  }
-  .calendar-header button { 
-    background: none; 
-    border: none; 
-    font-size: 18px; 
-    color: #555; 
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background-color 0.2s;
-  }
-  .calendar-header button:hover { 
-    color: #007bff; 
-    background-color: #f1f3f5;
-  }
-  .calendar-days { 
-    display: grid; 
-    grid-template-columns: repeat(7, 1fr); 
-    gap: 5px; 
-    width: 100%; 
-  }
-  .calendar-day-header { 
-    text-align: center; 
-    font-weight: bold; 
-    color: #555; 
-    font-size: 14px; 
-  }
+  height: 550px; /* 메인 캘린더 높이 */
+  font-family: '온글잎 공부잘하자나', sans-serif; 
+  box-sizing: border-box;
+}
 
-  /* --- ✅ [수정] 이 부분을 덮어쓰세요 --- */
-  .calendar-date { 
-    border-radius: 8px; 
-    cursor: pointer; 
-    transition: 0.2s, color 0.2s; 
-    
-    /* [추가] 고정 높이와 flex 중앙 정렬 */
-    height: 32px; /* 👈 고정 높이 (이 값 조절 가능) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
-
-  .calendar-date:hover { background: #f1f3f5; }
-
-  .calendar-date.today { 
-    border: 1px solid #007bff; 
-    color: #007bff; 
-    font-weight: bold; 
-  }
-  .calendar-date.selected { 
-    background: #007bff; 
-    color: white; 
-    font-weight: bold; 
-  }
-
-  /* [수정] 빈 칸은 아예 투명하게 */
-  .calendar-date.empty { 
-    background: transparent; 
-    cursor: default; 
-    color: transparent; /* 글자(null) 안보이게 */
-    pointer-events: none; /* 클릭 방지 */
-  }
-  .calendar-date.empty:hover {
-    background: transparent;
-  }
-  /* --- ✅ 여기까지 --- */
-
-  .calendar-days { 
-    display: grid; 
-    grid-template-columns: repeat(7, 1fr); 
-    gap: 5px; 
-    width: 100%; 
-  }
-  .calendar-day-header { 
-    text-align: center; 
-    font-weight: bold; 
-    color: #555; 
-    font-size: 14px; 
-  }
-
-  /* --- ✅ [수정] --- */
-  .calendar-date { 
-    border-radius: 8px; 
-    cursor: pointer; 
-    transition: 0.2s, color 0.2s; 
-    
-    /* [삭제] padding: 8px 0; */
-    
-    /* [추가] 고정 높이와 flex 중앙 정렬 */
-    height: 36px; /* 👈 이 값으로 높이 고정 (조절 가능) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px; /* 글꼴 크기 명시 */
-  }
-  /* --- ✅ --- */
+/* * .calendar-header (기본 = 메인 캘린더용)
+ */
+.calendar-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  width: 100%; 
+  font-weight: 700;     /* 메인 캘린더 헤더 굵기 */
+  font-size: 22px;      /* 메인 캘린더 헤더 크기 */
+  margin-bottom: 30px;  /* 메인 캘린더 헤더 하단 여백 */
+}
 
 
-  .calendar-date:hover { background: #f1f3f5; }
-  .calendar-date.today { 
-    border: 1px solid #007bff; 
-    color: #007bff; 
-    font-weight: bold; 
-  }
-  .calendar-date.selected { 
-    background: #007bff; 
-    color: white; 
-    font-weight: bold; 
-  }
-  .calendar-date.empty { 
-    background: transparent; 
-    cursor: default; 
-    /* [추가] 빈 칸의 숫자/hover 효과 제거 */
-    color: transparent; 
-    pointer-events: none;
-  }
-/* ------------------------------- 
- * 📘 1. 반응형 (Responsive)
- * ------------------------------- */
+.calendar-header button { 
+  background: none; 
+  border: none; 
+  font-size: 18px; /* 메인 캘린더 화살표 크기 */
+  color: #555; 
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.calendar-header button:hover { 
+  color: #007bff; 
+  background-color: #f1f3f5;
+}
+
+.calendar-days { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 5px; 
+  width: 100%; 
+}
+
+/* [수정] 평일(월-금) 헤더는 검은색, 기본값 변경 */
+.calendar-day-header { 
+  text-align: center; 
+  font-weight: bold; 
+  color: #222; /* #555 -> #222 (검은색) */
+  font-size: 14px; /* 메인 캘린더 요일 헤더 크기 */
+}
+
+/* [수정] '일', '토' 헤더 (이제 .calendar-box를 통해 메인 캘린더만 선택) */
+.calendar-box .calendar-day-header:first-child {
+  color: #FF0000; /* 일요일 (Red) */
+}
+.calendar-box .calendar-day-header:last-child {
+  color: #0000FF; /* 토요일 (Blue) */
+}
+
+/*
+ * .calendar-date (기본 = 메인 캘린더용)
+ */
+.calendar-date { 
+  border-radius: 8px; 
+  cursor: pointer; 
+  transition: 0.2s, color 0.2s; 
+  
+  height: 60px; /* [중요] 메인 캘린더 날짜 칸 높이 */
+  display: flex;
+  flex-direction: column; /* 세로 정렬 (숫자, 점) */
+  align-items: center;
+  justify-content: flex-start; /* 위에서부터 정렬 */
+  
+  font-size: 14px; /* 메인 캘린더 날짜 폰트 크기 */
+  position: relative; /* event-dots의 기준점 */
+  padding-top: 6px; /* 숫자 상단 여백 */
+  box-sizing: border-box;
+  /* 평일(월-금) 색상은 body의 #222 (검은색)을 상속받음 */
+}
+
+.calendar-date:hover { 
+  background: #f1f3f5; 
+}
+
+/* [수정] '일', '토' 날짜 색상 (모든 캘린더에 적용) */
+.calendar-days .calendar-date:nth-child(7n + 1) {
+  color: #FF0000; /* 일요일 (Red) */
+}
+.calendar-days .calendar-date:nth-child(7n) {
+  color: #0000FF; /* 토요일 (Blue) */
+}
+
+
+/* [수정] '오늘' 날짜 색상 (모든 캘린더에 적용) */
+.calendar-days .calendar-date.today { 
+  color: #222; /* 검은색 */
+  font-weight: bold; 
+}
+
+/* [수정] 선택된 날짜 (모든 캘린더에 적용) */
+.calendar-days .calendar-date.selected { 
+  background: #cce0ff; /* 연한 파랑 */
+  color: #222; /* 글자색을 어둡게 변경 */
+  font-weight: bold; 
+}
+
+/* [수정] 빈 날짜 (모든 캘린더에 적용) */
+.calendar-days .calendar-date.empty { 
+  background: transparent; 
+  cursor: default; 
+  color: transparent; 
+  pointer-events: none;
+}
+
+.calendar-date.empty:hover {
+  background: transparent;
+}
+
+
+/* * ⭐️ [핵심] 모달 내부의 캘린더 스타일 덮어쓰기 ⭐️
+ */
+
+.modal-calendar-left .custom-datepicker {
+  padding: 10px;        /* 내부 여백 감소 */
+  border-width: 1px;    /* 얇은 테두리 */
+  height: auto;         /* [중요] 메인 캘린더의 550px 높이를 덮어씀 */
+}
+
+.modal-calendar-left .calendar-header {
+  font-size: 15px;      /* 헤더 폰트 감소 (22px -> 15px) */
+  font-weight: 600;     /* 굵기 감소 (700 -> 600) */
+  margin-bottom: 8px;   /* 하단 여백 감소 (30px -> 8px) */
+}
+
+.modal-calendar-left .calendar-header button {
+  font-size: 16px;      /* 화살표 버튼 감소 (18px -> 16px) */
+  padding: 2px 6px;
+}
+
+.modal-calendar-left .calendar-day-header {
+  font-size: 13px;      /* 요일 헤더 폰트 감소 (14px -> 13px) */
+  color: #222;           /* [수정] #555 -> #222 (메인 캘린더와 기본값 통일) */
+}
+
+/* [⭐️ 삭제] 모달의 주말 헤더 색상을 덮어쓰던 코드 삭제 */
+/*
+.modal-calendar-left .calendar-day-header:first-child,
+.modal-calendar-left .calendar-day-header:last-child {
+  color: #555;
+}
+*/
+
+.modal-calendar-left .calendar-days {
+  gap: 3px;             /* 날짜 간격 감소 (5px -> 3px) */
+}
+
+/* [수정] 모달 날짜 */
+.modal-calendar-left .calendar-days .calendar-date {
+  height: 32px;         /* [중요] 메인 캘린더 높이 덮어쓰기 (60px -> 32px) */
+  flex-direction: row;    /* 가로 정렬 (점 없으므로) */
+  justify-content: center;/* 중앙 정렬 */
+  font-size: 13px;      /* 폰트 크기 축소 (14px -> 13px) */
+  padding-top: 0;       /* 패딩 리셋 */
+  /* [⭐️ 삭제] color: #222; 삭제 (이제 메인 캘린더의 주말 색상을 상속받음) */
+}
+
+/* [수정] 모달 '오늘' 날짜 색상 덮어쓰기 (배경색 제거) */
+.modal-calendar-left .calendar-days .calendar-date.today {
+  color: #222; 
+  font-weight: bold; 
+  background: transparent; /* 덮어쓰기 (선택 안됐을 때) */
+}
+
+/* [수정] 모달 '선택' 날짜 색상 덮어쓰기 */
+.modal-calendar-left .calendar-days .calendar-date.selected {
+  background: #cce0ff; 
+  color: #222; 
+  font-weight: bold; 
+}
+
+
+/* --- 이벤트 점 스타일 (메인 캘린더 전용) --- */
+.event-dots {
+  position: absolute;
+  bottom: 6px; /* 날짜 칸 바닥에 위치 */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 점이 클릭 방해하지 않도록 */
+}
+
+.event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  /* 흰색 테두리를 주어 겹쳐도 보이게 함 */
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* --- 미디어 쿼리 --- */
+
 @media (max-width: 920px) {
   .calendar-container {
     flex-direction: column;
@@ -792,9 +617,6 @@ body {
     max-width: 100%;
     min-width: 0;
   }
-  .react-calendar {
-    margin-left: 0; 
-  }
 
   /* 모바일에서 모달 2단 레이아웃 해제 */
   .modal-calendar-layout {
@@ -802,20 +624,30 @@ body {
     gap: 16px;
   }
   .modal {
-    width: 0%; /* 모바일에서 꽉 차게 */
+    width: 90%; 
     padding: 20px;
   }
 }
 
-/* ------------------------------- 
- * 📘 15. 모달 애니메이션
- * ------------------------------- */
+/* --- 키프레임 --- */
+
 @keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes modalSlideUp {
-  from { opacity: 0; transform: translate(-50%, -48%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+/* 스크롤 */
+/* [추가] 5개 미만일 때의 목록 컨테이너 */
+.event-list {
+  flex-grow: 1; 
+  overflow-y: hidden; /* 스크롤 없음 */
+  min-height: 0;
+}
+/* [추가] 5개 이상일 때의 스크롤 컨테이너 */
+.event-list-scrollable {
+  flex-grow: 1;
+  overflow-y: auto; /* ⬅️ 이 속성이 스크롤을 만듭니다 */
+  min-height: 0;
+  
+  padding-right: 5px; 
 }
