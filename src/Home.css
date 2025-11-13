@@ -272,3 +272,29 @@
     font-size: 12px;
   }
 }
+
+/* ===== Fix: header link underline/visited color ===== */
+.nav a,
+.brand,
+.brand:visited,
+.brand-text {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-text {
+  font-weight: 800;
+}
+
+/* 혹시 브라우저 기본 visited 컬러가 남는 경우 방지 */
+.nav a:visited {
+  color: inherit !important;
+}
+
+

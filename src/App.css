@@ -28,6 +28,28 @@
   color: #61dafb;
 }
 
+
+/* 기본 링크 스타일 */
+.menu .menu-link{
+  color:#0f172a;            /* 기본 글자색 */
+  text-decoration:none;
+  font-weight:600;
+  transition:color .15s ease;
+}
+
+/* 활성 탭(현재 페이지) */
+.menu .menu-link.is-active{
+  color:#2563eb;           /* 파란색 */
+  font-weight:800;
+}
+
+/* 호버 */
+.menu .menu-link:hover{
+  color:#1d4ed8;
+}
+
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
