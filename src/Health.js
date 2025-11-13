@@ -9,8 +9,8 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-// ✅ [추가 1] Chart.js 라이브러리 import
-import { Line } from 'react-chartjs-2';
+// Chart.js
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -20,9 +20,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
-// ✅ [추가 2] Chart.js에 필요한 기능 등록
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -33,128 +32,116 @@ ChartJS.register(
   Legend
 );
 
-// --- 초기 더미 데이터 ---
-const initialRecords = [
-  // (필요시 여기에 초기 데이터를 추가하세요)
-];
+// 초기 더미 데이터
+const initialRecords = [];
 
-// ✅ [수정] 부모로부터 user와 pet 데이터를 props로 받음
 const Health = ({ user, pet }) => {
-  /* --- 기존 상태들 --- */
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [records, setRecords] = useState(initialRecords);
   const [activeTab, setActiveTab] = useState("all");
 
-  /* '추가' 모달 상태 */
+  // 추가 모달
   const [showModal, setShowModal] = useState(false);
   const [newRecord, setNewRecord] = useState({
-    type: "", 
+    type: "",
     title: "",
     location: "",
     date: "",
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  /* '수정' 모달 상태 */
+
+  // 수정 모달
   const [showEditModal, setShowEditModal] = useState(false);
   const [recordToEdit, setRecordToEdit] = useState(null);
   const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
 
-  /* '삭제' 모달 상태 */
+  // 삭제 모달
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [recordToDelete, setRecordToDelete] = useState(null); 
+  const [recordToDelete, setRecordToDelete] = useState(null);
 
-  /* AI 분석 결과 상태 */
-  const [analysisResult, setAnalysisResult] = useState(null); 
+  // AI 분석
+  const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  /* --- ✅ [추가 3] 그래프용 '가짜' 데이터 (컴포넌트 내부로 이동) --- */
+  // 체중 그래프 (데이터만; 실제 렌더는 필요할 때 추가)
   const weightData = {
     labels: ["9월", "10월", "11월", "12월", "1월", "2월", "3월", "4월", "5월"],
     datasets: [
       {
         label: "체중 (kg)",
-        data: [3.20, 3.40, 3.35, 3.50, 3.60, 3.45, 3.50, 3.55, 3.52],
-        
-        /* --- 선 스타일 --- */
-        borderColor: "#4b7bec", // 🔵 선 색상
-        tension: 0.4, // 〰️ 선의 부드러운 정도
-        
-        /* --- 영역 채우기 (그라데이션) --- */
-        fill: true, 
-        backgroundColor: "rgba(75, 123, 236, 0.1)", // 옅은 파란색
-        
-        /* --- 점(포인트) 스타일 --- */
-        pointBackgroundColor: "#fff", // ⚪ 점 배경색 (흰색)
-        pointBorderColor: "#4b7bec", // 🔵 점 테두리색 (파란색)
-        pointBorderWidth: 2, // 점 테두리 두께
-        pointRadius: 5, // 점 크기
-        pointHoverRadius: 7, // 마우스 올렸을 때 점 크기
+        data: [3.2, 3.4, 3.35, 3.5, 3.6, 3.45, 3.5, 3.55, 3.52],
+        borderColor: "#4b7bec",
+        tension: 0.4,
+        fill: true,
+        backgroundColor: "rgba(75,123,236,0.1)",
+        pointBackgroundColor: "#fff",
+        pointBorderColor: "#4b7bec",
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
       },
     ],
   };
 
   const chartOptions = {
-    responsive: true, // 반응형
-    maintainAspectRatio: false, // 👈 .graph-box 높이에 맞게 꽉 차게
-    
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false, // 그래프 위 '체중 (kg)' 라벨 숨기기
+        display: false,
       },
-      /* --- ✅ [수정] 툴팁(설명창) 스타일 --- */
       tooltip: {
-        enabled: true, // 툴팁 활성화
-        backgroundColor: "#dfebfaff", 
-        titleColor: "#000000ff",     
-        bodyColor: "#0c0c0cff",      
-        padding: 12,            
-        cornerRadius: 8,      
-        borderColor: "#dfebfaff",
-        borderWidth: 3,        
-        
-        // 툴팁 박스에 그림자 추가
-        caretSize: 0, // 툴팁의 뾰족한 꼬리 제거
-        displayColors: false, // 색상 사각형 숨기기
+        enabled: true,
+        backgroundColor: "#dfebfa",
+        titleColor: "#000",
+        bodyColor: "#0c0c0c",
+        padding: 12,
+        cornerRadius: 8,
+        borderColor: "#dfebfa",
+        borderWidth: 3,
+        caretSize: 0,
+        displayColors: false,
         boxPadding: 8,
-        
-        // 폰트 설정 (Pretendard가 적용되도록)
         bodyFont: {
           size: 14,
-          family: "Pretendard", 
+          family: "Pretendard",
         },
         titleFont: {
           size: 12,
           family: "Pretendard",
-        }
+        },
       },
-      /* --- ✅ --- */
     },
-    
-    // --- 축 스타일 ---
     scales: {
       y: {
-        min: 3.0, // y축 최소값
+        min: 3.0,
         grid: {
-          color: "#e9e9e9", // 📉 y축 그리드 선 색상
+          color: "#e9e9e9",
         },
       },
       x: {
         grid: {
-          display: false, // 👈 x축 그리드 선 숨기기
+          display: false,
         },
       },
-    }
+    },
   };
-  /* --- ✅ --- */
 
   const symptoms = [
-    "구토", "설사", "식사 부진", "복부 팽만",
-    "과도한 갈증", "피부 발진", "비듬", "탈모",
-    "기력 저하", "수면 증가", "불안 / 공격성", "걸음걸이 이상",
+    "구토",
+    "설사",
+    "식사 부진",
+    "복부 팽만",
+    "과도한 갈증",
+    "피부 발진",
+    "비듬",
+    "탈모",
+    "기력 저하",
+    "수면 증가",
+    "불안 / 공격성",
+    "걸음걸이 이상",
   ];
 
-  /* 증상 선택 */
   const toggleSymptom = (symptom) => {
     setSelectedSymptoms((prev) =>
       prev.includes(symptom)
@@ -163,15 +150,12 @@ const Health = ({ user, pet }) => {
     );
   };
 
-  /* --- '추가', '수정', '삭제' 모달 관련 함수들 --- */
-
-  /* '추가' 모달 열기 */
+  // 추가 모달
   const handleAdd = () => {
     setShowModal(true);
-    setIsDropdownOpen(false); 
+    setIsDropdownOpen(false);
   };
 
-  /* '추가' 모달 입력 변경 */
   const handleChange = (e) => {
     setNewRecord({
       ...newRecord,
@@ -179,9 +163,13 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  /* '추가' 모달 저장 (가짜) */
   const handleSave = () => {
-    if (!newRecord.type || !newRecord.title || !newRecord.location || !newRecord.date) {
+    if (
+      !newRecord.type ||
+      !newRecord.title ||
+      !newRecord.location ||
+      !newRecord.date
+    ) {
       alert("모든 내용을 입력해주세요!");
       return;
     }
@@ -200,20 +188,18 @@ const Health = ({ user, pet }) => {
     setIsDropdownOpen(false);
   };
 
-  /* '추가' 모달 폼 제출 */
   const handleFormSubmit = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     handleSave();
   };
 
-  /* '수정' 모달 열기 */
+  // 수정 모달
   const handleEditClick = (record) => {
-    setRecordToEdit(record); 
-    setShowEditModal(true); 
-    setIsEditDropdownOpen(false); 
+    setRecordToEdit(record);
+    setShowEditModal(true);
+    setIsEditDropdownOpen(false);
   };
 
-  /* '수정' 모달 입력 변경 */
   const handleEditChange = (e) => {
     setRecordToEdit({
       ...recordToEdit,
@@ -221,42 +207,45 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  /* '수정' 모달 저장 (가짜) */
   const handleUpdateSave = () => {
-    if (!recordToEdit.type || !recordToEdit.title || !recordToEdit.location || !recordToEdit.date) {
+    if (
+      !recordToEdit.type ||
+      !recordToEdit.title ||
+      !recordToEdit.location ||
+      !recordToEdit.date
+    ) {
       alert("모든 내용을 입력해주세요!");
       return;
     }
     const iconMap = { visit: "🏥", vax: "💉", med: "💊" };
     const updatedRecord = {
       ...recordToEdit,
-      icon: iconMap[recordToEdit.type]
+      icon: iconMap[recordToEdit.type],
     };
-    setRecords(records.map(r => (r.id === updatedRecord.id ? updatedRecord : r)));
+    setRecords(
+      records.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
+    );
     setShowEditModal(false);
     setRecordToEdit(null);
     setIsEditDropdownOpen(false);
   };
 
-  /* '수정' 모달 폼 제출 */
   const handleEditFormSubmit = (e) => {
     e.preventDefault();
     handleUpdateSave();
   };
 
-  /* '삭제' 모달 열기 */
+  // 삭제 모달
   const handleDeleteClick = (id) => {
     setRecordToDelete(id);
     setShowDeleteModal(true);
   };
 
-  /* '삭제' 모달 > '취소' */
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setRecordToDelete(null);
   };
 
-  /* '삭제' 모달 > '삭제' (가짜) */
   const handleConfirmDelete = () => {
     if (recordToDelete) {
       setRecords(records.filter((r) => r.id !== recordToDelete));
@@ -265,14 +254,13 @@ const Health = ({ user, pet }) => {
     setRecordToDelete(null);
   };
 
-
-  /* AI 분석 요청 함수 */
+  // AI 분석 (더미)
   const handleAnalyze = async () => {
     if (selectedSymptoms.length === 0) {
       alert("먼저 증상을 선택해주세요!");
       return;
     }
-    setIsLoading(true); 
+    setIsLoading(true);
     setAnalysisResult(null);
 
     const analysisData = {
@@ -282,156 +270,288 @@ const Health = ({ user, pet }) => {
       },
       symptoms: selectedSymptoms,
     };
-    
-    // --- (시연용) 가짜 백엔드 응답 (2초 딜레이) ---
+    console.log("fake send:", analysisData);
+
     setTimeout(() => {
       const fakeResponse = {
         illness_name: "복합적 문제",
-        illness_details: `선택하신 '${selectedSymptoms.join(", ")}' 증상은 급성 위장염의 가능성을 시사합니다. 소화기관의 염증으로 인해 발생할 수 있으며, 탈수 증상으로 이어질 수 있어 주의가 필요합니다.`,
+        illness_details: `선택하신 '${selectedSymptoms.join(
+          ", "
+        )}' 증상은 급성 위장염의 가능성을 시사합니다. 소화기관의 염증으로 인해 발생할 수 있으며, 탈수 증상으로 이어질 수 있어 주의가 필요합니다.`,
         recommendations: [
           "유산균을 급여하고 식단을 점검해주세요.",
           "탈수 방지를 위해 수분 섭취에 신경써주세요.",
           "편안한 환경에서 충분히 쉴 수 있도록 해주세요.",
-          "다른 증상이 동반되거나 24시간 내 호전되지 않으면 수의사와 상담하세요."
-        ]
+          "다른 증상이 동반되거나 24시간 내 호전되지 않으면 수의사와 상담하세요.",
+        ],
       };
-      setAnalysisResult(fakeResponse); 
+      setAnalysisResult(fakeResponse);
       setIsLoading(false);
     }, 1500);
   };
 
-  /* 필터링 */
   const filteredRecords = records.filter((record) =>
     activeTab === "all" ? true : record.type === activeTab
   );
 
-    // ✅ [수정] 네비게이션 렌더링 함수 (user prop에 안전하게 접근)
-  const renderNavLinks = () => {
-    // user prop이 있고 nickname 속성이 있을 때 환영 메시지 표시
-    if (user && user.nickname) {
-      return (
-        <span className="welcome-msg">{user.nickname}님</span>
-      );
-    }
-    // user prop이 없거나 nickname이 없을 때 로그인/회원가입 링크 표시
-    return (
-      <>
-        <a href="/signup">회원가입</a>
-        <a href="/signin">로그인</a>
-      </>
-    );
-  };
-
-
   return (
     <div className="health-page">
+      {/* 추가 모달 */}
+{showModal && (
+  <div className="health-add-overlay" onClick={() => setIsDropdownOpen(false)}>
+    <div className="health-add-modal" onClick={(e) => e.stopPropagation()}>
 
-      {/* --- '추가' 모달 UI --- */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => { if (isDropdownOpen) setIsDropdownOpen(false); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>새로운 건강 기록 추가</h2>
-            <form onSubmit={handleFormSubmit}>
-              <label>종류</label>
-              <div className="custom-select-wrapper">
-                <button
-                  type="button"
-                  className={`custom-select-trigger ${newRecord.type === "" ? "placeholder" : ""}`}
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                >
-                  {newRecord.type === "visit" && "병원 방문"}
-                  {newRecord.type === "vax" && "예방접종"}
-                  {newRecord.type === "med" && "투약"}
-                  {newRecord.type === "" && "선택하세요"}
-                </button>
-                {isDropdownOpen && (
-                  <ul className="custom-options">
-                    <li className="custom-option" onClick={() => { setNewRecord({ ...newRecord, type: "visit" }); setIsDropdownOpen(false); }}>병원 방문</li>
-                    <li className="custom-option" onClick={() => { setNewRecord({ ...newRecord, type: "vax" }); setIsDropdownOpen(false); }}>예방접종</li>
-                    <li className="custom-option" onClick={() => { setNewRecord({ ...newRecord, type: "med" }); setIsDropdownOpen(false); }}>투약</li>
-                  </ul>
-                )}
-              </div>
-              <label>제목</label>
-              <input type="text" name="title" placeholder="예: 종합 백신 5차"
-                value={newRecord.title} onChange={handleChange} required />
-              <label>장소 / 약 이름</label>
-              <input type="text" name="location" placeholder="예: 멍냥 동물 병원"
-                value={newRecord.location} onChange={handleChange} required />
-              <label>날짜</label>
-              <input type="date" name="date" placeholder="연도-월-일"
-                value={newRecord.date} onChange={handleChange} required />
-              <div className="form-buttons">
-                <button type="submit">저장</button>
-                <button type="button" onClick={() => setShowModal(false)}>취소</button>
-              </div>
-            </form>
-          </div>
+      <h2>새로운 건강 기록 추가</h2>
+
+      <div className="health-add-group">
+  <label>종류</label>
+
+  <div className="health-select-wrapper">
+    <button
+      type="button"
+      className={`health-select-trigger ${newRecord.type === "" ? "placeholder" : ""}`}
+      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+    >
+      <span>
+        {newRecord.type === ""
+          ? "선택하세요"
+          : newRecord.type === "visit"
+          ? "병원 방문"
+          : newRecord.type === "vax"
+          ? "예방접종"
+          : "투약"}
+      </span>
+
+      <span className="health-select-arrow">▼</span>
+    </button>
+
+    {isDropdownOpen && (
+      <div className="health-select-options">
+        <div
+          className="health-select-option"
+          onClick={() => {
+            setNewRecord({ ...newRecord, type: "visit" });
+            setIsDropdownOpen(false);
+          }}
+        >
+          병원 방문
         </div>
-      )}
 
-      {/* --- '수정' 모달 UI --- */}
+        <div
+          className="health-select-option"
+          onClick={() => {
+            setNewRecord({ ...newRecord, type: "vax" });
+            setIsDropdownOpen(false);
+          }}
+        >
+          예방접종
+        </div>
+
+        <div
+          className="health-select-option"
+          onClick={() => {
+            setNewRecord({ ...newRecord, type: "med" });
+            setIsDropdownOpen(false);
+          }}
+        >
+          투약
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+
+      <div className="health-add-group">
+        <label>제목</label>
+        <input className="health-add-input" name="title" value={newRecord.title}
+              onChange={handleChange} placeholder="예: 종합 백신 5차" required/>
+      </div>
+
+      <div className="health-add-group">
+        <label>장소 / 약 이름</label>
+        <input className="health-add-input" name="location" value={newRecord.location}
+              onChange={handleChange} placeholder="예: 멍냥 동물병원" required/>
+      </div>
+
+      <div className="health-add-group">
+        <label>날짜</label>
+        <input className="health-add-input" name="date" type="date"
+              value={newRecord.date} onChange={handleChange} required/>
+      </div>
+
+      <div className="health-add-buttons">
+        <button className="health-add-btn cancel" onClick={() => setShowModal(false)}>취소</button>
+        <button className="health-add-btn save" onClick={handleFormSubmit}>저장</button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+      {/* 수정 모달 */}
       {showEditModal && recordToEdit && (
-        <div className="modal-overlay" onClick={() => { if (isEditDropdownOpen) setIsEditDropdownOpen(false); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="health-modal-overlay"
+          onClick={() => {
+            if (isEditDropdownOpen) setIsEditDropdownOpen(false);
+            setShowEditModal(false);
+          }}
+        >
+          <div
+            className="health-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>건강 기록 수정</h2>
             <form onSubmit={handleEditFormSubmit}>
-              <label>종류</label>
-              <div className="custom-select-wrapper">
+              <div className="form-group">
+                <label>종류</label>
+                <div className="custom-select-wrapper">
+                  <button
+                    type="button"
+                    className={`custom-select-trigger ${
+                      recordToEdit.type === "" ? "placeholder" : ""
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEditDropdownOpen(!isEditDropdownOpen);
+                    }}
+                  >
+                    {recordToEdit.type === "visit" && "병원 방문"}
+                    {recordToEdit.type === "vax" && "예방접종"}
+                    {recordToEdit.type === "med" && "투약"}
+                    {recordToEdit.type === "" && "선택하세요"}
+                  </button>
+                  {isEditDropdownOpen && (
+                    <ul className="custom-options">
+                      <li
+                        className="custom-option"
+                        onClick={() => {
+                          setRecordToEdit({
+                            ...recordToEdit,
+                            type: "visit",
+                          });
+                          setIsEditDropdownOpen(false);
+                        }}
+                      >
+                        병원 방문
+                      </li>
+                      <li
+                        className="custom-option"
+                        onClick={() => {
+                          setRecordToEdit({
+                            ...recordToEdit,
+                            type: "vax",
+                          });
+                          setIsEditDropdownOpen(false);
+                        }}
+                      >
+                        예방접종
+                      </li>
+                      <li
+                        className="custom-option"
+                        onClick={() => {
+                          setRecordToEdit({
+                            ...recordToEdit,
+                            type: "med",
+                          });
+                          setIsEditDropdownOpen(false);
+                        }}
+                      >
+                        투약
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>제목</label>
+                <input
+                  className="input"
+                  type="text"
+                  name="title"
+                  placeholder="예: 종합 백신 5차"
+                  value={recordToEdit.title}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>장소 / 약 이름</label>
+                <input
+                  className="input"
+                  type="text"
+                  name="location"
+                  placeholder="예: 멍냥 동물 병원"
+                  value={recordToEdit.location}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>날짜</label>
+                <input
+                  className="input"
+                  type="date"
+                  name="date"
+                  placeholder="연도-월-일"
+                  value={recordToEdit.date}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+
+              <div className="form-buttons">
                 <button
                   type="button"
-                  className={`custom-select-trigger ${recordToEdit.type === "" ? "placeholder" : ""}`}
-                  onClick={() => setIsEditDropdownOpen(!isEditDropdownOpen)}
+                  className="btn-cancel"
+                  onClick={() => setShowEditModal(false)}
                 >
-                  {recordToEdit.type === "visit" && "병원 방문"}
-                  {recordToEdit.type === "vax" && "예방접종"}
-                  {recordToEdit.type === "med" && "투약"}
-                  {recordToEdit.type === "" && "선택하세요"}
+                  취소
                 </button>
-                {isEditDropdownOpen && (
-                  <ul className="custom-options">
-                    <li className="custom-option" onClick={() => { setRecordToEdit({ ...recordToEdit, type: "visit" }); setIsEditDropdownOpen(false); }}>병원 방문</li>
-                    <li className="custom-option" onClick={() => { setRecordToEdit({ ...recordToEdit, type: "vax" }); setIsEditDropdownOpen(false); }}>예방접종</li>
-                    <li className="custom-option" onClick={() => { setRecordToEdit({ ...recordToEdit, type: "med" }); setIsEditDropdownOpen(false); }}>투약</li>
-                  </ul>
-                )}
-              </div>
-              <label>제목</label>
-              <input type="text" name="title" placeholder="예 : 종합 백신 5차"
-                value={recordToEdit.title} onChange={handleEditChange} required />
-              <label>장소 / 약 이름</label>
-              <input type="text" name="location" placeholder="예 : 멍냥 동물 병원"
-                value={recordToEdit.location} onChange={handleEditChange} required />
-              <label>날짜</label>
-              <input type="date" name="date" placeholder="연도-월-일"
-                value={recordToEdit.date} onChange={handleEditChange} required />
-              <div className="form-buttons">
-                <button type="submit">저장</button>
-                <button type="button" onClick={() => setShowEditModal(false)}>취소</button>
+                <button type="submit" className="btn-primary">
+                  저장
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* --- '삭제 확인' 모달 UI  --- */}
+      {/* 삭제 모달 */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={handleCancelDelete}>
-          <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
+        <div className="health-modal-overlay" onClick={handleCancelDelete}>
+          <div
+            className="health-modal health-modal-delete"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>정말 삭제하시겠습니까?</h2>
             <p className="delete-confirm-text">이 기록은 복구할 수 없습니다.</p>
             <div className="form-buttons">
-              <button type="button" className="btn-cancel" onClick={handleCancelDelete}>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={handleCancelDelete}
+              >
                 취소
               </button>
-              <button type="button" className="btn-delete-confirm" onClick={handleConfirmDelete}>
+              <button
+                type="button"
+                className="btn-delete-confirm"
+                onClick={handleConfirmDelete}
+              >
                 삭제
               </button>
             </div>
           </div>
         </div>
       )}
-          {/* --- 네비게이션 --- */}
+
+      {/* 헤더 */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
@@ -440,7 +560,9 @@ const Health = ({ user, pet }) => {
           </div>
           <nav className="menu">
             <a href="/activity">활동</a>
-            <a href="/health" className="active">건강</a>
+            <a href="/health" className="active">
+              건강
+            </a>
             <a href="/calendar">캘린더</a>
             <a href="/community">커뮤니티</a>
           </nav>
@@ -456,71 +578,88 @@ const Health = ({ user, pet }) => {
           </nav>
         </div>
       </header>
-      {/* --- 건강 컨텐츠 --- */}
+
+      {/* 본문 */}
       <div className="health-container">
-{/* 펫 정보 (props로 받음) */}
-        <section className="health-info">
-          <h2 className="hw">{pet ? pet.name : '반려동물'}님의 건강 정보</h2>
-          <div className="info-grid">
-            <div><span>품종</span><b>{pet ? pet.breed : '미입력'}</b></div>
-            <div><span>현재 체중</span><b>{pet ? pet.weight : '미입력'}</b></div>
-            <div><span>나이</span><b>{pet ? pet.age : '미입력'}</b></div>
-            
-            {/* ✅ [수정] BCS 항목: pet.bcs 값에 따라 렌더링 */}
+        {/* 펫 정보 */}
+        <section className="health-info">
+          <h2 className="hw">
+            {pet ? pet.name : "반려동물"}님의 건강 정보
+          </h2>
+          <div className="info-grid">
+            <div>
+              <span>품종</span>
+              <b>{pet ? pet.breed : "미입력"}</b>
+            </div>
+            <div>
+              <span>현재 체중</span>
+              <b>{pet ? pet.weight : "미입력"}</b>
+            </div>
+            <div>
+              <span>나이</span>
+              <b>{pet ? pet.age : "미입력"}</b>
+            </div>
             <div>
               <span>BCS</span>
-              {pet && pet.bcs && pet.bcs !== '미입력' ? (
-                // 2. BCS 값이 있을 때: 최종 점수 표시 (예: 6단계)
+              {pet && pet.bcs && pet.bcs !== "미입력" ? (
                 <b>{pet.bcs}</b>
               ) : (
-                // 1. BCS 값이 '미입력'일 때: '미입력'과 '진단하기' 버튼 표시
                 <>
                   <b>미입력</b>
-                  <span 
-                      className="test"
-                      onClick={() => window.location.href = '/BcsTest'}
+                  <span
+                    className="test"
+                    onClick={() => (window.location.href = "/BcsTest")}
                   >
-                      진단하기
+                    진단하기
                   </span>
                 </>
               )}
             </div>
-          </div>
-        </section>
-        {/* --- 건강 기록 목록 --- */}
+          </div>
+        </section>
+
+        {/* 최근 건강 기록 */}
         <section className="health-info">
           <div className="health-header">
             <h2 className="hw">최근 건강 기록</h2>
-            <button className="add-button" onClick={handleAdd}></button> 
+            <button className="add-button" onClick={handleAdd}></button>
           </div>
 
-          {/* 탭 */}
           <nav className="health-tabs">
             <button
               className={activeTab === "all" ? "active" : ""}
               onClick={() => setActiveTab("all")}
-            >전체</button>
-
+            >
+              전체
+            </button>
             <button
               className={activeTab === "vax" ? "active" : ""}
               onClick={() => setActiveTab("vax")}
-            >예방접종</button>
-
+            >
+              예방접종
+            </button>
             <button
               className={activeTab === "visit" ? "active" : ""}
               onClick={() => setActiveTab("visit")}
-            >병원 방문</button>
-
+            >
+              병원 방문
+            </button>
             <button
               className={activeTab === "med" ? "active" : ""}
               onClick={() => setActiveTab("med")}
-            >투약</button>
+            >
+              투약
+            </button>
           </nav>
 
           <ul className="health-record-list">
             {filteredRecords.length > 0 ? (
               filteredRecords.map((record) => (
-                <li key={record.id} className="record-item" data-type={record.type}>
+                <li
+                  key={record.id}
+                  className="record-item"
+                  data-type={record.type}
+                >
                   <div className="record-icon">{record.icon}</div>
                   <div className="record-content">
                     <span className="record-title">{record.title}</span>
@@ -531,14 +670,25 @@ const Health = ({ user, pet }) => {
                   <div className="record-details">
                     <small className="record-date">{record.date}</small>
                     <div className="record-actions">
-                      <button className="edit-btn" onClick={() => handleEditClick(record)}>
-                        <img src={editIcon} className="icon-img" alt="edit" />
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEditClick(record)}
+                      >
+                        <img
+                          src={editIcon}
+                          className="icon-img"
+                          alt="edit"
+                        />
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDeleteClick(record.id)} 
+                        onClick={() => handleDeleteClick(record.id)}
                       >
-                        <img src={trashIcon} className="icon-img" alt="delete" />
+                        <img
+                          src={trashIcon}
+                          className="icon-img"
+                          alt="delete"
+                        />
                       </button>
                     </div>
                   </div>
@@ -549,8 +699,8 @@ const Health = ({ user, pet }) => {
             )}
           </ul>
         </section>
-        
-        {/* --- 증상 체크 --- */}
+
+        {/* 증상 체크 */}
         <section className="health-info">
           <h2 className="hw">건강 이상 징후 체크리스트</h2>
           <p>반려동물에게 해당하는 증상을 모두 선택하고 AI 분석 버튼을 눌러주세요.</p>
@@ -560,37 +710,41 @@ const Health = ({ user, pet }) => {
               <button
                 key={symptom}
                 onClick={() => toggleSymptom(symptom)}
-                className={selectedSymptoms.includes(symptom) ? "selected" : ""}
+                className={
+                  selectedSymptoms.includes(symptom) ? "selected" : ""
+                }
               >
                 {symptom}
               </button>
             ))}
           </div>
 
-          <button 
-            className="analyze-btn" 
-            onClick={handleAnalyze} 
+          <button
+            className="analyze-btn"
+            onClick={handleAnalyze}
             disabled={isLoading}
           >
             {isLoading ? "분석 중..." : "AI 분석하기"}
           </button>
         </section>
 
-        {/* --- AI 분석 결과 섹션 --- */}
+        {/* AI 분석 결과 */}
         {analysisResult && (
           <section className="ai-result-section">
             <h2 className="hw">AI 분석 결과</h2>
-            
+
             <div className="result-box danger">
-              <span className="box-title">의심 질환 : {analysisResult.illness_name}</span>
+              <span className="box-title">
+                의심 질환 : {analysisResult.illness_name}
+              </span>
               <p>{analysisResult.illness_details}</p>
             </div>
-            
+
             <div className="result-box info">
               <span className="box-title">권장 대처 방안</span>
               <ul>
-                {analysisResult.recommendations.map((action, index) => (
-                  <li key={index}>{action}</li>
+                {analysisResult.recommendations.map((action, idx) => (
+                  <li key={idx}>{action}</li>
                 ))}
               </ul>
             </div>
@@ -598,7 +752,7 @@ const Health = ({ user, pet }) => {
         )}
       </div>
 
-      {/* --- 푸터 --- */}
+      {/* 푸터 */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
@@ -618,8 +772,15 @@ const Health = ({ user, pet }) => {
                 <div className="col" key={id}>
                   <h3>{name}</h3>
                   <p>{role}</p>
-                  <a href={`https://github.com/${id}`} className="github-link">
-                    <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <a
+                    href={`https://github.com/${id}`}
+                    className="github-link"
+                  >
+                    <img
+                      src={githubpic}
+                      alt="GitHub Logo"
+                      className="github-icon"
+                    />
                     {id}
                   </a>
                 </div>
@@ -629,13 +790,17 @@ const Health = ({ user, pet }) => {
             <div className="tech-stack">
               <h3>TECH STACK</h3>
               <img src={reactpic} alt="React Logo" className="react-icon" />
-              <img src={djangopic} alt="Django Logo" className="django-icon" />
+              <img
+                src={djangopic}
+                alt="Django Logo"
+                className="django-icon"
+              />
             </div>
           </div>
         </div>
       </footer>
     </div>
   );
-}
+};
 
 export default Health;

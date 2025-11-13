@@ -360,8 +360,7 @@ export default function Calendar() {
         </div>
       </main>
 
-      {/* '추가/수정' 모달 (변경 없음) */}
-      {showForm && (
+            {showForm && (
         <div
           className={`modal-overlay ${closing ? "closing" : ""}`}
           onClick={closeForm}
@@ -370,24 +369,34 @@ export default function Calendar() {
             className={`modal ${closing ? "closing" : ""}`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* ----- 모달 제목 ----- */}
             <h2>{editingId ? "일정 수정" : "일정 추가"}</h2>
+
+            {/* ----- 폼 전체 ----- */}
             <form onSubmit={handleSave}>
+
+              {/* 날짜 / 일정내용 / 카테고리 가로 정렬 */}
               <div className="modal-calendar-layout">
+
+                {/* 왼쪽: 날짜 */}
                 <div className="modal-calendar-left">
                   <label className="date">날짜</label>
-                  {/* 모달에서는 'events' prop을 안 넘겨주면 점이 안 찍힘 (정상) */}
                   <CustomDatePicker
                     value={form.date}
                     onChange={(newDate) => setForm({ ...form, date: newDate })}
                   />
                 </div>
 
+                {/* 오른쪽: 일정 내용 + 카테고리 */}
                 <div className="modal-calendar-right">
+
                   <label className="date">일정 내용</label>
                   <input
                     type="text"
                     value={form.text}
-                    onChange={(e) => setForm({ ...form, text: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, text: e.target.value })
+                    }
                     placeholder="예: 심장사상충 약 먹는 날"
                   />
 
@@ -409,12 +418,16 @@ export default function Calendar() {
                         : null
                     }
                     onChange={(option) =>
-                      setForm({ ...form, category: option ? option.value : "" })
+                      setForm({
+                        ...form,
+                        category: option ? option.value : "",
+                      })
                     }
                   />
                 </div>
               </div>
 
+              {/* 저장/취소 버튼 */}
               <div className="form-buttons">
                 <button type="submit" className="save">
                   저장
@@ -423,10 +436,12 @@ export default function Calendar() {
                   취소
                 </button>
               </div>
+
             </form>
           </div>
         </div>
       )}
+
 
       {/* 삭제 모달 (변경 없음) */}
       {showDeleteModal && (
