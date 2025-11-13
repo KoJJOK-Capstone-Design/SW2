@@ -305,6 +305,24 @@ const Health = ({ user, pet }) => {
     activeTab === "all" ? true : record.type === activeTab
   );
 
+    // ✅ [수정] 네비게이션 렌더링 함수 (user prop에 안전하게 접근)
+  const renderNavLinks = () => {
+    // user prop이 있고 nickname 속성이 있을 때 환영 메시지 표시
+    if (user && user.nickname) {
+      return (
+        <span className="welcome-msg">{user.nickname}님</span>
+      );
+    }
+    // user prop이 없거나 nickname이 없을 때 로그인/회원가입 링크 표시
+    return (
+      <>
+        <a href="/signup">회원가입</a>
+        <a href="/signin">로그인</a>
+      </>
+    );
+  };
+
+
   return (
     <div className="health-page">
 
@@ -413,8 +431,7 @@ const Health = ({ user, pet }) => {
           </div>
         </div>
       )}
-
-      {/* --- 네비게이션 --- */}
+          {/* --- 네비게이션 --- */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
@@ -439,31 +456,37 @@ const Health = ({ user, pet }) => {
           </nav>
         </div>
       </header>
-
       {/* --- 건강 컨텐츠 --- */}
       <div className="health-container">
-
-        {/* 펫 정보 (props로 받음) */}
-        <section className="health-info">
-          <h2 className="hw">{pet ? pet.name : '반려동물'}님의 건강 정보</h2>
-          <div className="info-grid">
-            <div><span>품종</span><b>{pet ? pet.breed : '미입력'}</b></div>
-            <div><span>현재 체중</span><b>{pet ? pet.weight : '미입력'}</b></div>
-            <div><span>나이</span><b>{pet ? pet.age : '미입력'}</b></div>
-            <div><span>BCS</span><b>{pet ? pet.bcs : '미입력'}</b></div>
-
-          </div>
-        </section>
-
-        {/* --- ✅ [수정] 체중 변화 그래프 --- */}
-        <section className="health-info">
-          <h2 className="hw">체중 변화 그래프</h2>
-          <div className="graph-box">
-            {/* "그래프 자리" p 태그 대신 <Line> 컴포넌트 삽입 */}
-            <Line options={chartOptions} data={weightData} />
-          </div>
-        </section>
-        
+{/* 펫 정보 (props로 받음) */}
+        <section className="health-info">
+          <h2 className="hw">{pet ? pet.name : '반려동물'}님의 건강 정보</h2>
+          <div className="info-grid">
+            <div><span>품종</span><b>{pet ? pet.breed : '미입력'}</b></div>
+            <div><span>현재 체중</span><b>{pet ? pet.weight : '미입력'}</b></div>
+            <div><span>나이</span><b>{pet ? pet.age : '미입력'}</b></div>
+            
+            {/* ✅ [수정] BCS 항목: pet.bcs 값에 따라 렌더링 */}
+            <div>
+              <span>BCS</span>
+              {pet && pet.bcs && pet.bcs !== '미입력' ? (
+                // 2. BCS 값이 있을 때: 최종 점수 표시 (예: 6단계)
+                <b>{pet.bcs}</b>
+              ) : (
+                // 1. BCS 값이 '미입력'일 때: '미입력'과 '진단하기' 버튼 표시
+                <>
+                  <b>미입력</b>
+                  <span 
+                      className="test"
+                      onClick={() => window.location.href = '/BcsTest'}
+                  >
+                      진단하기
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
         {/* --- 건강 기록 목록 --- */}
         <section className="health-info">
           <div className="health-header">
