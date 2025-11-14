@@ -1,3 +1,25 @@
+/* [모든 텍스트 커서(깜빡임) 문제 해결 코드]
+  index.css 파일 최상단에 붙여넣으세요.
+*/
+* {
+  -webkit-user-modify: read-only !important;
+  user-modify: read-only !important;
+  user-select: none !important;
+  cursor: default !important;
+}
+
+/* 링크, 버튼, 입력창은 예외 처리 */
+a, button, [role="button"] {
+  cursor: pointer !important;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-modify: read-write !important;
+  user-modify: read-write !important;
+  user-select: auto !important;
+  cursor: text !important;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
