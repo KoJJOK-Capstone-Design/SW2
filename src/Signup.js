@@ -33,6 +33,8 @@ function Signup() {
       console.log('회원가입 성공:', res.data);
       alert('회원가입이 성공적으로 완료되었습니다!');
       setFormData({ username: '', password: '', email: '', nickname: '' });
+
+      window.location.href = '/signin';
     } catch (err) {
       console.log('회원가입 에러:', err.response?.data || err.message);
       alert('회원가입에 실패했습니다. 다시 시도해 주세요.');

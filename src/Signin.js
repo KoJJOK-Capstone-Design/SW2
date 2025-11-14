@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';   // ✅ 추가
 import './Signin.css';
 
 function Signin() {
   const [form, setForm] = useState({ id: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -12,23 +15,75 @@ function Signin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.id || !form.password) return;
+
     try {
-      const res = await axios.post('https://youngbin.pythonanywhere.com/api/v1/users/login/', {
-        // 백엔드 스펙에 맞게 username/email로 변경
-        username: form.id,
-        password: form.password,
-      });
+      setLoading(true);
 
-      const token = res.data?.token || res.data?.access || res.data?.accessToken;
-      if (token) localStorage.setItem('token', token);
+      // --- 1단계: 로그인 ---
+      const loginRes = await axios.post(
+        'https://youngbin.pythonanywhere.com/api/v1/users/login/',
+        {
+          username: form.id,
+          password: form.password,
+        }
+      );
 
-      window.location.href = '/Homelogin'; // 라우트로 이동
+      const token = loginRes.data?.access;   // SimpleJWT 기준
+      if (!token) {
+        throw new Error('로그인 응답에 Access Token이 없습니다.');
+      }
+      localStorage.setItem('token', token);
+
+      // --- 2단계: 펫 목록 확인 ---
+      const petCheckRes = await axios.get('https://youngbin.pythonanywhere.com/api/v1/pets/', 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+        if (petCheckRes.data && petCheckRes.data.length > 0) {
+
+          const firstPetId = petCheckRes.data[0].id; // 👈 여기엔 "5"만 들어있음
+          localStorage.setItem('pet_id', firstPetId); // 👈 "5"만 저장
+
+          navigate('/dashboard');
+        }
+
+      console.log('펫 목록 응답:', petCheckRes.data);
+
+      // --- 3단계: pet_id 저장 + 페이지 이동 ---
+      let pets = [];
+
+      // 응답이 배열인 경우
+      if (Array.isArray(petCheckRes.data)) {
+        pets = petCheckRes.data;
+      }
+      // 응답이 { results: [...] } 형태일 수도 있음
+      else if (Array.isArray(petCheckRes.data.results)) {
+        pets = petCheckRes.data.results;
+      }
+
+      const hasPets = pets.length > 0;
+
+      if (hasPets) {
+        const firstPetId = pets[0].id;
+        console.log('저장할 pet_id:', firstPetId);
+        localStorage.setItem('pet_id', String(firstPetId));  // ✅ 핵심
+
+        navigate('/dashboard');
+      } else {
+        localStorage.removeItem('pet_id');
+        navigate('/Homelogin');
+      }
     } catch (err) {
-      console.error(err);
+      console.error('로그인 또는 펫 확인 중 오류:', err);
       alert('아이디 또는 비밀번호를 확인해 주세요.');
+    } finally {
+      setLoading(false);
     }
   };
-
   return (
     <div className="signin-container">
       <div className="main-content">
@@ -64,11 +119,14 @@ function Signin() {
             />
           </div>
 
-          <button type="submit" className="sign-in-button" disabled={!form.id || !form.password}>
-            Login
+          <button
+            type="submit"
+            className="sign-in-button"
+            disabled={!form.id || !form.password || loading}
+          >
+            {loading ? 'Sign in' : 'Sign in'}
           </button>
 
-          {/* 라우터를 쓰고 있다면 <Link to="/signup">가 더 안전 */}
           <p className="signup-link">
             <a href="/signup">계정 만들기</a>
           </p>

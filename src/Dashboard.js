@@ -1,4 +1,7 @@
-import React, { useMemo, useState } from "react";
+// src/Dashboard.js
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+
 import "./Dashboard.css";
 import "./Activity.css";
 
@@ -14,43 +17,232 @@ import circle from "./img/circle.png";
 import plusicon from "./img/plusicon.png";
 
 export default function Dashboard() {
-  // 오늘 날짜
+  // ================== 오늘 날짜 ==================
   const todayStr = useMemo(() => {
     const d = new Date();
     const week = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
     return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${week}요일`;
   }, []);
 
+  // ================== 헤더 - 로그인 유저 이름 ==================
+  const [username, setUsername] = useState("멍냥");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("토큰이 없습니다. 비로그인 상태일 수 있어요.");
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(
+          "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const name =
+          res.data?.nickname ||
+          res.data?.username ||
+          res.data?.id ||
+          "멍냥";
+
+        setUsername(name);
+      } catch (err) {
+        console.error(
+          "유저 정보 불러오기 실패:",
+          err.response?.data || err.message
+        );
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // ================== 팝업 상태 ==================
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
-  // 할 일
-  const [tasks, setTasks] = useState([
-    { id: 1, text: "산책하기", done: true },
-    { id: 2, text: "밥주기", done: false },
-    { id: 3, text: "양치시키기", done: false },
-    { id: 4, text: "물주기", done: false },
-  ]);
+  // ================== 대시보드 데이터 상태 ==================
+  // 할 일 목록 (백엔드 care_list.items -> tasks 로 매핑)
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
 
+  // 다가오는 일정
+  const [upcomingSchedules, setUpcomingSchedules] = useState([]);
+
+  // 건강 추세
+  const [healthTrend, setHealthTrend] = useState(null);
+
+  // 음식 가이드
+  const [foodGuide, setFoodGuide] = useState({
+    good_foods: [],
+    bad_foods: [],
+  });
+
+  // 로딩 / 에러 상태
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // ================== 진행률 ==================
   const progress = useMemo(() => {
     const total = tasks.length || 1;
     const done = tasks.filter((t) => t.done).length;
     return Math.round((done / total) * 100);
   }, [tasks]);
 
+  // 체크박스 토글 (프론트에서만 동작, 아직 백엔드 동기화 없음)
   const toggleTask = (id) =>
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+    );
 
-  const removeTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+  const removeTask = (id) =>
+    setTasks((prev) => prev.filter((t) => t.id !== id));
 
   const addTask = () => {
     const text = newTask.trim();
     if (!text) return;
-    setTasks((prev) => [...prev, { id: prev.at(-1)?.id + 1 || 1, text, done: false }]);
+    setTasks((prev) => [
+      ...prev,
+      { id: prev.at(-1)?.id + 1 || 1, text, done: false },
+    ]);
     setNewTask("");
   };
 
+  // ================== 체중 그래프 path 계산 ==================
+  const chartPath = useMemo(() => {
+    if (!healthTrend?.graph_data || healthTrend.graph_data.length === 0) {
+      // 데이터 없으면 예전 데모용 곡선 대신, 가로선
+      return "M5,45 L95,45";
+    }
+
+    const data = healthTrend.graph_data;
+    const weights = data.map((d) => d.weight);
+    const minW = Math.min(...weights);
+    const maxW = Math.max(...weights);
+    const range = maxW - minW || 1;
+
+    return data
+      .map((d, i) => {
+        const x =
+          data.length === 1 ? 50 : 5 + (90 * i) / (data.length - 1);
+        const norm = (d.weight - minW) / range;
+        const y = 50 - norm * 40; // 10~50 사이
+        return `${i === 0 ? "M" : "L"}${x},${y}`;
+      })
+      .join(" ");
+  }, [healthTrend]);
+
+  // ================== D-day 표시 ==================
+  const getDDayLabel = (d) => {
+    if (d === 0) return "오늘";
+    if (d === 1) return "D-1";
+    if (d > 1) return `D-${d}`;
+    return "지남";
+  };
+
+  const getDDayClass = (d) => {
+    if (d <= 1) return "event__badge event__badge--danger";
+    if (d <= 3) return "event__badge event__badge--soft";
+    return "event__badge";
+  };
+
+  // ================== 대시보드 API 호출 ==================
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = localStorage.getItem("token");
+        const petId = localStorage.getItem("pet_id"); // 로그인/펫 선택 시 저장해둔다고 가정
+
+        if (!token) {
+          setError("로그인이 필요합니다. 먼저 로그인 후 다시 시도해 주세요.");
+          return;
+        }
+
+        if (!petId) {
+          setError("반려동물 정보를 찾을 수 없습니다. 펫 등록 후 이용해 주세요.");
+          return;
+        }
+
+        const url = `https://youngbin.pythonanywhere.com/api/v1/pets/dashboard/${petId}/`;
+
+        const res = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`, // SimpleJWT
+          },
+        });
+
+        const data = res.data;
+        console.log("📌 대시보드 응답:", data);
+
+        // care_list → tasks로 세팅
+        if (data.care_list && Array.isArray(data.care_list.items)) {
+          setTasks(
+            data.care_list.items.map((item) => ({
+              id: item.id,
+              text: item.content,
+              done: !!item.is_complete,
+            }))
+          );
+        }
+
+        // upcoming_schedules
+        if (Array.isArray(data.upcoming_schedules)) {
+          setUpcomingSchedules(data.upcoming_schedules);
+        }
+
+        // health_trend
+        if (data.health_trend) {
+          setHealthTrend(data.health_trend);
+        }
+
+        // food_guide
+        if (data.food_guide) {
+          setFoodGuide({
+            good_foods: data.food_guide.good_foods || [],
+            bad_foods: data.food_guide.bad_foods || [],
+          });
+        }
+      } catch (err) {
+        console.error(
+          "🚨 대시보드 에러:",
+          err.response?.status,
+          err.response?.data
+        );
+
+        if (err.response?.status === 401) {
+          setError("로그인 정보가 만료되었어요. 다시 로그인 후 이용해 주세요.");
+        } else if (err.response?.status === 404) {
+          setError("대시보드 데이터를 찾을 수 없어요. (404)");
+        } else {
+          setError("대시보드 데이터를 불러오지 못했어요.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  // ================== 로딩 / 에러 화면 ==================
+  if (loading) {
+    return <div className="app">대시보드 불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div className="app">에러: {error}</div>;
+  }
+
+  // ================== 실제 화면 렌더 ==================
   return (
     <div className="app">
       {/* 헤더 */}
@@ -69,31 +261,53 @@ export default function Dashboard() {
           </nav>
 
           <nav className="menuicon">
+            {/* 🔹 프로필 영역 추가 */}
+            <div className="profile">
+              <div className="profile__avatar">
+                {/* 필요하면 실제 프로필 사진 URL로 교체 */}
+                <img
+                  src="https://i.pravatar.cc/80?img=11"
+                  alt="프로필"
+                />
+              </div>
+              <span className="profile__name">{username}</span>
+            </div>
+
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
+                onClick={() => {
+                  setShowBellPopup((v) => !v);
+                  setShowChatPopup(false);
+                }}
               >
                 <img src={bell} alt="알림 아이콘" className="icon" />
               </button>
               {showBellPopup && (
-                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
+                <div className="popup">
+                  <p>📢 새 알림이 없습니다.</p>
+                </div>
               )}
             </div>
 
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
+                onClick={() => {
+                  setShowChatPopup((v) => !v);
+                  setShowBellPopup(false);
+                }}
               >
-                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+                <a href="/Chat">
+                  <img src={chat} alt="채팅 아이콘" className="icon" />
+                </a>
               </button>
             </div>
           </nav>
         </div>
       </header>
 
-      {/* 본문 */}
+      {/* 본문 이하 그대로 */}
       <main className="main">
         {/* 인트로 */}
         <section className="section section--intro">
@@ -111,7 +325,10 @@ export default function Dashboard() {
           <div className="card card--todo">
             <div className="todolist">오늘 할 일</div>
             <div className="progress">
-              <div className="progress__bar" style={{ width: `${progress}%` }} />
+              <div
+                className="progress__bar"
+                style={{ width: `${progress}%` }}
+              />
             </div>
 
             <ul className="todo">
@@ -124,7 +341,9 @@ export default function Dashboard() {
                       checked={t.done}
                       onChange={() => toggleTask(t.id)}
                     />
-                    <span className={`todo__text ${t.done ? "is-done" : ""}`}>
+                    <span
+                      className={`todo__text ${t.done ? "is-done" : ""}`}
+                    >
                       {t.text}
                     </span>
                   </label>
@@ -134,8 +353,11 @@ export default function Dashboard() {
                     aria-label="삭제"
                     title="삭제"
                   >
-                    {/* ✅ 수정: hover 효과 적용을 위해 icon-img 클래스 추가 */}
-                    <img src={trashIcon} alt="삭제 아이콘" className="icon-img" />
+                    <img
+                      src={trashIcon}
+                      alt="삭제 아이콘"
+                      className="icon-img"
+                    />
                   </button>
                 </li>
               ))}
@@ -149,7 +371,11 @@ export default function Dashboard() {
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
               />
-              <button className="todo__addbtn" onClick={addTask} aria-label="추가">
+              <button
+                className="todo__addbtn"
+                onClick={addTask}
+                aria-label="추가"
+              >
                 <img src={circle} alt="" className="circle" aria-hidden />
                 <img src={plusicon} alt="추가" className="plus" />
               </button>
@@ -168,30 +394,33 @@ export default function Dashboard() {
           <div className="section--grid">
             {/* 좌측: 일정 리스트 */}
             <div className="card card--event">
-              <div className="event">
-                <span className="event__icon event__icon--cart" />
-                <div className="event__body">
-                  <div className="event__title">사료 세일</div>
-                  <div className="event__date">10월 5일</div>
-                </div>
-                <div className="event__badge event__badge--soft">3일 남음</div>
-              </div>
-
-              <div className="event">
-                <span className="event__icon event__icon--steth" />
-                <div className="event__body">
-                  <div className="event__title">정기 검진일</div>
-                  <div className="event__date">10월 7일</div>
-                </div>
-                <div className="event__badge event__badge--danger">5일 남음</div>
-              </div>
+              {upcomingSchedules.length === 0 ? (
+                <p className="event__empty">등록된 일정이 없어요.</p>
+              ) : (
+                upcomingSchedules.map((s) => (
+                  <div key={s.id} className="event">
+                    <span className="event__icon event__icon--steth" />
+                    <div className="event__body">
+                      <div className="event__title">{s.content}</div>
+                      <div className="event__date">{s.schedule_date}</div>
+                    </div>
+                    <div className={getDDayClass(s.d_day)}>
+                      {getDDayLabel(s.d_day)}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* 우측: 차트 */}
             <div className="card card--chart">
               <div className="chart__header">
                 <span className="chart__caption">
-                  최근 1개월간 <b className="text--green">0.1kg 증가</b>했어요.
+                  최근 1개월간{" "}
+                  <b className="text--green">
+                    {healthTrend?.recent_change || "변동 없음"}
+                  </b>
+                  했어요.
                 </span>
               </div>
               <div className="dashboard">
@@ -204,20 +433,25 @@ export default function Dashboard() {
                     aria-hidden
                   >
                     <defs>
-                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <linearGradient
+                        id="lineGrad"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="0"
+                      >
                         <stop offset="0" stopColor="#3b82f6" />
                         <stop offset="1" stopColor="#60a5fa" />
                       </linearGradient>
                     </defs>
                     <path
-                      d="M5,45 C20,30 35,40 50,28 C65,18 80,26 95,20"
+                      d={chartPath}
                       fill="none"
                       stroke="url(#lineGrad)"
                       strokeWidth="2.2"
                       strokeLinejoin="round"
                       strokeLinecap="round"
                     />
-                    <circle cx="95" cy="20" r="1.8" fill="#3b82f6" />
                   </svg>
                 </div>
               </div>
@@ -234,34 +468,44 @@ export default function Dashboard() {
 
           <div className="food-guide">
             <div className="food-group">
-              <h3 className="food-group__title food-group__title--ok">먹어도 괜찮아요!</h3>
+              <h3 className="food-group__title food-group__title--ok">
+                먹어도 괜찮아요!
+              </h3>
               <div className="food-grid">
-                <div className="food-card food-card--ok">
-                  <div className="food-card__name">당근, 고구마, 브로콜리</div>
-                  <div className="food-card__note">익혀서 적당 소량 급여</div>
-                  <span className="badge badge--ok">권장</span>
-                </div>
-                <div className="food-card food-card--ok">
-                  <div className="food-card__name">사과, 배, 바나나</div>
-                  <div className="food-card__note">씨 제거 후 급여</div>
-                  <span className="badge badge--ok">권장</span>
-                </div>
+                {foodGuide.good_foods.length === 0 ? (
+                  <p className="food-empty">등록된 추천 음식이 없어요.</p>
+                ) : (
+                  foodGuide.good_foods.map((f) => (
+                    <div key={f.id} className="food-card food-card--ok">
+                      <div className="food-card__name">{f.name}</div>
+                      <div className="food-card__note">
+                        {f.description}
+                      </div>
+                      <span className="badge badge--ok">권장</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
             <div className="food-group">
-              <h3 className="food-group__title food-group__title--no">절대 주면 안돼요!</h3>
+              <h3 className="food-group__title food-group__title--no">
+                절대 주면 안돼요!
+              </h3>
               <div className="food-grid">
-                <div className="food-card food-card--no">
-                  <div className="food-card__name">초콜릿</div>
-                  <div className="food-card__note">테오브로민 독성</div>
-                  <span className="badge badge--no">금지</span>
-                </div>
-                <div className="food-card food-card--no">
-                  <div className="food-card__name">양파, 마늘, 파</div>
-                  <div className="food-card__note">적혈구 손상 위험</div>
-                  <span className="badge badge--no">금지</span>
-                </div>
+                {foodGuide.bad_foods.length === 0 ? (
+                  <p className="food-empty">등록된 주의 음식이 없어요.</p>
+                ) : (
+                  foodGuide.bad_foods.map((f) => (
+                    <div key={f.id} className="food-card food-card--no">
+                      <div className="food-card__name">{f.name}</div>
+                      <div className="food-card__note">
+                        {f.description}
+                      </div>
+                      <span className="badge badge--no">금지</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -277,20 +521,31 @@ export default function Dashboard() {
               <span className="wordmark">KoJJOK</span>
             </div>
 
-          <div className="grid">
+            <div className="grid">
               <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
                 <a href="https://github.com/ouskxk" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   ouskxk
                 </a>
               </div>
               <div className="col">
                 <h3>Jiun Ko</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/suerte223" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                <a
+                  href="https://github.com/suerte223"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   suerte223
                 </a>
               </div>
@@ -298,15 +553,26 @@ export default function Dashboard() {
                 <h3>Seungbeom Han</h3>
                 <p>Front-End Dev</p>
                 <a href="https://github.com/hsb9838" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   hsb9838
                 </a>
               </div>
               <div className="col">
                 <h3>Munjin Yang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/munjun0608" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                <a
+                  href="https://github.com/munjun0608"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   munjun0608
                 </a>
               </div>
@@ -314,7 +580,11 @@ export default function Dashboard() {
                 <h3>Youngbin Kang</h3>
                 <p>Back-End Dev</p>
                 <a href="https://github.com/0bini" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" />
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />
                   0bini
                 </a>
               </div>

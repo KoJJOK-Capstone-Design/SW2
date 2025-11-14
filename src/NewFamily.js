@@ -1,3 +1,4 @@
+// src/NewFamily.js
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import axios from "axios";
@@ -14,7 +15,7 @@ import chat from "./img/chat.png";
 export default function NewFamily() {
   const navigate = useNavigate();
 
-  // 로그인한 사용자 이름
+  // 로그인한 사용자 이름(닉네임)
   const [username, setUsername] = useState("냥냥");
 
   // DB 필드명 기반 입력 폼
@@ -31,30 +32,40 @@ export default function NewFamily() {
   });
 
   const [profileImage, setProfileImage] = useState(null);
+  const [profileFile, setProfileFile] = useState(null); // 실제 파일
 
-  // 🔹 로그인된 사용자 정보 가져오기
+  // 🔹 로그인된 사용자 정보 가져오기 (닉네임 연동)
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.warn("토큰이 없습니다. 비로그인 상태일 수 있어요.");
+      return;
+    }
 
     const fetchUser = async () => {
       try {
         const res = await axios.get(
-          "https://youngbin.pythonanywhere.com/api/v1/pets/",
+          "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
+        // 백엔드 응답에 따라 우선순위대로 이름 선택
         const name =
-          res.data?.username ||
-          res.data?.nickname ||
-          res.data?.id ||
-          "냥냥";
+          res.data?.nickname || // 닉네임이 있으면 우선 사용
+          res.data?.username || // 없으면 username
+          res.data?.id || // 그래도 없으면 id
+          "멍냥";
 
         setUsername(name);
       } catch (err) {
-        console.error("유저 정보 조회 실패:", err.response?.data || err.message);
+        console.error(
+          "유저 정보 불러오기 실패:",
+          err.response?.data || err.message
+        );
       }
     };
 
@@ -136,7 +147,6 @@ export default function NewFamily() {
   // 입력 변경
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setForm((prev) => ({ ...prev, [name]: value }));
 
     if (e.target.tagName === "TEXTAREA") {
@@ -146,25 +156,20 @@ export default function NewFamily() {
   };
 
   // 프로필 이미지 업로드
-  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB 제한 (원하면 수정 가능)
-
-  const [profileFile, setProfileFile] = useState(null);   // 실제 파일
+  const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 용량 제한
     if (file.size > MAX_FILE_SIZE) {
       alert("이미지 용량이 너무 커요! 2MB 이하의 사진만 업로드해주세요.");
       e.target.value = "";
       return;
     }
 
-    // ✅ 서버로 보낼 건 이 파일 객체
     setProfileFile(file);
 
-    // ✅ 화면에 보여줄 미리보기만 dataURL
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfileImage(reader.result);
@@ -172,90 +177,77 @@ export default function NewFamily() {
     reader.readAsDataURL(file);
   };
 
-
   // 제출 → API 전송
-    const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!form.name || !form.species || !form.breed || !form.birth_date) {
-    alert("기본 정보를 모두 입력해주세요!");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-
-    // ✅ JSON 말고 FormData 사용
-    const fd = new FormData();
-
-    fd.append("name", form.name);
-    fd.append("species", form.species);
-    fd.append("breed", form.breed);
-    fd.append("birth_date", form.birth_date);
-
-    if (form.gender) fd.append("gender", form.gender);
-
-    // 🔸 is_neutered → 불리언 문자열로 변환
-    if (form.is_neutered) {
-      const boolStr = form.is_neutered === "완료" ? "true" : "false";
-      fd.append("is_neutered", boolStr);
-    }
-
-    if (form.weight) fd.append("weight", form.weight);
-    if (form.target_activity_minutes)
-      fd.append(
-        "target_activity_minutes",
-        form.target_activity_minutes
-      );
-    if (form.special_notes)
-      fd.append("special_notes", form.special_notes);
-
-    // 🔸 실제 파일 붙이기 (여기가 핵심)
-    if (profileFile) {
-      fd.append("profile_photo", profileFile, profileFile.name);
-    }
-
-    // 헤더: Content-Type은 쓰지 말고, 토큰만 넣기
-    const headers = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const res = await axios.post(
-      "https://youngbin.pythonanywhere.com/api/v1/pets/",
-      fd,
-      { headers } // ← 여기엔 Authorization만
-    );
-
-    console.log("반려동물 등록 성공:", res.data);
-    alert("등록이 완료되었습니다!");
-    navigate("/dashboard");
-  } catch (err) {
-    const status = err.response?.status;
-    const data = err.response?.data;
-
-    console.error("반려동물 등록 실패:", data || err.message);
-
-    // 토큰 만료 처리
-    if (
-      status === 401 &&
-      (data?.code === "token_not_valid" ||
-        data?.detail?.includes("Token is expired"))
-    ) {
-      alert("로그인 시간이 만료되었습니다. 다시 로그인 해주세요.");
-      localStorage.removeItem("token");
-      navigate("/signin");
+    if (!form.name || !form.species || !form.breed || !form.birth_date) {
+      alert("기본 정보를 모두 입력해주세요!");
       return;
     }
 
-    alert(
-      "에러 코드: " +
-        status +
-        "\n메시지: " +
-        JSON.stringify(data, null, 2)
-    );
-  }
-};
+    try {
+      const token = localStorage.getItem("token");
+      const fd = new FormData();
 
+      fd.append("name", form.name);
+      fd.append("species", form.species);
+      fd.append("breed", form.breed);
+      fd.append("birth_date", form.birth_date);
 
+      if (form.gender) fd.append("gender", form.gender);
+
+      if (form.is_neutered) {
+        const boolStr = form.is_neutered === "완료" ? "true" : "false";
+        fd.append("is_neutered", boolStr);
+      }
+
+      if (form.weight) fd.append("weight", form.weight);
+      if (form.target_activity_minutes)
+        fd.append("target_activity_minutes", form.target_activity_minutes);
+      if (form.special_notes) fd.append("special_notes", form.special_notes);
+
+      if (profileFile) {
+        fd.append("profile_photo", profileFile, profileFile.name);
+      }
+
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await axios.post(
+        "https://youngbin.pythonanywhere.com/api/v1/pets/",
+        fd,
+        { headers }
+      );
+
+      console.log("반려동물 등록 성공:", res.data);
+      alert("등록이 완료되었습니다!");
+      navigate("/dashboard");
+    } catch (err) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+
+      console.error("반려동물 등록 실패:", data || err.message);
+
+      if (
+        status === 401 &&
+        (data?.code === "token_not_valid" ||
+          data?.detail?.includes("Token is expired"))
+      ) {
+        alert("로그인 시간이 만료되었습니다. 다시 로그인 해주세요.");
+        localStorage.removeItem("token");
+        navigate("/signin");
+        return;
+      }
+
+      alert(
+        "에러 코드: " +
+          status +
+          "\n메시지: " +
+          JSON.stringify(data, null, 2)
+      );
+    }
+  };
 
   return (
     <div className="newfamily-page">
@@ -283,6 +275,7 @@ export default function NewFamily() {
               <div className="profile__avatar">
                 <img src="https://i.pravatar.cc/80?img=11" alt="프로필" />
               </div>
+              {/* ✅ 여기에서 username이 닉네임/아이디로 표시됨 */}
               <span className="profile__name">{username}</span>
             </div>
 
@@ -330,7 +323,9 @@ export default function NewFamily() {
                             </div>
                             <div className="noti__meta">
                               <span className="noti__time">{n.time}</span>
-                              {!n.read && <span className="noti__badge">안 읽음</span>}
+                              {!n.read && (
+                                <span className="noti__badge">안 읽음</span>
+                              )}
                             </div>
                           </div>
                         </li>
@@ -363,7 +358,11 @@ export default function NewFamily() {
           <div className="profile-upload">
             <label htmlFor="profileInput" className="profile-pic">
               {profileImage ? (
-                <img src={profileImage} alt="미리보기" className="profile-preview" />
+                <img
+                  src={profileImage}
+                  alt="미리보기"
+                  className="profile-preview"
+                />
               ) : (
                 "+"
               )}
@@ -522,17 +521,17 @@ export default function NewFamily() {
           </section>
 
           {/* 특이사항 */}
-          <section className="info-section">
-            <h2 id="h2">특이사항 (선택)</h2>
-            <textarea
-              id="notes"
-              name="special_notes" // ❗️ (수정) "notes" -> "special_notes"
-              placeholder="알레르기, 질병 등 특별한 정보를 입력해주세요."
-              value={form.special_notes} // ❗️ (수정) "form.notes" -> "form.special_notes"
-              onChange={handleChange}
-              rows="1"
-            />
-          </section>
+          <section className="info-section">
+            <h2 id="h2">특이사항 (선택)</h2>
+            <textarea
+              id="notes"
+              name="special_notes"
+              placeholder="알레르기, 질병 등 특별한 정보를 입력해주세요."
+              value={form.special_notes}
+              onChange={handleChange}
+              rows="1"
+            />
+          </section>
 
           {/* 완료 버튼 */}
           <div className="submit-container">
