@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Health.css";
+import { NavLink, Link } from "react-router-dom";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -8,6 +9,11 @@ import trashIcon from "./img/Trash_2.png";
 import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
+
+import bell from "./img/bell.png";
+import chat from "./img/chat.png";
+import circle from "./img/circle.png";
+import plusicon from "./img/plusicon.png";
 
 // Chart.js
 import { Line } from "react-chartjs-2";
@@ -33,7 +39,7 @@ ChartJS.register(
 );
 
 // 초기 더미 데이터
-const initialRecords = [];
+const initialRecords = []; 
 
 const Health = ({ user, pet }) => {
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
@@ -62,6 +68,20 @@ const Health = ({ user, pet }) => {
   // AI 분석
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 헤더 팝업 관련 state
+  const [showBellPopup, setShowBellPopup] = useState(false);
+  const [showChatPopup, setShowChatPopup] = useState(false);
+
+  // 할 일
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "산책하기", done: true },
+    { id: 2, text: "밥주기", done: false },
+    { id: 3, text: "양치시키기", done: false },
+    { id: 4, text: "물주기", done: false },
+  ]);
+  const [newTask, setNewTask] = useState("");
+
 
   // 체중 그래프 (데이터만; 실제 렌더는 필요할 때 추가)
   const weightData = {
@@ -296,98 +316,99 @@ const Health = ({ user, pet }) => {
 
   return (
     <div className="health-page">
-      {/* 추가 모달 */}
-{showModal && (
-  <div className="health-add-overlay" onClick={() => setIsDropdownOpen(false)}>
-    <div className="health-add-modal" onClick={(e) => e.stopPropagation()}>
+      
+      {/* --- 모달들 --- */}
+      {showModal && (
+        <div className="health-add-overlay" onClick={() => setIsDropdownOpen(false)}>
+          <div className="health-add-modal" onClick={(e) => e.stopPropagation()}>
 
-      <h2>새로운 건강 기록 추가</h2>
+            <h2>새로운 건강 기록 추가</h2>
 
-      <div className="health-add-group">
-  <label>종류</label>
+            <div className="health-add-group">
+              <label>종류</label>
 
-  <div className="health-select-wrapper">
-    <button
-      type="button"
-      className={`health-select-trigger ${newRecord.type === "" ? "placeholder" : ""}`}
-      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-    >
-      <span>
-        {newRecord.type === ""
-          ? "선택하세요"
-          : newRecord.type === "visit"
-          ? "병원 방문"
-          : newRecord.type === "vax"
-          ? "예방접종"
-          : "투약"}
-      </span>
+              <div className="health-select-wrapper">
+                <button
+                  type="button"
+                  className={`health-select-trigger ${newRecord.type === "" ? "placeholder" : ""}`}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <span>
+                    {newRecord.type === ""
+                      ? "선택하세요"
+                      : newRecord.type === "visit"
+                        ? "병원 방문"
+                        : newRecord.type === "vax"
+                          ? "예방접종"
+                          : "투약"}
+                  </span>
 
-      <span className="health-select-arrow">▼</span>
-    </button>
+                  <span className="health-select-arrow">▼</span>
+                </button>
 
-    {isDropdownOpen && (
-      <div className="health-select-options">
-        <div
-          className="health-select-option"
-          onClick={() => {
-            setNewRecord({ ...newRecord, type: "visit" });
-            setIsDropdownOpen(false);
-          }}
-        >
-          병원 방문
+                {isDropdownOpen && (
+                  <div className="health-select-options">
+                    <div
+                      className="health-select-option"
+                      onClick={() => {
+                        setNewRecord({ ...newRecord, type: "visit" });
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      병원 방문
+                    </div>
+
+                    <div
+                      className="health-select-option"
+                      onClick={() => {
+                        setNewRecord({ ...newRecord, type: "vax" });
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      예방접종
+                    </div>
+
+                    <div
+                      className="health-select-option"
+                      onClick={() => {
+                        setNewRecord({ ...newRecord, type: "med" });
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      투약
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+            <div className="health-add-group">
+              <label>제목</label>
+              <input className="health-add-input" name="title" value={newRecord.title}
+                onChange={handleChange} placeholder="예: 종합 백신 5차" required />
+            </div>
+
+            <div className="health-add-group">
+              <label>장소 / 약 이름</label>
+              <input className="health-add-input" name="location" value={newRecord.location}
+                onChange={handleChange} placeholder="예: 멍냥 동물병원" required />
+            </div>
+
+            <div className="health-add-group">
+              <label>날짜</label>
+              <input className="health-add-input" name="date" type="date"
+                value={newRecord.date} onChange={handleChange} required />
+            </div>
+
+            <div className="health-add-buttons">
+              <button className="health-add-btn cancel" onClick={() => setShowModal(false)}>취소</button>
+              <button className="health-add-btn save" onClick={handleFormSubmit}>저장</button>
+            </div>
+
+          </div>
         </div>
-
-        <div
-          className="health-select-option"
-          onClick={() => {
-            setNewRecord({ ...newRecord, type: "vax" });
-            setIsDropdownOpen(false);
-          }}
-        >
-          예방접종
-        </div>
-
-        <div
-          className="health-select-option"
-          onClick={() => {
-            setNewRecord({ ...newRecord, type: "med" });
-            setIsDropdownOpen(false);
-          }}
-        >
-          투약
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
-
-      <div className="health-add-group">
-        <label>제목</label>
-        <input className="health-add-input" name="title" value={newRecord.title}
-              onChange={handleChange} placeholder="예: 종합 백신 5차" required/>
-      </div>
-
-      <div className="health-add-group">
-        <label>장소 / 약 이름</label>
-        <input className="health-add-input" name="location" value={newRecord.location}
-              onChange={handleChange} placeholder="예: 멍냥 동물병원" required/>
-      </div>
-
-      <div className="health-add-group">
-        <label>날짜</label>
-        <input className="health-add-input" name="date" type="date"
-              value={newRecord.date} onChange={handleChange} required/>
-      </div>
-
-      <div className="health-add-buttons">
-        <button className="health-add-btn cancel" onClick={() => setShowModal(false)}>취소</button>
-        <button className="health-add-btn save" onClick={handleFormSubmit}>저장</button>
-      </div>
-
-    </div>
-  </div>
-)}
+      )}
 
 
       {/* 수정 모달 */}
@@ -410,9 +431,8 @@ const Health = ({ user, pet }) => {
                 <div className="custom-select-wrapper">
                   <button
                     type="button"
-                    className={`custom-select-trigger ${
-                      recordToEdit.type === "" ? "placeholder" : ""
-                    }`}
+                    className={`custom-select-trigger ${recordToEdit.type === "" ? "placeholder" : ""
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsEditDropdownOpen(!isEditDropdownOpen);
@@ -524,9 +544,9 @@ const Health = ({ user, pet }) => {
 
       {/* 삭제 모달 */}
       {showDeleteModal && (
-        <div className="health-modal-overlay" onClick={handleCancelDelete}>
+        <div className className="health-modal-overlay" onClick={handleCancelDelete}>
           <div
-            className="health-modal health-modal-delete"
+            className="health-modal"
             onClick={(e) => e.stopPropagation()}
           >
             <h2>정말 삭제하시겠습니까?</h2>
@@ -551,35 +571,46 @@ const Health = ({ user, pet }) => {
         </div>
       )}
 
-      {/* 헤더 */}
+      {/* --- 헤더 --- */}
       <header className="nav">
         <div className="nav-inner">
-          <div className="brand">
-            <img src={logoBlue} className="paw" alt="logo" />
+          <Link to="/dashboard" className="brand">
+            <img src={logoBlue} alt="paw logo" className="paw" />
             <span className="brand-text">멍냥멍냥</span>
-          </div>
+          </Link>
+
           <nav className="menu">
-            <a href="/activity">활동</a>
-            <a href="/health" className="active">
-              건강
-            </a>
-            <a href="/calendar">캘린더</a>
-            <a href="/community">커뮤니티</a>
+            <NavLink to="/activity">활동</NavLink>
+            <NavLink to="/health">건강</NavLink>
+            <NavLink to="/calendar">캘린더</NavLink>
+            <NavLink to="/community">커뮤니티</NavLink>
           </nav>
-          <nav className="menulink">
-            {user ? (
-              <span className="welcome-msg">{user.nickname}님</span>
-            ) : (
-              <>
-                <a href="/signup">회원가입</a>
-                <a href="/signin">로그인</a>
-              </>
-            )}
+          <nav className="menuicon">
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
+              >
+                <img src={bell} alt="알림 아이콘" className="icon" />
+              </button>
+              {showBellPopup && (
+                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
+              )}
+            </div>
+
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
+              >
+                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+              </button>
+            </div>
           </nav>
         </div>
       </header>
-
-      {/* 본문 */}
+      
+      {/* --- 본문 --- */}
       <div className="health-container">
         {/* 펫 정보 */}
         <section className="health-info">
@@ -752,7 +783,7 @@ const Health = ({ user, pet }) => {
         )}
       </div>
 
-      {/* 푸터 */}
+      {/* --- 푸터 --- */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
