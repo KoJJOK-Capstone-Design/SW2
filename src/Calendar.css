@@ -364,7 +364,6 @@ body {
 .form-buttons button.save:hover {
     filter: brightness(0.98);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(37, 120, 255, .30);
 }
 
 /* ⭐️ [핵심 추가] 커스텀 드롭다운 스타일 (Activity.css에서 이식) ⭐️ */
@@ -687,6 +686,7 @@ h2 {
   margin-bottom: 26px;
 }
 .delete-confirm-text {
+  text-align: center;
   font-size: 14px;
   color: #6b7280;
   margin: 0 0 18px;
@@ -704,10 +704,8 @@ h2 {
   background: #ef4444 !important;
   color: #ffffff !important;
   transition: all 0.2s ease-out;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
 }
 .btn-delete-confirm:hover {
   transform: translateY(-2px);
   filter: brightness(0.92);
-  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.3);
 }
