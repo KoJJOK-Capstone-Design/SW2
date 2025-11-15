@@ -440,7 +440,7 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* ---------------- 삭제 모달 ---------------- */}
+      {/* 삭제 모달 */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
           <div className="modal-modal-delete-confirm" onClick={(e) => e.stopPropagation()}>

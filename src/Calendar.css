@@ -663,7 +663,6 @@ body {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    /* 흰색 테두리를 주어 겹쳐도 보이게 함 */
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 

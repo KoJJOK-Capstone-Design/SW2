@@ -437,7 +437,6 @@ export default function Activity() {
                         className="activity-select-option"
                         onClick={() => handleEditDropdownSelect(cat.label)}
                       >
-                        {/* 아이콘 크기 수정을 위해 <span> 분리 */}
                         <div>
                           <span className="dropdown-icon">{cat.icon}</span> {cat.label}
                         </div>                
