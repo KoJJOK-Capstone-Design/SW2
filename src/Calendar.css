@@ -321,7 +321,8 @@ body {
 .calendar-page .form-buttons {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
+    padding-top: 15px;
     margin-top: 10px;
 }
 
@@ -664,4 +665,50 @@ body {
     border-radius: 50%;
     /* 흰색 테두리를 주어 겹쳐도 보이게 함 */
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.modal-overlay .modal-modal-delete-confirm{
+  position: relative;
+  z-index: 10000;
+  width:540px;
+  max-height: 230px;
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
+  border: none;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  padding: 28px 32px 30px ;
+  text-align: center;
+}
+h2 {
+  font-size: 30px;
+  font-weight: 600;
+  text-align: center;
+  color: #111827;
+  margin-bottom: 26px;
+}
+.delete-confirm-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 18px;
+}
+.btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  transition: all 0.2s ease-out;
+}
+.btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+.btn-delete-confirm {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease-out;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+.btn-delete-confirm:hover {
+  transform: translateY(-2px);
+  filter: brightness(0.92);
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.3);
 }

@@ -443,7 +443,7 @@ export default function Calendar() {
       {/* ---------------- 삭제 모달 ---------------- */}
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
-          <div className="modal modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-modal-delete-confirm" onClick={(e) => e.stopPropagation()}>
             <h2>정말 삭제하시겠습니까?</h2>
             <p className="delete-confirm-text">이 기록은 복구할 수 없습니다.</p>
             <div className="form-buttons">
