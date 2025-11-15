@@ -1,5 +1,4 @@
-/* ============ 레이아웃 베이스 ============ */
-/* 화면 중앙에 지나치게 모이지 않도록 폭을 더 넓힘 */
+
 .community-container{
   width:100%;
   max-width:1400px;      /* 넓이는 유지 */
@@ -24,12 +23,11 @@
 
 /* 제목 타이포 & 간격 */
 .comm-title-lg{
-  font-size: 60px;          /* 56 → 60: 타이틀 존재감 업 */
-  font-weight: 800;
-  line-height: 1.18;
-  margin: 0 0 14px 0;       /* 제목과 설명 사이 여백 */
+  font-size: 25px !important;          /* 56 → 60: 타이틀 존재감 업 */
+  font-weight: 600;
+  margin-bottom: 3px !important;
 }
-.section-sub{ margin-top: 10px; color:#6b7280; }
+.section-sub{ margin-top: 10px; color:#222; font-size:15px;}
 
 /* 검색 + 글쓰기 스택 */
 .comm-toolbar{
@@ -46,14 +44,14 @@
 /* 검색창을 조금 더 크게 (넓은 레이아웃과 균형) */
 .search-input{
   width:100%;
-  height:48px;              /* 44 → 48 */
+  height:39px;              /* 44 → 48 */
   border:1px solid #e5e7eb; border-radius:12px;
   padding:0 16px 0 42px;    /* 좌측 아이콘 패딩 유지, 좌우 여유 ↑ */
-  font-size:16px;           /* 15 → 16 */
+  font-size:15px;           /* 15 → 16 */
   background:#fff;
 }
 .search-input:focus{
-  outline:none; border-color:#2578ff; box-shadow:0 0 0 3px rgba(37,120,255,.12);
+  outline:none; border-color:#2578ff;  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 /* 글쓰기 버튼 */
@@ -65,7 +63,6 @@
   font-size: 15px;          /* 14 → 15 */
   border-radius:12px;
   background:#2578ff; color:#fff; text-decoration:none;
-  box-shadow:0 10px 26px rgba(37,120,255,.28);
 }
 .write-btn:hover{ filter:brightness(.98); }
 .write-icon{ width:18px; height:18px; }
@@ -80,10 +77,10 @@
   padding: 18px 22px;       /* 안쪽 여백 살짝 넓힘 */
   box-shadow:0 6px 18px rgba(0,0,0,.04);
 }
-.post-title{ font-size:19px; font-weight:700; }
-.post-content{ margin-top:10px; color:#4b5563; }
-.post-meta{ display:flex; justify-content:space-between; margin-top:12px; color:#9ca3af; font-size:13px; }
-.meta-right{ color:#9ca3af; }
+.post-title{ font-size:px; font-weight:600; }
+.post-content{ margin-top:10px; color:#222; }
+.post-meta{ display:flex; justify-content:space-between; margin-top:12px; color:#222; font-size:13px; }
+.meta-right{ color:#222; }
 
 /* ============ 페이지네이션 ============ */
 .pager{
@@ -92,11 +89,11 @@
 }
 .pager-btn, .pager-num{
   height:34px; min-width:34px; padding:0 12px;
-  border-radius:8px; border:1px solid #e5e7eb;
+  border-radius:8px; border:1px solid #fff;
+  justify-content: center;
   background:#fff; cursor:pointer; color:#6b7280; font-size:14px;
 }
-.pager-btn:hover, .pager-num:hover{ border-color:#c7d2fe; }
-.pager-btn:focus, .pager-num:focus{ outline:none; box-shadow:0 0 0 3px rgba(37,120,255,.12); }
+.pager-btn:focus, .pager-num:focus{ outline:none; }
 .pager-btn:disabled{ opacity:.45; cursor:not-allowed; }
 .pager-num.is-active{ background:#2578ff; color:#fff; border-color:#2578ff; }
 
@@ -104,13 +101,13 @@
 /* 링크로 감싼 카드 기본 스타일 유지 */
 .link-reset{ text-decoration:none; color:inherit; display:block; }
 /* 상단 크럼/프로필/액션 */
-.crumb { display:inline-block; margin-bottom:14px; color:#111827; text-decoration:none; }
+.crumb { display:inline-block; margin-bottom:14px; color:#222; text-decoration:none; }
 .post-detail-head{ display:flex; align-items:center; gap:14px; margin-bottom:30px; max-width: 1000px; margin-left:auto; margin-right:auto; padding-left: 20px; }
 .avatar{ width:48px; height:48px; border-radius:50%; background:#cfe0ff; }
-.who .name{ font-weight:700; }
-.who .when{ color:#9ca3af; font-size:13px; }
+.who .name{ font-weight:600; font-size:15px}
+.who .when{ color:#888; font-size:13px; }
 .post-actions{ margin-left:auto; display:flex; gap:12px; }
-.link-btn{ background:none; border:none; color:#2563eb; cursor:pointer; padding:0; font-size:14px; text-decoration:none; }
+.link-btn{ background:none; border:none; color:#2578ff; cursor:pointer; padding:0; font-size:14px; text-decoration:none; }
 .link-btn:hover{ opacity:.8; text-decoration:none; }
 .link-btn.danger{ color:#ef4444; }
 
@@ -124,13 +121,17 @@
 .divider{ border:none; border-top:1px solid #eee; margin:10px 0 16px; }
 .comment-input-row{ max-width:1000px; margin:20px auto 50px; display:flex; gap:10px; }
 .comment-input{ flex:1; height:44px; padding:10px 15px; border-radius:8px; border:1px solid #ddd; }
-.comment-submit{ min-width:60px; border:none; border-radius:8px; background:#2563eb; color:#fff; font-size:14px; cursor:pointer; }
+.comment-input:focus {  outline: none;
+  border-color: #2578ff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+.comment-submit{ min-width:60px; border:none; border-radius:8px; background:#2578ff; color:#fff; font-size:14px; cursor:pointer; }
 
 /* ============ 삭제 모달 유지 ============ */
 .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
 .modal-card{ width:min(520px, 92vw); background:#fff; border-radius:16px; padding:28px 32px; box-shadow:0 18px 50px rgba(0,0,0,.2); text-align:center; }
-.modal-title{ font-size:28px; font-weight:800; margin:4px 0 8px; }
-.modal-sub{ color:#6b7280; margin-bottom:18px; }
+.modal-title{ font-size:30px; font-weight:600; margin:0 0 26px; }
+.modal-sub{ color:#6b7280; margin-bottom:18px; font-size: 14px;}
 .modal-actions{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
 .btn{ height:38px; padding:0 16px; border-radius:10px; border:none; cursor:pointer; background:#f3f4f6; color:#111827; }
 .btn-ghost{ background:#eef2ff; }
@@ -235,11 +236,11 @@
   color:#6b7280; font-size:13px;
 }
 .comment-author{ color:#111827; font-weight:600; }
-.comment-when{ color:#9ca3af; }
+.comment-when{ color:#888; }
 .comment-actions{ margin-left:auto; display:inline-flex; gap:10px; }
 .c-action{
   background:none; border:none; padding:0; cursor:pointer;
-  color:#1d4ed8; font-size:13px;
+  color:#2578ff; font-size:14px;
 }
 .c-action.danger{ color:#ef4444; }
 
@@ -257,7 +258,7 @@
   height:34px; padding:0 12px; border-radius:8px; border:1px solid #e5e7eb;
   cursor:pointer; background:#fff; color:#111827; font-size:14px;
 }
-.c-btn.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+.c-btn.primary{ background:#2578ff; color:#fff; border-color:#2578ff; }
 .c-btn.ghost{ background:#eef2ff; }
 
 .comment-input-row {
@@ -283,7 +284,7 @@
   padding: 0 16px;
   border: none;
   border-radius: 10px;
-  background: #2563eb;
+  background: #2578ff;
   color: #fff;
   cursor: pointer;
 }
@@ -305,3 +306,14 @@
   .comm-toolbar{ align-items:stretch; }
   .write-btn{ align-self:flex-end; }
 }
+
+/* 추가 코드 */
+.blue-stick {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: #007bff;
+  border-radius: 3px;
+}
+

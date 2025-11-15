@@ -12,6 +12,11 @@ import djangopic from "./img/django.png";
 
 import searchIcon from "./img/Search_alt.png";
 import editIcon from "./img/Edit_fill.png";
+// import문  
+import bell from "./img/bell.png";
+import chat from "./img/chat.png";
+import circle from "./img/circle.png";
+import plusicon from "./img/plusicon.png";
 
 const POSTS_KEY = "community_posts";
 const PER_PAGE = 4;
@@ -45,6 +50,9 @@ export default function Community() {
     if (page > totalPages) setPage(totalPages);
     if (page < 1) setPage(1);
   }, [totalPages, page]);
+  
+  const [showBellPopup, setShowBellPopup] = useState(false);
+  const [showChatPopup, setShowChatPopup] = useState(false);
 
   return (
     <div className="home">
@@ -55,18 +63,37 @@ export default function Community() {
             <span className="brand-text">멍냥멍냥</span>
           </div>
           <nav className="menu">
-            <NavLink to="/activity" className={({isActive}) => isActive ? 'active-link' : ''}>활동</NavLink>
-            <NavLink to="/health"   className={({isActive}) => isActive ? 'active-link' : ''}>건강</NavLink>
-            <NavLink to="/calendar" className={({isActive}) => isActive ? 'active-link' : ''}>캘린더</NavLink>
-            <NavLink to="/community"className={({isActive}) => isActive ? 'active-link' : ''}>커뮤니티</NavLink>
+            <NavLink to="/activity">활동</NavLink>
+            <NavLink to="/health">건강</NavLink>
+            <NavLink to="/calendar">캘린더</NavLink>
+            <NavLink to="/community">커뮤니티</NavLink>
           </nav>
 
-          <nav className="menulink">
-            <Link to="/signup">회원가입</Link>
-            <Link to="/signin">로그인</Link>
+             <nav className="menuicon">
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
+              >
+                <img src={bell} alt="알림 아이콘" className="icon" />
+              </button>
+              {showBellPopup && (
+                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
+              )}
+            </div>
+
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
+              >
+                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+              </button>
+            </div>
           </nav>
         </div>
       </header>
+
 
       <main className="community-container">
         <section className="section">
@@ -180,7 +207,7 @@ export default function Community() {
                 </a>
               </div>
               <div className="col">
-                <h3>Munjin Yang</h3>
+                <h3>Munjun Yang</h3>
                 <p>Back-End Dev</p>
                 <a href="https://github.com/munjun0608" className="github-link">
                   <img src={githubpic} alt="" className="github-icon" />munjun0608

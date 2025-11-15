@@ -49,7 +49,7 @@
 
 .info-grid div span {
   font-size: 15px;
-  color: #6b7280;
+  color: #222;
   white-space: nowrap;
 }
 
@@ -79,7 +79,7 @@
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  color: #888;
+  color: #222;
   height: 300px;
 }
 
@@ -264,7 +264,7 @@
 .no-records {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: #222;
   background-color: #f9f9f9;
   border-radius: 10px;
 }
@@ -455,7 +455,7 @@
 .health-add-input:focus, .health-modal .input:focus {
   outline: none;
   border-color: #2578ff;
-  box-shadow: 0 0 0 3px rgba(37,120,255,0.15);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 /* --- 드롭다운 스타일 --- */

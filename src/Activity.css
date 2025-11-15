@@ -26,6 +26,8 @@
 }
 .section-title h2 {
   font-size: 25px;
+  margin-bottom: 3px !important;
+
 }
 .blue-stick {
   content: "";
@@ -34,10 +36,6 @@
   height: 22px;
   background-color: #007bff;
   border-radius: 3px;
-}
-
-#h2 {
-  font-size: 25px;
 }
 
 .menu a {
