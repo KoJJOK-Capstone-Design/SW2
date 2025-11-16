@@ -235,8 +235,8 @@
   transform: translateY(-1px);
 }
 .icon-img {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: block;
   opacity: .65;
   filter: brightness(0) saturate(100%)
@@ -491,7 +491,7 @@
   margin-right: 10px;
   display: inline-block;
   vertical-align: middle;
-  margin-top: -10px;
+  margin-bottom: -5px;
 }
 
 /* ===== Responsive ===== */
