@@ -16,11 +16,11 @@ import bell from "./img/bell.png";
 import chat from "./img/chat.png";
 
 const ACTIVITY_CATEGORIES = [
-  { key: 'walk', label: '산책', color: '#87CEEB ', icon: '🐾' },
-  { key: 'play', label: '놀이', color: '#32CD32', icon: '🎾' },
-  { key: 'train', label: '훈련', color: '#FFD700', icon: '🏆' },
-  { key: 'outing', label: '외출', color: '#B283FA', icon: '🚗' },
-  { key: 'other', label: '기타', color: '#B0B0B0', icon: '⚫' }
+  { key: 'walk', label: '산책', color: '#D7EFFF ', icon: '🐾' },
+  { key: 'play', label: '놀이', color: '#E6FFE3', icon: '🎾' },
+  { key: 'train', label: '훈련', color: '#FFF7CC', icon: '🏆' },
+  { key: 'outing', label: '외출', color: '#EFE4FF', icon: '🚗' },
+  { key: 'other', label: '기타', color: '#E9ECEF', icon: '⚫' }
 ];
 
 function getCategory(label) {

@@ -229,13 +229,16 @@ const Health = ({ user, pet }) => {
   return (
     <div className="health-page">
 
-      {/* ============ 추가 모달 ============ */}
-      {showModal && (
-        <div className="health-add-overlay" onClick={() => setIsDropdownOpen(false)}>
+      {/* ============ 추가 모달 ============ */} 
+      {showModal && (   
+        <div className="health-add-overlay" onClick={() => {
+          setShowModal(false);
+          setNewRecord({ type: "", title: "", location: "", date: "" }); // ⭐️ 폼 리셋
+        }}>
           <div className="health-add-modal" onClick={(e) => e.stopPropagation()}>
             <h2>건강 기록 추가</h2>
 
-            <form onSubmit={handleFormSubmit}>
+<form onSubmit={handleFormSubmit}>
               {/* 종류 드롭다운 */}
               <div className="health-add-group">
                 <label>종류</label>
@@ -252,36 +255,37 @@ const Health = ({ user, pet }) => {
                     {newRecord.type === "med" && <>💊 투약</>}
                   </button>
 
+                  {/* ✅✅✅ <ul>과 <li> 태그로 수정한 부분입니다 ✅✅✅ */}
                   {isDropdownOpen && (
-                    <div className="health-select-options">
-                      <div
-                        className="health-select-option"
+                    <ul className="health-select-options"> {/* ⭐️ 1. div -> ul ⭐️ */}
+                      <li
+                        className="health-select-option" /* ⭐️ 2. div -> li ⭐️ */
                         onClick={() => {
                           setNewRecord({ ...newRecord, type: "visit" });
                           setIsDropdownOpen(false);
                         }}
                       >
                         🏥 병원 방문
-                      </div>
-                      <div
-                        className="health-select-option"
+                      </li>
+                      <li
+                        className="health-select-option" /* ⭐️ 2. div -> li ⭐️ */
                         onClick={() => {
                           setNewRecord({ ...newRecord, type: "vax" });
                           setIsDropdownOpen(false);
                         }}
                       >
                         💉 예방접종
-                      </div>
-                      <div
-                        className="health-select-option"
+                      </li>
+                      <li
+                        className="health-select-option" /* ⭐️ 2. div -> li ⭐️ */
                         onClick={() => {
                           setNewRecord({ ...newRecord, type: "med" });
                           setIsDropdownOpen(false);
                         }}
                       >
                         💊 투약
-                      </div>
-                    </div>
+                      </li>
+                    </ul> /* ⭐️ 1. /div -> /ul ⭐️ */
                   )}
                 </div>
               </div>
@@ -325,9 +329,12 @@ const Health = ({ user, pet }) => {
               </div>
 
               <div className="health-add-buttons">
-                <button type="button" className="health-add-btn cancel" onClick={() => setShowModal(false)}>
-                  취소
-                </button>
+                <button type="button" className="health-add-btn cancel" onClick={() => {
+                      setShowModal(false);
+                      setNewRecord({ type: "", title: "", location: "", date: "" }); // ⭐️ 폼 리셋
+                    }}>
+                      취소
+                    </button>
                 <button type="submit" className="health-add-btn save">
                   저장
                 </button>
@@ -341,7 +348,7 @@ const Health = ({ user, pet }) => {
 {showEditModal && recordToEdit && (
   <div className="health-modal-overlay" onClick={() => setShowEditModal(false)}>
     <div className="health-modal" onClick={(e) => e.stopPropagation()}>
-      <h2>기록 수정</h2>
+      <h2>건강 기록 수정</h2>
 
       <form onSubmit={handleEditFormSubmit}>
         {/* 종류 */}

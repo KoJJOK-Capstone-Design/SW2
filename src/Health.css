@@ -162,12 +162,19 @@
 }
 
 .record-item {
+  position: relative;
+  width: 100%;
+  max-width: 1500px;
+  margin: 20px auto 0;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px 20px;
   display: flex;
   align-items: center;
-  padding: 16px;
-  background-color: #f4f6fb;
-  border-radius: 10px;
-  gap: 16px;
+  justify-content: space-between;
+  background: #fff;
+  box-sizing: border-box; 
+  box-shadow: 0 6px 18px rgba(0,0,0,.04);
 }
 
 .record-icon {
@@ -662,9 +669,7 @@
   color: #6b7280;
   margin: 0 auto 18px auto;
 }
-/* Health.css 파일의 .record-item 관련 스타일입니다. */
 
-/* --- 기본 .record-icon 스타일 (기존 코드 유지) --- */
 .record-icon {
   width: 48px;
   height: 48px;
@@ -676,22 +681,22 @@
   font-size: 24px;
   
 }
-.record-item[data-type="visit"] .record-icon {
-  background-color: #ffe4e6; /* 연한 빨강/핑크 배경 */
-  color: #d93025; /* 진한 빨강 아이콘 색상 */
-}
 
-/* 💉 예방접종 (vax) 스타일 - 배경색 및 아이콘 색상 */
 .record-item[data-type="vax"] .record-icon {
-  background-color: #e0e7ff; /* 연한 파랑 배경 */
-  color: #007bff; /* 진한 파랑 아이콘 색상 */
+  background-color: #F4E9FF;
+  /* 예방접종: 파란색 */
 }
 
-/* 💊 투약 (med) 스타일 - 배경색 및 아이콘 색상 */
-.record-item[data-type="med"] .record-icon {
-  background-color: #fff4e0; /* 연한 주황/노랑 배경 */
-  color: #f29900; /* 진한 주황 아이콘 색상 */
+.record-item[data-type="visit"] .record-icon {
+  background-color: #79D19E;
+  /* 병원 방문: 초록색 */
 }
+
+.record-item[data-type="med"] .record-icon {
+  background-color: #F8B46B;
+  /* 투약: 주황색 */
+}
+
 
 @media (max-width: 768px) {
   .info-grid {
@@ -710,4 +715,3 @@
     font-size: 24px;
   }
 }
-
