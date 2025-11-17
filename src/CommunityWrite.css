@@ -133,6 +133,10 @@
   padding: 12px 14px;
 }
 
+
+
+
+
 /* 반응형: 화면이 좁으면 썸네일을 아래로 떨어뜨림 */
 @media (max-width: 640px){
   .write-attach-row{

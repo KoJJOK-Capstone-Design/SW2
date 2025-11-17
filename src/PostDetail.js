@@ -19,11 +19,12 @@ import { getPost, deletePost, updatePost } from "./lib/communityStore";
 
 const CURRENT_USER = "냥냥";
 
+// 경과 시간 레이블
 function timeLabel(iso) {
   const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000),
-    h = Math.floor(m / 60),
-    d = Math.floor(h / 24);
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
   if (m < 1) return "방금 전";
   if (m < 60) return `${m}분 전`;
   if (h < 24) return `${h}시간 전`;
@@ -57,6 +58,7 @@ export default function PostDetail() {
       commentsArr: Array.isArray(p.commentsArr) ? p.commentsArr : [],
       likedBy: Array.isArray(p.likedBy) ? p.likedBy : [],
       likes: typeof p.likes === "number" ? p.likes : 0,
+      attachments: Array.isArray(p.attachments) ? p.attachments : [],
     };
 
     setPost(normalized);
@@ -118,8 +120,7 @@ export default function PostDetail() {
     const updated = {
       ...post,
       commentsArr: [...post.commentsArr, newComment],
-      // 구버전과 동시 사용 중이면 숫자 필드도 함께 관리
-      comments: (post.commentsArr.length + 1),
+      comments: post.commentsArr.length + 1,
     };
 
     setPost(updated);
@@ -205,10 +206,34 @@ export default function PostDetail() {
           )}
         </div>
 
-        {/* 제목/본문 넓게 */}
+        {/* 제목/본문 + 이미지 */}
         <div className="post-detail-body detail-wide">
           <h1 className="detail-title detail-title-xl">{post.title}</h1>
-          <div className="detail-content detail-content-wide">{post.content}</div>
+          <div className="detail-content detail-content-wide">
+            {post.content}
+          </div>
+
+          {/* 첨부 이미지 표시 */}
+          {post.attachments && post.attachments.length > 0 && (
+            <div className="detail-images">
+              {post.attachments.map((att, idx) =>
+                att.dataUrl ? (
+                  <img
+                    key={idx}
+                    src={att.dataUrl}
+                    alt={att.name}
+                    style={{
+                      width: "200px",
+                      height: "auto",
+                      display: "block",
+                      marginTop: "8px",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ) : null
+              )}
+            </div>
+          )}
         </div>
 
         {/* 좋아요 / 댓글(아이콘 + 숫자) */}
