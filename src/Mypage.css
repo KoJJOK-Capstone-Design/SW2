@@ -1,3 +1,8 @@
+/* MyPage.css (최종 전체 코드 - 폼 간격 및 스크롤 안정화) */
+
+/* ------------------------------------------------ */
+/* A. 공통 & 상단 헤더 스타일 */
+/* ------------------------------------------------ */
 h1.title { 
     font-size:35px;
     color : #222;
@@ -55,7 +60,6 @@ h1.title {
 /* ------------------------------------------------ */
 /* B. 나의 반려동물 섹션 (메인 화면) */
 /* ------------------------------------------------ */
-
 .section__title--no-bullet { 
     font-size: 25px; 
     font-weight: 600; 
@@ -79,30 +83,92 @@ h1.title {
 }
 
 .pet-management-section { margin-bottom: 60px; }
-.pet-list-container { display: flex; gap: 30px; align-items: flex-start; }
-.pet-list { width: 150px; display: flex; flex-direction: column; gap: 15px; }
-.pet-item { display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
-.pet-item--active { background-color: #fff; border: 2px solid #3b82f6; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
-.pet-color-indicator { width: 60px; height: 60px; border-radius: 10px; margin-bottom: 5px; }
-.pet-color-indicator--pink { background-color: #ffc0cb; }
-.pet-color-indicator--yellow { background-color: #ffd700; }
-.pet-name { font-size: 1rem; color: #333; font-weight: 500; }
-.pet-add-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background-color: #f0f0f0; border: none; padding: 10px; border-radius: 12px; font-size: 1rem; color: #777; cursor: pointer; }
-.icon-plus-small { width: 24px; height: 24px; filter: none; }
-.pet-detail-card-wrapper {
+/* MyPage.css (수정 필요) */
+
+/* ------------------------------------------------ */
+/* B. 나의 반려동물 섹션 (안정화) */
+/* ------------------------------------------------ */
+
+/* ⭐️ [수정] 목록과 상세 카드를 나란히 배치하는 최상위 컨테이너 */
+.pet-list-container { 
+    /* ⚠️ 이 요소는 Flexbox 컨테이너여야 합니다. */
+    display: flex; 
+    gap: 30px; /* 목록과 상세 카드 간의 간격 */
+    align-items: flex-start; /* 상단 정렬 */
+    width: 1130px;
     flex-grow: 1;
     background-color: #fff;
     border-radius: 16px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     padding: 30px;
 }
+
+.pet-list { 
+    /* 목록의 너비는 유지하고, Flexbox가 남은 공간을 상세 카드에 할당합니다. */
+    width: 150px; 
+    flex-shrink: 0; /* 목록이 줄어들지 않도록 설정 */
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+}
+
+/* ⭐️ [수정/제거] 상세 정보 카드 Wrapper */
+/* 이 클래스는 상세 정보 내용만 담아야 하므로, Flexbox 속성을 제거합니다. */
+.pet-detail-card-wrapper {
+    /* display: flex; (제거) */
+    /* gap: 30px; (제거) */
+    /* align-items: flex-start; (제거) */
+    
+    flex-grow: 1; /* 남은 공간을 차지하도록 유지 */
+    background-color: #fff;
+    padding: 0; /* padding은 .pet-list-container에서 관리하므로 제거 */
+    /* ... 나머지 스타일 유지 ... */
+}
+
+/* ------------------------------------------------ */
+/* C. 펫 아이템 스타일 (유지) */
+/* ------------------------------------------------ */
+
+.pet-item { display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
+.pet-item--active { background-color: #fff; border: 2px solid #3b82f6; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+.pet-color-indicator { width: 60px; height: 60px; border-radius: 10px; margin-bottom: 5px; }
+.pet-name { font-size: 1rem; color: #333; font-weight: 500; }
+.pet-add-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background-color: #f0f0f0; border: none; padding: 10px; border-radius: 12px; font-size: 1rem; color: #777; cursor: pointer; }
 .pet-name-and-edit { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .pet-detail-name { font-size: 1.25rem; font-weight: 700; color: #333; }
 .btn-edit-pet { background-color: #f0f4ff; color: #3b82f6; border: 1px solid #d1e5ff; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
 .pet-description-line { font-size: 1rem; color: #555; line-height: 1.6; margin-top: 5px; margin-bottom: 30px; font-weight: 500; }
-.pet-dashboard-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
-.upcoming-events-mypage { padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #fff; box-shadow: none; grid-column: span 2; }
-.upcoming-events-mypage h2.section-header-inline--title { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 15px; }
+/* MyPage.css (해당 부분만 발췌) */
+
+/* ... (이전 코드들 유지) ... */
+
+/* ------------------------------------------------ */
+/* B. 나의 반려동물 섹션 (메인 화면) */
+/* ------------------------------------------------ */
+
+/* ... (이전 코드들 유지) ... */
+
+.pet-dashboard-summary { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; /* ⭐️ 2열로 균등하게 나눕니다. */
+    gap: 30px; 
+    margin-top: 20px; 
+}
+
+.upcoming-events-mypage { 
+    padding: 15px; 
+    border: 1px solid #e0e0e0; 
+    border-radius: 10px; 
+    background-color: #fff; 
+    box-shadow: none; 
+    /* ⚠️ 여기를 수정합니다: grid-column: span 2; 속성을 제거합니다. */
+    /* grid-column: span 2;  <-- 이 줄을 제거 */
+}
+
+.upcoming-events-mypage h2.section-header-inline--title { 
+    display: flex; justify-content: space-between; align-items: center; 
+    font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 15px; 
+}
 .view-more { font-size: 0.9rem; color: #888; text-decoration: none; font-weight: 500; }
 .event-item-mypage--detail { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
 .event-icon-box { background-color: #fcebeb; border-radius: 8px; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; }
@@ -112,20 +178,16 @@ h1.title {
 .event-date { font-size: 0.9rem; color: #888; }
 
 
-/* ------------------------------------------------ */
-/* C. 모달 스타일 (NewFamily 폼 스타일 통합 및 간격 조정) */
-/* ------------------------------------------------ */
-
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);
     display: flex; justify-content: center; align-items: center; z-index: 1000; 
 }
 
 .modal-content {
-    /* ⭐️ 모달 너비, 높이 및 중앙 정렬 */
-    width: 600px; 
+    /* ⭐️ 스크롤 활성화 및 중앙 고정 */
+    width: 700px; 
     max-width: 90vw;
-    max-height: 95vh; 
+    max-height: 95vh; /* ⭐️ 뷰포트 높이 제한 및 스크롤 */
     
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
     z-index: 10000;
@@ -138,13 +200,15 @@ h1.title {
     box-sizing: border-box;
 }
 
-
 .modal-title { font-size: 30px; font-weight: 600; margin-bottom: 25px; color: #333; }
 .modal-close-btn { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 2rem; color: #999; cursor: pointer; }
+.modal-body form {
+    margin-top: 0; 
+    width: 100%;
+}
 
 /* ⭐️ 모달 섹션 그룹 설정 */
 .modal-section-group {
-    /* ⭐️ 섹션 상단 간격을 넓게 조정 */
     margin-top: 40px; 
     margin-bottom: 25px;
     padding-top: 15px;
@@ -162,7 +226,6 @@ h1.title {
     align-items: center;
     font-size: 20px; 
     font-weight: 700;
-    /* ⭐️ 제목 아래 필드와의 간격을 넓게 조정 */
     margin-bottom: 25px; 
 }
 .section-title-bar {
@@ -177,9 +240,8 @@ h1.title {
     color: #222; /* 검은색 텍스트 */
 }
 
-/* ⭐️ 폼 그룹 공통 스타일 (굵은 레이블 & 간격) */
+/* ⭐️ 폼 그룹 공통 스타일 (간격 조정) */
 .form-group { 
-    /* ⭐️ 여기의 margin-bottom이 행 간격을 제어합니다. */
     display: flex; flex-direction: column; 
     gap: 8px; /* 레이블과 입력 필드 사이 간격 */
     margin-bottom: 30px; /* ⭐️ 모든 폼 그룹의 하단 간격을 넓게 확보 */
@@ -191,20 +253,18 @@ h1.title {
 }
 
 
-/* ⭐️ 2열 구조 (NewFamily의 section-grid) */
+/* ⭐️ 2열 구조 (그리드 기반) */
 .form-row-two-cols {
     display: grid;
     grid-template-columns: 1fr 1fr; 
-    /* ⭐️ 행 내부 가로 간격 */
-    gap: 0 40px; /* 수직 간격은 내부 form-group의 margin-bottom이 제어 */
+    gap: 25px 40px; 
 }
 .form-row-two-cols > .form-group {
-    /* ⭐️ 2열 내부의 세로 간격은 form-group 자체의 margin-bottom이 제어 */
-    margin-bottom: 30px; 
+    margin-bottom: 0; /* 부모가 간격을 관리 */
 }
 
 
-/* ⭐️ 입력 필드 스타일 통일 (NewFamily) */
+/* ⭐️ 입력 필드 스타일 통일 */
 .form-group input, 
 .form-group select, 
 .form-group textarea {
@@ -217,27 +277,20 @@ h1.title {
     transition: 0.2s;
 }
 
-/* ⭐️ 호버/포커스 효과 (NewFamily 통합) */
-.form-group input:hover,
-.form-group textarea:hover {
-    border-color: #3d7eff; 
-    box-shadow: 0 0 0 3px rgba(61, 126, 255, 0.1); 
-}
-.form-group input:focus,
-.form-group textarea:focus {
+/* ⭐️ 호버/포커스 효과 (유지) */
+input:focus {
     outline: none;
     border-color: #2578ff;
     box-shadow: 0 0 0 3px rgba(37,120,255, 0.1);
 }
 
-
-/* ⭐️ 라디오 버튼 그룹 스타일 통일 (NewFamily) */
+/* ⭐️ 라디오 버튼 그룹 스타일 통일 */
 .radio-group-horizontal {
     display: flex;
     gap: 30px; 
     align-items: center;
     padding-top: 0px; 
-    height: 46px; /* 입력 필드와 높이 통일 */
+    min-height: 46px; 
 }
 .radio-group-horizontal label {
     font-weight: 500;
@@ -253,6 +306,20 @@ h1.title {
     cursor: pointer;
     margin-right: 0; 
     margin-top: 0;
+    
+    /* 커스텀 라디오 버튼 모양 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 2px solid #ccc; 
+    border-radius: 50%; 
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+.radio-group-horizontal input[type="radio"]:checked {
+    border-color: #007bff; 
+    box-shadow: 0 0 0 4px #fff inset; 
+    background-color: #007bff; 
 }
 
 
@@ -265,7 +332,6 @@ h1.title {
     border-radius: 8px;
     padding: 10px;
     background-color: #fff;
-    /* ⭐️ 파일 입력 그룹의 마진을 통일 */
     margin-bottom: 30px; 
 }
 .file-select-button {
@@ -275,13 +341,21 @@ h1.title {
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 0.2s;
+    border: 1px solid #ccc; 
 }
 .file-name-display {
     color: #888;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     flex-grow: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 8px 12px;
+    border: 1px solid #fff; 
+    border-radius: 6px;
+    height: 46px; 
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
 }
 #petImage { display: none; }
 

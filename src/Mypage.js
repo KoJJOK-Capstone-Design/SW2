@@ -121,8 +121,7 @@ const MyPageModal = ({
                                 <span className="section-title-bar"></span> 
                                 <span className="section-title-text">반려동물 사진</span> 
                             </h2>
-                            <div className="form-group file-input-group">
-                                <label htmlFor="petImage" className="file-select-button">파일 선택</label>
+                            <div className="form-group file-input-wrapper">
                                 <input 
                                     type="file" 
                                     id="petImage" 
@@ -130,9 +129,12 @@ const MyPageModal = ({
                                     accept="image/*" 
                                     onChange={handlePetFormChange} 
                                 />
-                                <span className="file-name-display">
-                                    {petFormData.imageFile ? petFormData.imageFile.name : '선택된 파일 없음'}
-                                </span>
+                                <div className="file-input-display-box">
+                                    <label htmlFor="petImage" className="file-select-button">파일 선택</label>
+                                    <span className="file-name-display">
+                                        {petFormData.imageFile ? petFormData.imageFile.name : '선택된 파일 없음'}
+                                    </span>
+                                </div>
                                 {/* 선택된 이미지 미리보기 */}
                                 {petFormData.imageUrl && (
                                     <div className="pet-image-preview">
@@ -162,7 +164,6 @@ const MyPageModal = ({
                                 <div className="form-group">
                                     <label htmlFor="petSpecies">종류</label>
                                     <div className="radio-group-horizontal">
-                                        {/* ⭐️ 초기값 ''과 비교하여 체크 해제 */}
                                         <label><input type="radio" name="species" value="강아지" checked={petFormData.species === '강아지'} onChange={handlePetFormChange} /> 강아지</label>
                                         <label><input type="radio" name="species" value="고양이" checked={petFormData.species === '고양이'} onChange={handlePetFormChange} /> 고양이</label>
                                     </div>
@@ -184,7 +185,6 @@ const MyPageModal = ({
                                 <div className="form-group">
                                     <label htmlFor="petGender">성별</label>
                                     <div className="radio-group-horizontal">
-                                        {/* ⭐️ 초기값 ''과 비교하여 체크 해제 */}
                                         <label><input type="radio" name="gender" value="수컷" checked={petFormData.gender === '수컷'} onChange={handlePetFormChange} /> 수컷</label>
                                         <label><input type="radio" name="gender" value="암컷" checked={petFormData.gender === '암컷'} onChange={handlePetFormChange} /> 암컷</label>
                                     </div>
@@ -323,13 +323,13 @@ export default function MyPage() {
     // 펫 상태
     const [petFormData, setPetFormData] = useState({
         name: "냥냥이", 
-        // ⭐️ [수정] 초기값을 빈 문자열로 설정하여 체크 해제
+        // ⭐️ 초기값을 빈 문자열로 설정하여 체크 해제
         species: "", 
         breed: "코리안숏헤어", 
         birth_date: "2023-10-12",
-        // ⭐️ [수정] 초기값을 빈 문자열로 설정하여 체크 해제
+        // ⭐️ 초기값을 빈 문자열로 설정하여 체크 해제
         gender: "", 
-        // ⭐️ [수정] 초기값을 null로 설정하여 체크 해제
+        // ⭐️ 초기값을 null로 설정하여 체크 해제
         neutered: null, 
         weight: "4.2", 
         memo: "기타사항 1",
