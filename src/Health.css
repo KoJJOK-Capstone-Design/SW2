@@ -1,6 +1,3 @@
-/* =========================================================
-   Health Page Global
-========================================================= */
 .health-page {
   font-family: "Pretendard", sans-serif;
 }
@@ -13,94 +10,105 @@
   padding-bottom: 120px;
 }
 
-/* =========================================================
-   공통 섹션
-========================================================= */
 .health-info {
-  margin-top: 40px;
-  margin-bottom: 90px;
+  padding: 32px 0px;
 }
 
-.health-info h2.hw {
+.health-info .hw {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.5rem;
+  font-size: 25px;
   color: #111;
   margin-bottom: 20px;
 }
 
-.health-info h2.hw::before {
+.health-info .hw::before {
   content: "";
   display: inline-block;
   width: 5px;
   height: 22px;
-  background-color: #2573f8;
+  background-color: #007bff;
   border-radius: 3px;
 }
 
 .info-grid {
   display: flex;
-  justify-content: space-between;
-  padding: 20px 0;
-  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 150px;
+  margin-left: 20px;
 }
 
 .info-grid div {
   display: flex;
-  flex-direction: row;
-  gap: 30px;
-  font-size: 1rem;
-  flex-basis: 15%;
-  min-width: 120px;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .info-grid div span {
-  font-weight: 500;
-  color: #515151;
+  font-size: 18px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.info-grid div .test:hover {
+  text-decoration: none;
+}
+
+.info-grid div b {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
 }
 
 .health-info .info-grid .test {
-  color: #2573f8;
-  cursor: pointer;
-  font-size: 0.95rem;
+  color: #007bff;
+  cursor: pointer !important;
+  font-size: 18px;
+  text-decoration: none;
+  margin-left: 4px;
+  transition: all 0.2s ease;
 }
 
-/* 그래프 박스 (차트용) */
+.info-grid .test:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
 .graph-box {
   border: 1px solid #e5e5e5;
   background: #f9f9f9;
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  color: #888;
+  color: #222;
   height: 300px;
 }
 
-/* =========================================================
-   최근 건강 기록 리스트
-========================================================= */
 .health-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-/* + 버튼 */
 .add-button {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-color: #2573f8;
+  background-color: #007bff;
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
   position: relative;
 }
+
 .add-button:hover {
   background-color: #1c5edb;
 }
+
 .add-button::before,
 .add-button::after {
   content: "";
@@ -111,16 +119,17 @@
   background-color: white;
   transform: translate(-50%, -50%);
 }
+
 .add-button::before {
   width: 15px;
   height: 3px;
 }
+
 .add-button::after {
   width: 3px;
   height: 15px;
 }
 
-/* 탭 */
 .health-tabs {
   display: flex;
   gap: 16px;
@@ -131,7 +140,7 @@
 .health-tabs button {
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 18px;
   padding: 8px 4px;
   cursor: pointer;
   color: #888;
@@ -146,7 +155,8 @@
   border-bottom-color: #2573f8;
 }
 
-/* 기록 리스트 */
+/* ============ ⭐️ 건강 기록 리스트 최종본 ⭐️ ============ */
+
 .health-record-list {
   list-style: none;
   padding: 0;
@@ -157,12 +167,19 @@
 }
 
 .record-item {
+  position: relative;
+  width: 100%;
+  max-width: 1500px;
+  margin: 12px auto 0;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px 20px;
   display: flex;
   align-items: center;
-  padding: 16px;
-  background-color: #f4f6fb;
-  border-radius: 10px;
-  gap: 16px;
+  justify-content: space-between;
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .04);
 }
 
 .record-icon {
@@ -170,24 +187,29 @@
   height: 48px;
   border-radius: 50%;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   font-size: 24px;
+  flex-shrink: 0;
+  margin-right: 15px;
 }
 
-/* 타입별 색 */
-.record-item[data-type="visit"] .record-icon {
-  background-color: #ffe4e6;
-  color: #d93025;
-}
+
 .record-item[data-type="vax"] .record-icon {
-  background-color: #e0e7ff;
-  color: #2573f8;
+  background-color: #F4E9FF;
+  /* 예방접종: 파란색 */
 }
+
+.record-item[data-type="visit"] .record-icon {
+  background-color: #bcebd0;
+  /* 병원 방문: 초록색 */
+}
+
 .record-item[data-type="med"] .record-icon {
-  background-color: #fff4e0;
-  color: #f29900;
+  background-color: #f0d7bb;
+  /* 투약: 주황색 */
 }
+
 
 .record-content {
   flex-grow: 1;
@@ -220,12 +242,12 @@
   color: #777;
 }
 
-/* 수정/삭제 아이콘 */
 .record-actions {
   display: flex;
   gap: 4px;
   margin-top: 4px;
 }
+
 .record-actions button {
   background: none;
   border: none;
@@ -235,14 +257,7 @@
   border-radius: 4px;
   transition: background-color 0.2s;
 }
-.record-actions .edit-btn:hover {
-  background-color: #f2f6ff;
-}
-.record-actions .delete-btn:hover {
-  background-color: #f5f5f5;
-}
 
-/* 아이콘 이미지 공통 */
 .icon-img {
   width: 18px;
   height: 18px;
@@ -251,30 +266,33 @@
   filter: brightness(0) saturate(100%) invert(88%);
   transition: filter 0.2s ease, opacity 0.2s ease;
 }
+
 .record-actions .edit-btn:hover .icon-img {
   opacity: 1;
+  transform: translateY(-1px);
   filter: brightness(0) saturate(100%)
-          invert(69%) sepia(26%) saturate(1478%)
-          hue-rotate(192deg) brightness(92%) contrast(86%);
+    invert(19%) sepia(99%) saturate(5460%) hue-rotate(206deg)
+    brightness(98%) contrast(103%);
 }
+
 .record-actions .delete-btn:hover .icon-img {
   opacity: 1;
+  transform: translateY(-1px);
   filter: brightness(0) saturate(100%)
-          invert(58%) sepia(0%) saturate(1%)
-          hue-rotate(149deg) brightness(91%) contrast(89%);
+    invert(19%) sepia(99%) saturate(5460%) hue-rotate(206deg)
+    brightness(98%) contrast(103%);
 }
 
 .no-records {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: #222;
   background-color: #f9f9f9;
   border-radius: 10px;
 }
 
-/* =========================================================
-   건강 이상 징후 체크리스트
-========================================================= */
+/* ============ ⭐️ 증상 체크 ⭐️ ============ */
+
 .symptom-grid {
   display: grid;
   padding: 20px;
@@ -318,17 +336,18 @@
   cursor: pointer;
   transition: background-color 0.2s;
 }
+
 .analyze-btn:hover {
   background: #1c5edb;
 }
+
 .analyze-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
 
-/* =========================================================
-   AI 분석 결과 박스
-========================================================= */
+/* ============ ⭐️ AI 분석 결과 ⭐️ ============ */
+
 .ai-result-section {
   margin-top: 40px;
   margin-bottom: 90px;
@@ -338,10 +357,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.5rem;
+  font-size: 25px;
   color: #111;
   margin-bottom: 20px;
 }
+
 .ai-result-section .hw::before {
   content: "";
   width: 5px;
@@ -357,25 +377,25 @@
 }
 
 .result-box .box-title {
-  font-size: 1.2rem;
+  font-size: 20px;
   font-weight: 600;
   display: block;
   margin-bottom: 12px;
 }
 
-.result-box p,
-.result-box li {
-  font-size: 1rem;
-  line-height: 1.6;
+.result-box span {
+  color: #3689fc;
 }
 
 .result-box.danger {
   background: #fff1f0;
   border: 2px solid #ffccc7;
 }
+
 .result-box.danger .box-title {
   color: #cf1322;
 }
+
 .result-box.danger p {
   color: #d9363e;
 }
@@ -384,311 +404,78 @@
   background: #f0f5ff;
   border: 2px solid #adc6ff;
 }
+
 .result-box.info .box-title {
   color: #1677ff;
 }
+
 .result-box.info li {
   color: #1d39c4;
   margin-left: -20px;
 }
 
-/* =========================================================
-   ✔ HEALTH 모달 전용
-   (Activity 페이지 모달과 겹치지 않도록 .health-page로 스코프)
-========================================================= */
+/* ============ ⭐️ 모달 공통 스타일 (Activity 스타일로 최종 통일) ⭐️ ============ */
 
-/* 뒷배경 */
-.health-page .modal-overlay {
+/* --- 모달 오버레이 --- */
+.health-modal-overlay,
+.health-add-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
 }
 
-/* 공통 모달 박스 */
-.health-page .modal {
+/* --- 모달 박스 --- */
+.health-modal,
+.health-add-modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  width: 520px;          /* 살짝 줄인 크기 */
-  max-width: 90vw;
-  max-height: 80vh;
-  padding: 24px 26px;
-
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
-}
-
-/* 모달 제목 */
-.health-page .modal h2 {
-  margin: 0 0 24px;
-  font-size: 30px;
-  font-weight: 800;
-  color: #111;
-  text-align: left;
-  line-height: 1.25;
-  word-break: keep-all;
-}
-
-/* 모달 폼 */
-.health-page .modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/* 라벨 */
-.health-page .modal label {
-  font-size: 15px;
-  font-weight: 700;
-  color: #111827;
-}
-
-/* input 공통 */
-.health-page .modal input[type="text"],
-.health-page .modal input[type="date"] {
-  width: 100%;
-  height: 52px;
-  padding: 0 14px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 15px;
-  box-sizing: border-box;
-  background: #fff;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-
-.health-page .modal input[type="text"]::placeholder,
-.health-page .modal input[type="date"]::placeholder {
-  color: #9ca3af;
-}
-
-.health-page .modal input[type="text"]:focus,
-.health-page .modal input[type="date"]:focus {
-  outline: none;
-  border-color: #2578ff;
-  box-shadow: 0 0 0 3px rgba(37,120,255,.12);
-}
-
-/* ---------------------------------------------------------
-   커스텀 셀렉트 (종류 선택)
---------------------------------------------------------- */
-
-/* 감싸는 래퍼 */
-.health-page .custom-select-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-/* 버튼 모양의 셀렉트 트리거 */
-.health-page .custom-select-trigger {
-  width: 100%;
-  height: 52px;
-  padding: 0 48px 0 14px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 15px;
-  box-sizing: border-box;
-  background-color: #fff;
-  cursor: pointer;
-  text-align: left;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
-
-  /* 오른쪽 화살표 + 세로 구분선 */
-  background-image:
-    url("data:image/svg+xml;utf8,<svg fill='none' stroke='%23999' stroke-width='2' height='14' width='14' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><polyline points='6 9 12 15 18 9'></polyline></svg>"),
-    linear-gradient(to left, #e5e7eb 1px, transparent 1px);
-  background-repeat: no-repeat, no-repeat;
-  background-position: right 16px center, right 44px center;
-  background-size: 14px 14px, 1px 60%;
-}
-
-/* placeholder 색상 */
-.health-page .custom-select-trigger.placeholder {
-  color: #b5b5b5;
-}
-
-/* 포커스 효과 */
-.health-page .custom-select-trigger:focus {
-  outline: none;
-  border-color: #2578ff;
-  box-shadow: 0 0 0 3px rgba(37,120,255,.12);
-}
-
-/* 옵션 리스트 박스 */
-.health-page .custom-options {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-
-  max-height: 210px;
-  overflow-y: auto;
-
-  padding: 6px 0;
-  margin: 0;
-  list-style: none;
-
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 28px rgba(15,23,42,0.16);
-  z-index: 100;
-}
-
-/* 개별 옵션 */
-.health-page .custom-option {
-  padding: 10px 14px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background-color .15s ease;
-}
-
-.health-page .custom-option:hover {
-  background-color: #f3f4ff;
-}
-
-/* ---------------------------------------------------------
-   모달 버튼 영역
---------------------------------------------------------- */
-
-.health-page .modal .form-buttons {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.health-page .modal .form-buttons button {
-  height: 42px;
-  min-width: 88px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-.health-page .modal .form-buttons button:hover {
-  transform: translateY(-1px);
-}
-
-/* 추가/수정 모달 - 공통 버튼 */
-.health-page .modal .form-buttons button[type="button"] {
-  background: #e5e9f2;
-  color: #222;
-}
-
-.health-page .modal .form-buttons button[type="submit"] {
-  background: #2578ff;
-  color: #fff;
-  box-shadow: 0 8px 22px rgba(37,120,255,.22);
-}
-
-/* ---------------------------------------------------------
-   삭제 확인 모달
---------------------------------------------------------- */
-
-.health-page .modal.modal-delete-confirm {
-  width: 400px;
-  max-width: 90vw;
-  height: auto;
-  padding-top: 28px;
-  padding-bottom: 24px;
-}
-
-.health-page .modal.modal-delete-confirm h2 {
-  font-size: 22px;
-  margin-bottom: 10px;
-}
-
-.health-page .modal-delete-confirm .delete-confirm-text {
-  text-align: center;
-  color: #555;
-  margin: 0 0 18px;
-}
-
-.health-page .modal.modal-delete-confirm .form-buttons {
-  justify-content: center;
-}
-
-/* 삭제 모달 버튼 */
-.health-page .modal-delete-confirm .btn-cancel {
-  background: #55555527;
-  color: #000;
-}
-
-.health-page .modal-delete-confirm .btn-delete-confirm {
-  background: #ff2024;
-  color: #fff;
-  font-weight: 500;
-}
-.health-page .modal-delete-confirm .btn-delete-confirm:hover {
-  background: #ff000d;
-}
-/* =========================================================
-   ⚡ HEALTH ADD MODAL (전용, 완전 분리)
-========================================================= */
-
-/* 배경 */
-.health-add-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-/* 모달 박스 */
-.health-add-modal {
+  z-index: 10000;
   width: 500px;
   max-width: 92vw;
-  max-height: 85vh;
-
+  max-height: 98vw;
+  overflow-y: auto;
   background: #fff;
   border-radius: 16px;
   padding: 28px 28px 34px;
-
-  box-shadow: 0 18px 45px rgba(0,0,0,0.25);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
-  overflow-y: auto;
 }
 
-/* 모달 제목 */
+/* --- 제목 --- */
+.health-modal h2,
 .health-add-modal h2 {
   margin: 0 0 24px;
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 30px;
+  font-weight: 600;
   color: #111;
+  text-align: center;
 }
 
-/* 입력 그룹 */
-.health-add-group {
+/* --- 폼 그룹 --- */
+.health-add-group,
+.form-group {
   margin-bottom: 18px;
 }
 
+.health-modal label,
 .health-add-group label {
   display: block;
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
+  color: #111827;
 }
 
-/* 기본 input */
-.health-add-input {
+/* --- 인풋 --- */
+.health-add-input,
+.health-modal .input,
+.health-modal input[type="date"] {
   width: 100%;
   height: 50px;
   border: 1.6px solid #ddd;
@@ -697,23 +484,25 @@
   font-size: 15px;
   background: #fff;
   transition: 0.15s;
+  justify-content: flex-start;
 }
 
-.health-add-input:focus {
+.health-add-input:focus,
+.health-modal .input:focus {
   outline: none;
   border-color: #2578ff;
-  box-shadow: 0 0 0 3px rgba(37,120,255,0.15);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
-/* =========================================================
-   🔽 드롭다운 (전용)
-========================================================= */
+/* ============ ⭐️ 드롭다운 스타일 (활동 모달 기준으로 통일) ⭐️ ============ */
+/* (기존 .health-select- / .custom-select- 모두 제거됨) */
 
-.health-select-wrapper {
+.activity-select-wrapper {
   position: relative;
 }
 
-.health-select-trigger {
+.activity-select-trigger {
+  /* 기존 모달의 레이아웃 속성 */
   width: 100%;
   height: 50px;
   border: 1.6px solid #ddd;
@@ -721,91 +510,165 @@
   background: #fff;
   padding: 0 14px;
   font-size: 15px;
-  text-align: left;
+
+  /* '활동' 모달 스타일 */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  text-align: left;
 }
 
-.health-select-trigger.placeholder {
+.activity-select-trigger:focus {
+    outline: none;
+  border-color: #2578ff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+.activity-select-trigger.placeholder {
   color: #8f8f8f;
 }
 
-.health-select-arrow {
-  font-size: 14px;
-  opacity: 0.6;
+.activity-select-trigger::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #888;
+  margin-right: 4px;
+  transition: transform 0.2s ease;
 }
 
-/* 옵션 박스 */
-.health-select-options {
+.activity-select-options {
+  /* '활동' 모달 스타일 */
   position: absolute;
-  top: calc(100% + 6px);
+  top: 100%;
   left: 0;
-  width: 100%;
-  background: #fff;
-  border: 1.6px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 7px 18px rgba(0,0,0,0.15);
-  overflow: hidden;
-  z-index: 20;
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  margin-top: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10010;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  
+  /* (ul, li 태그 리셋) */
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.health-select-option {
+.activity-select-option {
+  /* '활동' 모달 스타일 */
   padding: 12px 14px;
   font-size: 15px;
+  color: #111827;
   cursor: pointer;
-  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: background-color 0.15s ease;
 }
 
-.health-select-option:hover {
-  background: #f2f6ff;
+.activity-select-option:hover {
+  background-color: #f3f4f6;
 }
 
-/* =========================================================
-   버튼 그룹
-========================================================= */
-.health-add-buttons {
+/* ⭐️ '아이콘' 스타일 (모든 모달 공통) ⭐️ */
+.dropdown-icon {
+  font-size: 20px;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: 5px !important;
+}
+
+/* --- 버튼 영역 (추가/수정 동일) --- */
+.health-add-buttons,
+.health-modal .form-buttons {
   margin-top: 24px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
 }
 
-.health-add-btn {
-  height: 42px;
+.health-add-btn,
+.health-modal .form-buttons button {
+  height: 40px;
   min-width: 80px;
-  border: none;
   border-radius: 10px;
   font-size: 15px;
   cursor: pointer;
+  border: none;
+  transition: all 0.2s ease-out;
 }
 
-.health-add-btn.cancel {
-  background: #e5e6eb;
-  color: #222;
+/* --- 개별 버튼 색상 및 호버 --- */
+.health-add-btn.cancel,
+.health-modal .form-buttons .btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  transition: all 0.2s ease-out;
 }
 
-.health-add-btn.save {
+.health-add-btn.cancel:hover,
+.health-modal .form-buttons .btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+.health-add-btn.save,
+.health-modal .form-buttons .btn-primary {
   background: #2578ff;
   color: #fff;
-  box-shadow: 0 6px 16px rgba(37,120,255,0.25);
 }
 
-.health-add-btn.save:hover {
+.health-add-btn.save:hover,
+.health-modal .form-buttons .btn-primary:hover {
   filter: brightness(0.96);
+  transform: translateY(-2px);
 }
 
-/* ---------------------------------------------------------
-   모바일 대응
---------------------------------------------------------- */
+/* --- 삭제 버튼 (Delete Modal 전용) --- */
+.health-modal .form-buttons .btn-delete-confirm {
+  background: #ef4444 !important;
+  color: #ffffff;
+  transition: all 0.2s ease-out;
+}
+
+.health-modal .form-buttons .btn-delete-confirm:hover {
+  transform: translateY(-2px);
+  filter: brightness(0.92);
+  background: #d93025 !important;
+}
+
+/* --- 삭제 확인 모달 텍스트 --- */
+.health-page .modal-delete-confirm .delete-confirm-text {
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 auto 18px auto;
+}
+
+/* ============ ⭐️ 반응형 ⭐️ ============ */
+
+@media (max-width: 768px) {
+  .info-grid {
+    gap: 30px;
+  }
+}
 
 @media (max-width: 640px) {
-  .health-page .modal {
+  .health-modal,
+  .health-add-modal {
     width: 92vw;
     padding: 24px 18px;
   }
-  .health-page .modal h2 {
+
+  .health-modal h2,
+  .health-add-modal h2 {
     font-size: 24px;
   }
 }

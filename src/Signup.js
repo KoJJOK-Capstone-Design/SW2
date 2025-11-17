@@ -4,7 +4,7 @@ import './Signup.css';
 
 function Signup() {
   const [formData, setFormData] = useState({
-    id: '',
+    username: '',
     password: '',
     email: '',
     nickname: ''
@@ -18,15 +18,28 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/v1/users/register/→회원가입', formData);
+      const payload = {
+        username: formData.username,          // ✅ 백엔드용 필드명
+        password: formData.password,
+        email: formData.email,
+        nickname: formData.nickname,
+      };
+
+      const res = await axios.post(
+        'https://youngbin.pythonanywhere.com/api/v1/users/register/',
+        payload
+      );
+
       console.log('회원가입 성공:', res.data);
       alert('회원가입이 성공적으로 완료되었습니다!');
-      setFormData({ id: '', password: '', email: '', nickname: '' });
+      setFormData({ username: '', password: '', email: '', nickname: '' });
+
+      window.location.href = '/signin';
     } catch (err) {
+      console.log('회원가입 에러:', err.response?.data || err.message);
       alert('회원가입에 실패했습니다. 다시 시도해 주세요.');
     }
   };
-
 
   return (
     <div className="signup-container">
@@ -40,9 +53,9 @@ function Signup() {
           <div className="input-group">
             <input
               type="text"
-              name="id"
+              name="username"
               placeholder="아이디"
-              value={formData.id}
+              value={formData.username}
               onChange={handleChange}
               required
             />

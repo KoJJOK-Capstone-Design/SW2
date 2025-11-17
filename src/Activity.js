@@ -1,7 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // ⭐️ useEffect 추가
 import "./Home.css";
 import "./Activity.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -11,21 +21,46 @@ import djangopic from "./img/django.png";
 
 import editIcon from "./img/Edit_fill.png";
 import trashIcon from "./img/Trash_2.png";
-import plusIcon from "./img/plusicon.png";
-import circleImg from "./img/circle.png";
 
-/* 주간 활동 더미 데이터 */
-const weekly = [
-  { label: "일요일", value: 20 },
-  { label: "월요일", value: 50 },
-  { label: "화요일", value: 28 },
-  { label: "수요일", value: 38 },
-  { label: "목요일", value: 9 },
-  { label: "금요일", value: 31 },
-  { label: "토요일", value: 48 },
+import bell from "./img/bell.png";
+import chat from "./img/chat.png";
+
+// Chart.js 모듈 등록
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const ACTIVITY_CATEGORIES = [
+  { key: 'walk', label: '산책', color: '#D7EFFF ', icon: '🐾' },
+  { key: 'play', label: '놀이', color: '#E6FFE3', icon: '🎾' },
+  { key: 'train', label: '훈련', color: '#FFF7CC', icon: '🏆' },
+  { key: 'outing', label: '외출', 'color': '#EFE4FF', icon: '🚗' },
+  { key: 'other', label: '기타', color: '#E9ECEF', icon: '⚫' }
 ];
 
-const yTicks = [0, 10, 20, 30, 40, 50, 60, 70];
+function getCategory(label) {
+  // '선택하세요'의 경우 '기타' 카테고리 반환
+  if (label === "선택하세요") {
+    return ACTIVITY_CATEGORIES.find(cat => cat.key === 'other');
+  }
+  const found = ACTIVITY_CATEGORIES.find(cat => label.includes(cat.label));
+  return found || ACTIVITY_CATEGORIES.find(cat => cat.key === 'other');
+}
+
+const weekly = [
+  { label: "일요일", value: 24 },
+  { label: "월요일", value: 60 },
+  { label: "화요일", value: 34 },
+  { label: "수요일", value: 46 },
+  { label: "목요일", value: 11 },
+  { label: "금요일", value: 37 },
+  { label: "토요일", value: 57 },
+];
 
 function formatDate(d = new Date()) {
   const y = d.getFullYear();
@@ -34,24 +69,53 @@ function formatDate(d = new Date()) {
   return `${y}.${m}.${day}`;
 }
 
-export default function Activity() {
-  /* 최근 산책 기록 목록 */
-  const [walks, setWalks] = useState([
-    { id: 1, title: "저녁 산책", minutes: 22, km: 1.1, date: "2025.08.15" },
-  ]);
+// ⭐️ [변경] 로컬 스토리지에서 저장된 활동 기록을 불러오는 함수
+const getInitialWalks = () => {
+  try {
+    const savedWalks = localStorage.getItem('petActivityWalks');
+    // 저장된 데이터가 있으면 JSON 파싱, 없으면 빈 배열 반환
+    return savedWalks ? JSON.parse(savedWalks) : [];
+  } catch (error) {
+    console.error("Local Storage에서 데이터를 불러오는 중 오류 발생:", error);
+    return [];
+  }
+};
 
-  /* 추가 모달 + 폼 */
+export default function Activity() {
+  const [showBellPopup, setShowBellPopup] = useState(false);
+  const [showChatPopup, setShowChatPopup] = useState(false);
+
+  // Todo List는 현재 사용하지 않으므로 생략 (원본에는 있으나 기능에 영향X)
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "산책하기", done: true },
+    { id: 2, text: "밥주기", done: false },
+    { id: 3, text: "양치시키기", done: false },
+    { id: 4, text: "물주기", done: false },
+  ]);
+  const [newTask, setNewTask] = useState("");
+
+  // ⭐️ [변경] 초기값을 로컬 스토리지에서 가져오도록 설정
+  const [walks, setWalks] = useState(getInitialWalks);
+
+  // ⭐️ [추가] walks 상태가 변경될 때마다 로컬 스토리지에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem('petActivityWalks', JSON.stringify(walks));
+    } catch (error) {
+      console.error("Local Storage에 데이터를 저장하는 중 오류 발생:", error);
+    }
+  }, [walks]);
+
+  // 폼 기본값을 '선택하세요'로 변경
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
-    type: "산책",
+    type: "선택하세요",
     minutes: "",
     distance: "",
   });
 
-  /* 삭제 확인 모달 */
   const [confirm, setConfirm] = useState({ open: false, id: null });
 
-  /* 수정 모달 + 폼 */
   const [edit, setEdit] = useState({
     open: false,
     id: null,
@@ -60,7 +124,9 @@ export default function Activity() {
     distance: "",
   });
 
-  /* ---------- 공통 핸들러 ---------- */
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
+
   const handleChange = (field) => (e) => {
     const value = e?.target?.value ?? "";
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -80,9 +146,14 @@ export default function Activity() {
     return { ok: true, minutesNum, distanceNum };
   };
 
-  /* ---------- 추가 저장 ---------- */
   const handleSave = (e) => {
     e.preventDefault();
+
+    // '선택하세요' 상태에서는 저장 방지
+    if (form.type === "선택하세요") {
+      alert("활동 종류를 선택해 주세요.");
+      return;
+    }
 
     const v = validate(form.minutes, form.distance);
     if (!v.ok) return;
@@ -95,13 +166,12 @@ export default function Activity() {
       date: formatDate(),
     };
 
-    // 아래에 추가
     setWalks((prev) => [...prev, newItem]);
     setShowModal(false);
-    setForm({ type: "산책", minutes: "", distance: "" });
+    setIsAddDropdownOpen(false);
+    setForm({ type: "선택하세요", minutes: "", distance: "" }); // 리셋값 변경
   };
 
-  /* ---------- 삭제(확인 모달) ---------- */
   const openConfirm = (id) => setConfirm({ open: true, id });
   const closeConfirm = () => setConfirm({ open: false, id: null });
   const confirmDelete = () => {
@@ -109,20 +179,30 @@ export default function Activity() {
     closeConfirm();
   };
 
-  /* ---------- 수정(열기/변경/저장) ---------- */
   const openEdit = (w) => {
     setEdit({
       open: true,
       id: w.id,
-      type: w.title.replace(" 기록", "") || "산책", // 제목에서 활동종류 추정
+      type: getCategory(w.title)?.label || "산책",
       minutes: String(w.minutes ?? ""),
       distance: w.km == null ? "" : String(w.km),
     });
+    setIsEditDropdownOpen(false);
   };
 
   const handleEditChange = (field) => (e) => {
     const value = e?.target?.value ?? "";
     setEdit((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddDropdownSelect = (label) => {
+    setForm(prev => ({ ...prev, type: label }));
+    setIsAddDropdownOpen(false);
+  };
+
+  const handleEditDropdownSelect = (label) => {
+    setEdit(prev => ({ ...prev, type: label }));
+    setIsEditDropdownOpen(false);
   };
 
   const saveEdit = (e) => {
@@ -139,26 +219,68 @@ export default function Activity() {
               title: `${edit.type} 기록`,
               minutes: v.minutesNum,
               km: v.distanceNum,
-              // 날짜는 수정하지 않음. 필요하면 formatDate()로 갱신.
             }
           : w
       )
     );
     setEdit({ open: false, id: null, type: "", minutes: "", distance: "" });
+    setIsEditDropdownOpen(false);
   };
 
-  const closeEdit = () =>
+  const closeEdit = () => {
     setEdit({ open: false, id: null, type: "", minutes: "", distance: "" });
+    setIsEditDropdownOpen(false);
+  };
+
+  const closeAddModal = () => {
+    setShowModal(false);
+    setIsAddDropdownOpen(false);
+    setForm({ type: "선택하세요", minutes: "", distance: "" }); // 리셋값 변경
+  };
+
+  const chartData = {
+    labels: weekly.map(d => d.label),
+    datasets: [
+      {
+        label: '활동량',
+        data: weekly.map(d => Math.max(d.value, 5)),
+        backgroundColor: '#D6E4FF',
+        borderRadius: 12,
+        borderSkipped: false,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 10,
+        },
+        border: { display: false },
+        grid: { color: '#F0F0F0' },
+      },
+    },
+  };
 
   return (
     <div className="home">
-      {/* 헤더 */}
       <header className="nav">
         <div className="nav-inner">
-          <div className="brand">
+          <Link to="/dashboard" className="brand">
             <img src={logoBlue} alt="paw logo" className="paw" />
             <span className="brand-text">멍냥멍냥</span>
-          </div>
+          </Link>
 
           <nav className="menu">
             <NavLink to="/activity">활동</NavLink>
@@ -166,137 +288,154 @@ export default function Activity() {
             <NavLink to="/calendar">캘린더</NavLink>
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
+          <nav className="menuicon">
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
+              >
+                <img src={bell} alt="알림 아이콘" className="icon" />
+              </button>
+              {showBellPopup && (
+                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
+              )}
+            </div>
 
-          <nav className="menulink">
-            <NavLink to="/signup">회원가입</NavLink>
-            <NavLink to="/signin">로그인</NavLink>
+            <div className="icon-wrapper">
+              <button
+                className="icon-btn"
+                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
+              >
+                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+              </button>
+            </div>
           </nav>
         </div>
       </header>
 
-      {/* 본문 */}
       <main className="activity-container">
-        {/* 오늘의 활동 */}
         <section className="section">
           <div className="section-title">
             <span className="blue-stick" />
-            <h2>오늘의 활동</h2>
+            <h2 id='h2'>오늘의 활동</h2>
           </div>
-
           <div className="metrics">
             <Metric label="시간" value="45" unit="분" />
             <Metric label="거리" value="2.1" unit="km" />
           </div>
         </section>
 
-        {/* 주간 활동 분석 */}
         <section className="section">
           <div className="section-title">
             <span className="blue-stick" />
-            <h2>주간 활동 분석</h2>
+            <h2 id='h2'>주간 활동 분석</h2>
           </div>
-
-          <div className="chart">
-            <div className="y-grid">
-              {yTicks.map((n) => (
-                <div className="y-row" key={n}>
-                  <span className="y-label">{n}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="bars">
-              {weekly.map((d) => (
-                <div className="bar-wrap" key={d.label}>
-                  <div
-                    className="bar"
-                    style={{ height: `${d.value * 8}px` }}
-                    title={`${d.label} ${d.value}분`}
-                  />
-                  <div className="bar-label">{d.label}</div>
-                </div>
-              ))}
-            </div>
+          <div className="graph-box">
+            <Bar options={chartOptions} data={chartData} />
           </div>
         </section>
 
-        {/* 최근 산책 기록 */}
         <section className="section recent-walks">
           <div className="section-title">
             <span className="blue-stick" />
-            <h2>최근 산책 기록</h2>
+            <h2 id='h2'>최근 산책 기록</h2>
           </div>
-
-          {/* 섹션 우상단 고정 +버튼 (한 개만) */}
           <button
-            className="walk-fab"
+            className="css-plus-button"
             aria-label="빠른 추가"
             onClick={() => setShowModal(true)}
           >
-            <img src={circleImg} alt="" className="walk-fab-circle" />
-            <img src={plusIcon} alt="" className="walk-fab-plus" />
           </button>
-
-          {walks.map((w) => (
-            <div className="walk-card" key={w.id}>
-              <div className="walk-left">
-                <div className="avatar" />
-                <div className="walk-text">
-                  <div className="walk-title">{w.title}</div>
-                  <div className="walk-sub">
-                    {w.minutes}분 {w.km != null ? `| ${w.km}km` : ""}
+          {walks.map((w) => {
+            const category = getCategory(w.title);
+            return (
+              <div className="walk-card" key={w.id}>
+                <div className="walk-left">
+                  <div
+                    className="avatar"
+                    style={{ backgroundColor: category.color }}
+                  >
+                    {category.icon}
+                  </div>
+                  <div className="walk-text">
+                    <div className="walk-title">{w.title}</div>
+                    <div className="walk-sub">
+                      {w.minutes}분 {w.km != null ? `| ${w.km}km` : ""}
+                    </div>
+                  </div>
+                </div>
+                <div className="walk-right">
+                  <div className="walk-date">{w.date}</div>
+                  <div className="walk-actions">
+                    <button
+                      className="icon-btn"
+                      aria-label="수정"
+                      onClick={() => openEdit(w)}
+                    >
+                      <img className="icon-img" src={editIcon} alt="" />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      aria-label="삭제"
+                      onClick={() => openConfirm(w.id)}
+                    >
+                      <img className="icon-img" src={trashIcon} alt="" />
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="walk-right">
-                <div className="walk-date">{w.date}</div>
-
-                <div className="walk-actions">
-                  <button
-                    className="icon-btn"
-                    aria-label="수정"
-                    onClick={() => openEdit(w)}
-                  >
-                    <img className="icon-img" src={editIcon} alt="" />
-                  </button>
-                  <button
-                    className="icon-btn"
-                    aria-label="삭제"
-                    onClick={() => openConfirm(w.id)}
-                  >
-                    <img className="icon-img" src={trashIcon} alt="" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       </main>
 
       {/* 추가 모달 */}
       {showModal && (
         <div className="modal" role="dialog" aria-modal="true">
-          <div className="modal-backdrop" onClick={() => setShowModal(false)} />
+          <div className="modal-backdrop" onClick={closeAddModal} />
           <form className="modal-panel" onSubmit={handleSave}>
             <h2 className="modal-title">활동 기록 추가</h2>
 
             <div className="form-field">
               <label className="form-label">활동 종류</label>
-              <input
-                className="form-input"
-                type="text"
-                placeholder="예 : 아침 산책"
-                value={form.type}
-                onChange={handleChange("type")}
-              />
+              <div className="activity-select-wrapper">
+                <button
+                  type="button"
+                  // '선택하세요'일 때 placeholder 클래스 추가
+                  className={`form-input activity-select-trigger ${form.type === "선택하세요" ? "placeholder" : ""}`}
+                  onClick={() => setIsAddDropdownOpen(prev => !prev)}
+                >
+                  <div>
+                    {/* '선택하세요'일 때는 아이콘 숨김 처리 */}
+                    {form.type !== "선택하세요" && (
+                      <span className="dropdown-icon">{getCategory(form.type)?.icon}</span>
+                    )}
+                    {form.type}
+                  </div>
+                </button>
+                {isAddDropdownOpen && (
+                  <div className="activity-select-options">
+                    {ACTIVITY_CATEGORIES.map(cat => (
+                      <div
+                        key={cat.key}
+                        className="activity-select-option"
+                        onClick={() => handleAddDropdownSelect(cat.label)}
+                      >
+                        <div>
+                          <span className="dropdown-icon">{cat.icon}</span> {cat.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-field">
-              <label className="form-label">내용</label>
+              <label className="form-label">내용 (분)</label>
               <input
                 className="form-input"
-                type="text"
+                type="number"
                 placeholder="예 : 30"
                 value={form.minutes}
                 onChange={handleChange("minutes")}
@@ -307,7 +446,8 @@ export default function Activity() {
               <label className="form-label">이동 거리 (km, 선택)</label>
               <input
                 className="form-input"
-                type="text"
+                type="number"
+                step="0.1"
                 placeholder="예 : 1.5"
                 value={form.distance}
                 onChange={handleChange("distance")}
@@ -318,7 +458,7 @@ export default function Activity() {
               <button
                 type="button"
                 className="btn btn-ghost"
-                onClick={() => setShowModal(false)}
+                onClick={closeAddModal}
               >
                 취소
               </button>
@@ -339,19 +479,39 @@ export default function Activity() {
 
             <div className="form-field">
               <label className="form-label">활동 종류</label>
-              <input
-                className="form-input"
-                type="text"
-                value={edit.type}
-                onChange={handleEditChange("type")}
-              />
+              <div className="activity-select-wrapper">
+                <button
+                  type="button"
+                  className="form-input activity-select-trigger"
+                  onClick={() => setIsEditDropdownOpen(prev => !prev)}
+                >
+                  <div>
+                    <span className="dropdown-icon">{getCategory(edit.type)?.icon}</span> {edit.type}
+                  </div>
+                </button>
+                {isEditDropdownOpen && (
+                  <div className="activity-select-options">
+                    {ACTIVITY_CATEGORIES.map(cat => (
+                      <div
+                        key={cat.key}
+                        className="activity-select-option"
+                        onClick={() => handleEditDropdownSelect(cat.label)}
+                      >
+                        <div>
+                          <span className="dropdown-icon">{cat.icon}</span> {cat.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-field">
-              <label className="form-label">내용</label>
+              <label className="form-label">내용 (분)</label>
               <input
                 className="form-input"
-                type="text"
+                type="number"
                 value={edit.minutes}
                 onChange={handleEditChange("minutes")}
               />
@@ -361,7 +521,8 @@ export default function Activity() {
               <label className="form-label">이동 거리 (km, 선택)</label>
               <input
                 className="form-input"
-                type="text"
+                type="number"
+                step="0.1"
                 value={edit.distance}
                 onChange={handleEditChange("distance")}
               />
@@ -453,7 +614,7 @@ export default function Activity() {
                 </a>
               </div>
               <div className="col">
-                <h3>Munjin Yang</h3>
+                <h3>Munjun Yang</h3>
                 <p>Back-End Dev</p>
                 <a href="https://github.com/munjun0608" className="github-link">
                   <img

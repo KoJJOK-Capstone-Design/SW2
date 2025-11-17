@@ -86,14 +86,14 @@ body {
   box-sizing: border-box;
 }
 .section--intro { padding-top: 32px; }
-.title { margin: 0; font-size: 50px; font-weight: 600; }
+.title { margin: 0; font-size: 35px; font-weight: 600; }
 .date  { color: #6b7280; margin-top: 4px; font-size: 20px; }
 
 .section__title {
   display: flex; align-items: center; gap: 10px;
-  margin: 0 0 24px; font-size: 35px; font-weight: 500;
+  margin: 0 0 24px; font-size: 25px; font-weight: 600;
 }
-.section__bullet { width: 12px; height: 36px; border-radius: 10px; display: inline-block; font-weight: 500; }
+.section__bullet { width: 5px; height: 22px; border-radius: 3px; display: inline-block; font-weight: 500; }
 .section__bullet--blue { background: #1e90ff; }
 
 /******************************************
@@ -108,7 +108,7 @@ body {
  * 5) Todo Card
  ******************************************/
 .todolist {
-  font-size: 35px; font-weight: 500;
+  font-size: 25px; font-weight: 500;
   padding-top: 10px; padding-bottom: 20px;
   margin: 0 40px;
 }

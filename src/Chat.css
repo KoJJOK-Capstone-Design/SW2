@@ -20,10 +20,27 @@ a {
 /* ===== 알림 벨 & 배지 ===== */
 .bell { position: relative; }
 .bell__btn { position: relative; }
+/* 예를 들어, Chat.css 파일에 추가해주세요 */
+/* Chat.css 또는 Dashboard.css 파일에 추가 */
+
+/* 알림 아이콘의 부모 위치 설정 */
+.icon-wrapper.bell {
+    position: relative; 
+}
+
+/* 빨간색 닷 스타일 정의 */
 .bell__dot {
-  position: absolute; right: 2px; top: 2px;
-  width: 9px; height: 9px; border-radius: 50%;
-  background: #ef4444; box-shadow: 0 0 0 2px #fff;
+    /* 다른 CSS를 무시하고 무조건 표시되게 설정 */
+    position: absolute !important;
+    top: 5px !important;    
+    right: 5px !important;  
+    width: 10px !important;
+    height: 10px !important;
+    background-color: red !important; /* 확실한 빨간색 */
+    border-radius: 50% !important;
+    border: 1px solid white !important; /* 흰색 테두리로 강조 */
+    z-index: 9999 !important; /* 화면 최상위에 표시 */
+    display: block !important;
 }
 
 /* ===== 알림 패널 ===== */

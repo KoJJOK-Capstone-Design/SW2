@@ -100,7 +100,6 @@ export default function CommunityWrite() {
           />
 
         <div className="write-attach-row">
-        <span className="attach-label">사진 첨부</span>
 
         <div className="attach-controls">
           <label className="attach-btn">
