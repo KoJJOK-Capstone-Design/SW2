@@ -660,7 +660,6 @@ const Health = ({ user, pet }) => {
 
       </div>
 
-      {/* =================== 푸터 =================== */}
       <footer className="footer">
         <div className="footer-inner">
           <div className="logo-row">
