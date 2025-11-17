@@ -36,8 +36,8 @@ export default function HomeLogin() {
         );
 
         const name =
-          res.data?.username ||
           res.data?.nickname ||
+          res.data?.username ||
           res.data?.id ||
           "냥냥";
 

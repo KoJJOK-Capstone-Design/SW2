@@ -4,7 +4,7 @@ import axios from "axios";
 import "./Dashboard.css";
 import "./Chat.css";
 
-// (이하 생략: import는 그대로 유지)
+// 이미지 import는 그대로 유지
 import editIcon from "./img/Edit_fill.png";
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -17,7 +17,15 @@ import chat from "./img/chat.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
-// ===================== 헬퍼: 이름 결정 로직 =====================
+
+// =========================================================================
+// 📦📦📦 [HEADER.JS로 분리할 코드 모음] 📦📦📦
+// 이 블록에 있는 모든 코드를 복사하여 별도의 Header.js 파일에 붙여넣으세요.
+// =========================================================================
+
+/**
+ * 헬퍼: 이름 결정 로직 (Header와 Chat.js 모두 사용)
+ */
 const getDisplayName = (user) => {
   const rawNickname = (user?.nickname || "").trim();
   const rawUsername = (user?.username || "").trim();
@@ -29,44 +37,11 @@ const getDisplayName = (user) => {
     (rawId ? `사용자 ${rawId}` : "냥냥")
   );
 };
-// ==========================================================
 
-// ===================== 헬퍼: Interval Custom Hook =====================
-function useInterval(callback, delay) {
-  const savedCallback = useRef();
-
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  useEffect(() => {
-    function tick() {
-      savedCallback.current();
-    }
-    if (delay !== null) {
-      let id = setInterval(tick, delay);
-      return () => clearInterval(id);
-    }
-  }, [delay]);
-}
-// ==========================================================
-
-
-export default function Chat() {
-  // (이하 생략: makeDisplayTime, getTimeAgo 헬퍼 함수는 그대로 유지)
-  const makeDisplayTime = (sentAt) => {
-    if (!sentAt) return "";
-    const d = new Date(sentAt);
-    if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleString("ko-KR", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getTimeAgo = (dateString) => {
+/**
+ * 헬퍼: 시간 포맷 로직 (Header와 Chat.js 모두 사용)
+ */
+const getTimeAgo = (dateString) => {
     const now = new Date();
     const past = new Date(dateString);
     if (Number.isNaN(past.getTime())) return dateString; 
@@ -88,8 +63,226 @@ export default function Chat() {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+};
 
+/**
+ * 헬퍼: 알림 메시지 정리 로직 (Header와 Chat.js 모두 사용)
+ * - '닉네임'님으로부터 부분을 제거하고 메시지 내용만 반환
+ */
+const cleanAlertText = (message) => {
+    if (!message) return "새 알림";
+    // '닉네임'님으로부터 (메시지)
+    const match = message.match(/^'[^']+'님으로부터 (.*)/);
+
+    if (match && match.length > 1) {
+        return match[1].trim();
+    }
+    // 닉네임님으로부터 (메시지) - 홑따옴표 없는 경우
+    const matchNoQuote = message.match(/^([^']+)님으로부터 (.*)/);
+    if (matchNoQuote && matchNoQuote.length > 2) {
+        // 첫 번째 캡처 그룹(닉네임)을 제거한 나머지 텍스트를 반환
+        return matchNoQuote[2].trim();
+    }
+
+    return message;
+};
+
+/**
+ * 헬퍼: 메시지에서 닉네임 추출 로직 (Header와 Chat.js 모두 사용)
+ */
+const extractNickname = (message) => {
+    // '닉네임'님으로부터
+    let match = message.match(/'([^']+)'님으로부터/);
+    if (match) return match[1];
+
+    // 닉네임님으로부터
+    match = message.match(/^([^']+)님으로부터/);
+    if (match) return match[1];
+
+    return null;
+};
+
+/**
+ * Header 컴포넌트 (이 함수를 Header.js의 default export로 사용하세요)
+ * @param {object} props 
+ * @param {string} props.username 현재 로그인한 사용자 닉네임
+ * @param {boolean} props.openNoti 알림창 열림 상태
+ * @param {function} props.setOpenNoti 알림창 상태 변경 함수
+ * @param {boolean} props.hasNewNotification 새 알림 여부 (빨간 점 표시용)
+ * @param {Array<object>} props.notifications 알림 목록
+ * @param {boolean} props.loadingNoti 알림 로딩 상태
+ * @param {boolean} props.hasUnreadInList 목록 내 읽지 않은 알림 존재 여부
+ * @param {function} props.markAllRead 모든 알림 읽음 처리 함수
+ * @param {function} props.markRead 특정 알림 읽음 처리 함수
+ * @param {React.Ref} props.notiBtnRef 알림 버튼 Ref
+ * @param {React.Ref} props.notiRef 알림창 컨테이너 Ref
+ * @param {function} props.setShowChatPopup 채팅 팝업 상태 변경 (Chat.js에서는 false 고정)
+ */
+function HeaderComponent({
+  username, openNoti, setOpenNoti, hasNewNotification, notifications, loadingNoti, 
+  hasUnreadInList, markAllRead, markRead, notiBtnRef, notiRef, setShowChatPopup
+}) {
+  // Chat.js에서 이미지를 import 했으므로 여기서는 props로 넘겨받지 않고 직접 사용
+  // 만약 Header.js로 옮긴다면, 이 이미지들을 Header.js에서도 import 해야 합니다.
+  return (
+    <header className="nav">
+      <div className="nav-inner">
+        <div className="brand">
+          <a href="./dashboard">
+            <img src={logoBlue} alt="paw logo" className="paw" />
+            <span className="brand-text">멍냥멍냥</span>
+          </a>
+        </div>
+
+        <nav className="menu">
+          <a href="/activity">활동</a>
+          <a href="/health">건강</a>
+          <a href="/calendar">캘린더</a>
+          <a href="/community">커뮤니티</a>
+        </nav>
+
+        <nav className="menuicon">
+          {/* 프로필 */}
+          <div className="profile">
+            <div className="profile__avatar">
+              <img
+                src="https://i.pravatar.cc/80?img=11"
+                alt="프로필"
+              />
+            </div>
+            <span className="profile__name">{username}</span>
+          </div>
+
+          {/* 알림 벨 */}
+          <div className="icon-wrapper bell">
+            <button
+              ref={notiBtnRef}
+              className="icon-btn bell__btn"
+              aria-label="알림"
+              onClick={() => {
+                setOpenNoti((v) => !v);
+                setShowChatPopup(false);
+              }}
+            >
+              <img src={bell} alt="" className="icon" aria-hidden />
+              {/* 새 알림 표시 (빨간 점) */}
+              {hasNewNotification && <span className="bell__dot" aria-hidden />} 
+            </button>
+
+            {openNoti && (
+              <div ref={notiRef} className="noti">
+                <div className="noti__header">
+                  <strong>알림</strong>
+                  <button
+                    className="noti__allread"
+                    onClick={markAllRead}
+                    disabled={!hasUnreadInList} 
+                  >
+                    모두 읽음
+                  </button>
+                </div>
+                <ul className="noti__list">
+                  {loadingNoti && (
+                    <li className="noti__empty">알림 불러오는 중...</li>
+                  )}
+                  {!loadingNoti && notifications.length === 0 && (
+                    <li className="noti__empty">알림이 없습니다.</li>
+                  )}
+                  {!loadingNoti && notifications.map((n) => (
+                    <li
+                      key={n.id}
+                      className={`noti__item ${
+                        !n.is_read ? "is-unread" : "is-read" 
+                      }`}
+                      onClick={() => markRead(n.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && markRead(n.id)
+                      }
+                      title="클릭하면 읽음 처리"
+                    >
+                      <div
+                        className="noti__avatar"
+                        style={{ background: n.avatarColor }}
+                      />
+                      <div className="noti__body">
+                        <div className="noti__text">
+                          {/* 굵은 글씨: 발신자 닉네임/ID */}
+                          <b>{n.user}</b>
+                          {/* 일반 글씨: 정리된 메시지 내용 */}
+                          <span>{n.text}</span>
+                        </div>
+                        <div className="noti__meta">
+                          <span className="noti__time">
+                            {n.time}
+                          </span>
+                          {!n.is_read && (
+                            <span className="noti__badge">
+                              안 읽음
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* 채팅 아이콘 */}
+          <div className="icon-wrapper">
+            <button className="icon-btn">
+              <a href="./Chat">
+                <img src={chat} alt="채팅 아이콘" className="icon" />
+              </a>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+// =========================================================================
+// 📦📦📦 [Header.js로 분리할 코드 모음 끝] 📦📦📦
+// =========================================================================
+
+
+// ===================== 헬퍼: Interval Custom Hook (Chat.js에 남겨둠) =====================
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+// ==========================================================
+
+export default function Chat() {
+  // (기존 헬퍼 함수들은 Chat 컴포넌트 내부에 그대로 유지)
+  const makeDisplayTime = (sentAt) => {
+    if (!sentAt) return "";
+    const d = new Date(sentAt);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString("ko-KR", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // ===================== 로그인 유저 정보 =====================
   const [currentUser, setCurrentUser] = useState(null); 
@@ -111,16 +304,10 @@ export default function Chat() {
   const [notifications, setNotifications] = useState([]); 
   const [loadingNoti, setLoadingNoti] = useState(false);
 
-  // 🔔🔔🔔 수정: '새로운' 알림이 도착했는지 여부를 나타내는 상태 추가 🔔🔔🔔
+  // '새로운' 알림이 도착했는지 여부를 나타내는 상태 (빨간 점 표시용)
   const [hasNewNotification, setHasNewNotification] = useState(false); 
 
-  // 기존: 알림 목록 중 읽지 않은 것이 하나라도 있으면 true
-  // const hasUnread = useMemo(
-  //   () => notifications.some((n) => !n.is_read), 
-  //   [notifications]
-  // );
-
-  // 🔔🔔🔔 수정: '읽지 않은' 알림이 하나라도 있으면 true (알림창 내부 모두 읽음 버튼 활성화용) 🔔🔔🔔
+  // '읽지 않은' 알림이 하나라도 있으면 true (모두 읽음 버튼 활성화용)
   const hasUnreadInList = useMemo(
     () => notifications.some((n) => !n.is_read), 
     [notifications]
@@ -142,7 +329,7 @@ export default function Chat() {
         !notiBtnRef.current.contains(e.target)
       ) {
         setOpenNoti(false);
-        // 🔔🔔🔔 수정: 알림창 닫을 때 빨간색 뱃지 해제 🔔🔔🔔
+        // 알림창 닫을 때 빨간색 뱃지 해제
         setHasNewNotification(false);
       }
     };
@@ -154,28 +341,73 @@ export default function Chat() {
       document.removeEventListener("keydown", onEsc);
     };
   }, [openNoti]);
+
+
+  // ===================== 🚨 새로 추가된 함수: 서버에 알림 읽음 상태 반영 🚨 =====================
   
+  /** 서버에 특정 알림을 읽음 처리 요청 */
+  /** 서버에 특정 알림을 읽음 처리 요청 */
+const markNotificationAsReadOnServer = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+        // ❌ 기존: PATCH .../notifications/${id}/
+        // ✅ 수정: POST .../notifications/${id}/read/
+        await axios.post(
+            `https://youngbin.pythonanywhere.com/api/v1/notifications/${id}/read/`,
+            {}, // body 비워둠 (백엔드에서 필요 없음)
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log(`✅ 알림 ${id} 서버에 읽음 처리 완료`);
+    } catch (err) {
+        console.error(`❌ 알림 ${id} 서버 읽음 처리 실패:`, err.response?.status, err.message);
+    }
+};
+
+/** 서버에 모든 알림을 읽음 처리 요청 */
+const markAllNotificationsReadOnServer = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+        // ❌ 기존: .../mark_all_read/
+        // ✅ 수정: .../read-all/
+        await axios.post(
+            "https://youngbin.pythonanywhere.com/api/v1/notifications/read-all/",
+            {}, 
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log("✅ 모든 알림 서버에 읽음 처리 완료");
+    } catch (err) {
+        console.error("❌ 모든 알림 서버 읽음 처리 실패:", err.response?.status, err.message);
+    }
+};
+  // ===================== 🚨 수정된 함수: 클라이언트 상태 업데이트 후 서버 통신 추가 🚨 =====================
+
   const markRead = (id) => {
+    // 1. 클라이언트 상태 업데이트 (UI 즉시 반영)
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
+    // 2. 서버에 읽음 상태 반영 (새로고침 시 유지)
+    markNotificationAsReadOnServer(id); 
   };
   
   const markAllRead = () => {
+    // 1. 클라이언트 상태 업데이트 (UI 즉시 반영)
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    // 🔔🔔🔔 수정: 모두 읽음 처리 시 빨간색 뱃지 해제 🔔🔔🔔
+    // 모두 읽음 처리 시 빨간색 뱃지 해제
     setHasNewNotification(false);
+    // 2. 서버에 읽음 상태 반영 (새로고침 시 유지)
+    markAllNotificationsReadOnServer(); 
   }
 
-  // ===================== 알림 API 호출 함수 (useCallback으로 안정화) =====================
+  // ===================== 알림 API 호출 함수 (중복/발신자 오류 해결 로직 적용) =====================
   const fetchNotifications = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return; 
 
     console.log("🔔 알림 Polling 시작:", new Date().toLocaleTimeString());
 
-    // 🔔🔔🔔 수정: Polling 시 로딩 스피너 보이지 않도록 잠시 주석 처리 🔔🔔
-    // setLoadingNoti(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.get(
@@ -188,18 +420,21 @@ export default function Chat() {
         : res.data.results || [];
       
       const mappedNotifications = rawNotifications.map(n => {
-        // ✅ 수정된 로직: sender_nickname이 없거나 빈 문자열일 경우 sender_id를 사용하도록 강화
+        // 1. 발신자 이름 결정 (n.user에 들어갈 굵은 글씨)
         const senderName = 
           (n.sender_nickname && n.sender_nickname.trim())
-          ? n.sender_nickname.trim()
+          ? n.sender_nickname.trim() // 1순위: API 제공 닉네임
           : n.sender_id
-            ? `사용자 ${n.sender_id}`
-            : "시스템"; // 최종적으로 시스템
+            ? `사용자 ${n.sender_id}` // 2순위: 사용자 ID
+            : extractNickname(n.message || "") || "알 수 없는 사용자"; // 3순위: 메시지에서 추출 또는 최종 대체
         
+        // 2. 메시지 내용 정리 (중복 제거)
+        const cleanedText = cleanAlertText(n.message);
+
         return {
           id: n.id,
-          user: senderName, // 👈 수정된 변수 적용
-          text: n.message || "새 알림", 
+          user: senderName, // 👈 굵은 글씨로 표시될 닉네임
+          text: cleanedText, // 👈 중복이 제거된 메시지 내용
           time: getTimeAgo(n.created_at), 
           rawTime: n.created_at,
           is_read: n.is_read,
@@ -207,30 +442,53 @@ export default function Chat() {
         };
       });
 
-      mappedNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+      // 🚨 최종 수정: 중복 알림 필터링 로직 강화 🚨
+      const uniqueNotifications = mappedNotifications.reduce((acc, current) => {
+          
+          // 5초 이내에 도착한 모든 이전 알림을 확인
+          const isDuplicate = acc.some(item => 
+              Math.abs(new Date(item.rawTime) - new Date(current.rawTime)) < 5000 && 
+              (
+                // Case 1: 알림의 발신자가 같고 메시지 내용이 완전히 같을 때 (일반 중복)
+                (item.user === current.user && item.text === current.text) ||
 
-      // 🔔🔔🔔 핵심 수정: 새 알림 도착 여부 판단 🔔🔔🔔
-      const newNotiIds = new Set(mappedNotifications.map(n => n.id));
+                // Case 2: '알 수 없는 사용자' 알림 (중복 세트의 불필요한 알림)
+                // 현재 알림이 '알 수 없는 사용자' 또는 내용이 불완전할 때, 
+                // 5초 이내에 도착한 유효한 발신자의 알림이 이미 목록에 있고
+                // 현재 알림의 텍스트에 유효한 발신자 이름이 포함되어 있으면 중복으로 간주
+                (
+                    (current.user === "알 수 없는 사용자" || current.text === "새 쪽지가 도착했습니다.") && 
+                    item.user !== "알 수 없는 사용자" && 
+                    current.text.includes(item.user) 
+                )
+              )
+          );
+          
+          if (!isDuplicate) {
+              acc.push(current);
+          }
+          return acc;
+      }, []);
+
+
+      uniqueNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+      // 🔔🔔🔔 새 알림 도착 여부 판단 🔔🔔🔔
+      const newNotiIds = new Set(uniqueNotifications.map(n => n.id));
       
-      // 새로 도착한 읽지 않은 알림이 있는지 확인
-      const newlyArrivedUnread = mappedNotifications.some(n => 
+      const newlyArrivedUnread = uniqueNotifications.some(n => 
         !n.is_read && // 읽지 않았고
         !lastKnownNotiIds.current.has(n.id) // 이전에 없던 알림인 경우
       );
 
       if (newlyArrivedUnread) {
-          console.log("🚨 새로운 읽지 않은 알림이 도착했습니다!");
           setHasNewNotification(true);
-      } else {
-          console.log("✅ 새로 도착한 알림은 없습니다. (뱃지 유지/제거는 다른 로직)");
       }
       
-      // 현재 알림 목록의 ID를 저장
       lastKnownNotiIds.current = newNotiIds;
-      // 알림 목록 상태 업데이트
-      setNotifications(mappedNotifications);
+      setNotifications(uniqueNotifications);
       
-      console.log("✅ 알림 Polling 성공, 총 알림 수:", mappedNotifications.length);
+      console.log("✅ 알림 Polling 성공, 총 알림 수:", uniqueNotifications.length);
 
     } catch (err) {
       console.error("❌ 알림 Polling 실패:", err.response?.status, err.message);
@@ -241,7 +499,6 @@ export default function Chat() {
 
   // 10초마다 알림을 새로고침 (Polling)
   useInterval(() => {
-    // 🔔🔔🔔 수정: 알림창이 열려있을 때는 Polling을 하지 않아 중복 알림을 막음 🔔🔔
     if (openNoti) {
         console.log("🔔 알림창 열림: Polling Skip");
         return;
@@ -259,7 +516,7 @@ export default function Chat() {
   // 새 쪽지 모드
   const [isComposing, setIsComposing] = useState(false);
   const [recipient, setRecipient] = useState(null); 
-  const [recipientQuery, setRecipientQuery] = useState("");
+  const [recipientQuery, setRecipientQuery] = useState(""); 
   const [userSuggestions, setUserSuggestions] = useState([]); 
 
   const filteredThreads = useMemo(
@@ -324,17 +581,21 @@ export default function Chat() {
               : notiRes.data.results || [];
             
             const mappedNotifications = rawNotifications.map(n => {
+                // 1. 발신자 이름 결정 (n.user에 들어갈 굵은 글씨)
                 const senderName = 
                   (n.sender_nickname && n.sender_nickname.trim())
-                  ? n.sender_nickname.trim()
+                  ? n.sender_nickname.trim() // 1순위: API 제공 닉네임
                   : n.sender_id
-                    ? `사용자 ${n.sender_id}`
-                    : "시스템";
+                    ? `사용자 ${n.sender_id}` // 2순위: 사용자 ID
+                    : extractNickname(n.message || "") || "알 수 없는 사용자"; // 3순위: 메시지에서 추출 또는 최종 대체
                 
+                // 2. 메시지 내용 정리 (중복 제거)
+                const cleanedText = cleanAlertText(n.message);
+
                 return {
                   id: n.id,
                   user: senderName, 
-                  text: n.message || "새 알림", 
+                  text: cleanedText, // 👈 중복이 제거된 메시지 내용
                   time: getTimeAgo(n.created_at), 
                   rawTime: n.created_at,
                   is_read: n.is_read,
@@ -342,24 +603,43 @@ export default function Chat() {
                 };
               });
 
-            mappedNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+            // 🚨 최종 수정: 중복 알림 필터링 로직 강화 (fetchNotifications와 동일하게 적용)
+            const uniqueNotifications = mappedNotifications.reduce((acc, current) => {
+                const isDuplicate = acc.some(item => 
+                    Math.abs(new Date(item.rawTime) - new Date(current.rawTime)) < 5000 && 
+                    (
+                        (item.user === current.user && item.text === current.text) ||
+                        (
+                            (current.user === "알 수 없는 사용자" || current.text === "새 쪽지가 도착했습니다.") && 
+                            item.user !== "알 수 없는 사용자" && 
+                            current.text.includes(item.user) 
+                        )
+                    )
+                );
+                
+                if (!isDuplicate) {
+                    acc.push(current);
+                }
+                return acc;
+            }, []);
+
+            uniqueNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
 
             // 최초 로딩 시, 읽지 않은 알림이 있으면 뱃지 표시
-            if (mappedNotifications.some(n => !n.is_read)) {
+            if (uniqueNotifications.some(n => !n.is_read)) {
                 setHasNewNotification(true);
             }
 
             // 최초 알림 ID 세트 저장
-            lastKnownNotiIds.current = new Set(mappedNotifications.map(n => n.id));
+            lastKnownNotiIds.current = new Set(uniqueNotifications.map(n => n.id));
 
-            setNotifications(mappedNotifications);
+            setNotifications(uniqueNotifications);
         } catch (err) {
             console.error("❌ 최초 알림 로딩 실패:", err.response?.status, err.message);
         } finally {
             setLoadingNoti(false);
         }
-        // fetchNotifications(); // 기존: 여기서 최초 알림 로딩 (위로 분리)
-
+        
         const meId = String(user.id);
         const messages = Array.isArray(msgRes.data)
           ? msgRes.data
@@ -687,125 +967,28 @@ export default function Chat() {
   // ===================== 렌더링 =====================
   return (
     <div className="app">
-      {/* 헤더 */}
-      <header className="nav">
-        <div className="nav-inner">
-          <div className="brand">
-            <a href="./dashboard">
-              <img src={logoBlue} alt="paw logo" className="paw" />
-              <span className="brand-text">멍냥멍냥</span>
-            </a>
-          </div>
-
-          <nav className="menu">
-            <a href="/activity">활동</a>
-            <a href="/health">건강</a>
-            <a href="/calendar">캘린더</a>
-            <a href="/community">커뮤니티</a>
-          </nav>
-
-          <nav className="menuicon">
-            {/* 프로필 */}
-            <div className="profile">
-              <div className="profile__avatar">
-                <img
-                  src="https://i.pravatar.cc/80?img=11"
-                  alt="프로필"
-                />
-              </div>
-              <span className="profile__name">{username}</span>
-            </div>
-
-            {/* 알림 벨 */}
-            <div className="icon-wrapper bell">
-              <button
-                ref={notiBtnRef}
-                className="icon-btn bell__btn"
-                aria-label="알림"
-                onClick={() => {
-                  setOpenNoti((v) => !v);
-                  setShowChatPopup(false);
-                }}
-              >
-                <img src={bell} alt="" className="icon" aria-hidden />
-                {/* 🔔🔔🔔 수정: hasUnread -> hasNewNotification 사용 🔔🔔🔔 */}
-                {hasNewNotification && <span className="bell__dot" aria-hidden />} 
-              </button>
-
-              {openNoti && (
-                <div ref={notiRef} className="noti">
-                  <div className="noti__header">
-                    <strong>알림</strong>
-                    <button
-                      className="noti__allread"
-                      onClick={markAllRead}
-                      // 🔔🔔🔔 수정: hasUnread -> hasUnreadInList 사용 🔔🔔🔔
-                      disabled={!hasUnreadInList} 
-                    >
-                      모두 읽음
-                    </button>
-                  </div>
-                  <ul className="noti__list">
-                    {loadingNoti && (
-                      <li className="noti__empty">알림 불러오는 중...</li>
-                    )}
-                    {!loadingNoti && notifications.length === 0 && (
-                      <li className="noti__empty">알림이 없습니다.</li>
-                    )}
-                    {!loadingNoti && notifications.map((n) => (
-                      <li
-                        key={n.id}
-                        className={`noti__item ${
-                          !n.is_read ? "is-unread" : "is-read" 
-                        }`}
-                        onClick={() => markRead(n.id)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && markRead(n.id)
-                        }
-                        title="클릭하면 읽음 처리"
-                      >
-                        <div
-                          className="noti__avatar"
-                          style={{ background: n.avatarColor }}
-                        />
-                        <div className="noti__body">
-                          <div className="noti__text">
-                            <b>{n.user}</b>
-                            <span>{n.text}</span>
-                          </div>
-                          <div className="noti__meta">
-                            <span className="noti__time">
-                              {n.time}
-                            </span>
-                            {!n.is_read && (
-                              <span className="noti__badge">
-                                안 읽음
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* 채팅 아이콘 (현재 페이지지만 유지) */}
-            <div className="icon-wrapper">
-              <button className="icon-btn">
-                <a href="./Chat">
-                  <img src={chat} alt="채팅 아이콘" className="icon" />
-                </a>
-              </button>
-            </div>
-          </nav>
-        </div>
-      </header>
+      {/* Header 컴포넌트 사용. 실제 사용 시 HeaderComponent 대신 import한 Header를 사용하세요. */}
+      {/* 예: <Header 
+               username={username}
+               ...
+            /> 
+      */}
+      <HeaderComponent
+        username={username}
+        openNoti={openNoti}
+        setOpenNoti={setOpenNoti}
+        hasNewNotification={hasNewNotification}
+        notifications={notifications}
+        loadingNoti={loadingNoti}
+        hasUnreadInList={hasUnreadInList}
+        markAllRead={markAllRead}
+        markRead={markRead}
+        notiBtnRef={notiBtnRef}
+        notiRef={notiRef}
+        setShowChatPopup={setShowChatPopup} // Chat.js에서는 false 고정으로 사용
+      />
       
-      {/* (이하 생략: main, footer는 그대로 유지) */}
+      {/* (이하 생략: main, footer는 기존 코드 그대로 유지) */}
       <main className="dm">
         {/* 좌측: 쪽지함 */}
         <aside className="inbox">
