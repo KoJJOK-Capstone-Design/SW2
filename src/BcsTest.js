@@ -10,10 +10,7 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-// ✅ [수정] user, onUpdateBcs prop을 받도록 수정
 const BcsTest = ({ user, onUpdateBcs }) => { 
-  
-  // ✅ [추가] useNavigate 훅 사용
   const navigate = useNavigate(); 
   
   // 각 질문의 선택 상태를 관리하는 state
