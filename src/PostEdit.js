@@ -20,9 +20,9 @@ export default function PostEdit() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // 작성 페이지와 동일한 파일 상태
-  const [files, setFiles] = useState([]);       // File[]
-  const [previews, setPreviews] = useState([]); // objectURL[]
+  // 파일 / 첨부 이미지 정보
+  const [files, setFiles] = useState([]);             // 새로 선택한 File[]
+  const [attachments, setAttachments] = useState([]); // { name, size, dataUrl }[]
 
   useEffect(() => {
     const p = getPost(id);
@@ -33,32 +33,45 @@ export default function PostEdit() {
     setPost(p);
     setTitle(p.title || "");
     setContent(p.content || "");
+    setAttachments(Array.isArray(p.attachments) ? p.attachments : []);
   }, [id, nav]);
 
-  // 파일 선택 (작성과 동일)
+  // 파일 선택 (CommunityWrite와 동일한 방식으로 dataURL 생성)
   const onChangeFiles = (e) => {
     const list = Array.from(e.target.files || []);
     setFiles(list);
-    // 미리보기 URL (필수는 아님, 작성과 맞춰 둠)
-    setPreviews((old) => {
-      old.forEach((u) => URL.revokeObjectURL(u));
-      return list.map((f) => URL.createObjectURL(f));
+
+    if (list.length === 0) return;
+
+    const readers = list.map(
+      (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ file, dataUrl: reader.result });
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        })
+    );
+
+    Promise.all(readers).then((results) => {
+      const newAttachments = results.map((r) => ({
+        name: r.file.name,
+        size: r.file.size,
+        dataUrl: r.dataUrl,
+      }));
+      setAttachments(newAttachments);
     });
   };
-
-  useEffect(() => {
-    return () => previews.forEach((u) => URL.revokeObjectURL(u));
-  }, [previews]);
 
   const onSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) return alert("제목을 입력해 주세요.");
     if (!content.trim()) return alert("내용을 입력해 주세요.");
 
-    // 작성 페이지와 동일하게 로컬스토리지에는 파일 자체가 아니라 메타만 저장
+    // 첨부 이미지: 새로 선택한 게 있으면 그걸, 아니면 기존 것 유지
     const nextAttachments =
-      files.length > 0
-        ? files.map((f) => ({ name: f.name, size: f.size }))
+      attachments.length > 0
+        ? attachments
         : (post.attachments || []);
 
     const updated = {
@@ -99,7 +112,9 @@ export default function PostEdit() {
 
       {/* Body: CommunityWrite와 동일한 구조/클래스 */}
       <main className="write-container">
-        <NavLink to={`/community/${post.id}`} className="crumb">← 커뮤니티로 돌아가기</NavLink>
+        <NavLink to={`/community/${post.id}`} className="crumb">
+          ← 커뮤니티로 돌아가기
+        </NavLink>
         <h1 className="write-title">게시글 수정</h1>
 
         <form className="write-form" onSubmit={onSubmit}>
@@ -120,7 +135,29 @@ export default function PostEdit() {
             onChange={(e) => setContent(e.target.value)}
           />
 
-          {/* 사진 첨부 (작성 페이지와 완전 동일 UI/위치) */}
+          {/* 첨부 이미지 미리보기 */}
+          {attachments && attachments.length > 0 && (
+            <div className="edit-images">
+              {attachments.map((att, idx) =>
+                att.dataUrl ? (
+                  <img
+                    key={idx}
+                    src={att.dataUrl}
+                    alt={att.name}
+                    style={{
+                      width: "200px",
+                      height: "auto",
+                      display: "block",
+                      marginTop: "8px",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ) : null
+              )}
+            </div>
+          )}
+
+          {/* 사진 첨부 (작성 페이지와 유사 UI) */}
           <div className="write-attach-row">
             <span className="attach-label">사진 첨부</span>
 
@@ -138,8 +175,8 @@ export default function PostEdit() {
               <span className="attach-hint">
                 {files.length > 0
                   ? `${files.length}개 선택됨`
-                  : (post.attachments?.length
-                      ? `${post.attachments.length}개 첨부됨`
+                  : (attachments.length > 0
+                      ? `${attachments.length}개 첨부됨`
                       : "선택된 파일 없음")}
               </span>
             </div>
@@ -154,7 +191,9 @@ export default function PostEdit() {
             >
               취소
             </button>
-            <button type="submit" className="btn btn-primary">완료</button>
+            <button type="submit" className="btn btn-primary">
+              완료
+            </button>
           </div>
         </form>
       </main>
@@ -169,16 +208,46 @@ export default function PostEdit() {
             </div>
 
             <div className="grid">
-              <div className="col"><h3>Hyeona Kim</h3><p>UI/UX Design</p>
-                <a href="https://github.com/ouskxk" className="github-link"><img src={githubpic} alt="" className="github-icon" />ouskxk</a></div>
-              <div className="col"><h3>Jiun Ko</h3><p>Front-End Dev</p>
-                <a href="https://github.com/suerte223" className="github-link"><img src={githubpic} alt="" className="github-icon" />suerte223</a></div>
-              <div className="col"><h3>Seungbeom Han</h3><p>Front-End Dev</p>
-                <a href="https://github.com/hsb9838" className="github-link"><img src={githubpic} alt="" className="github-icon" />hsb9838</a></div>
-              <div className="col"><h3>Munjin Yang</h3><p>Back-End Dev</p>
-                <a href="https://github.com/munjun0608" className="github-link"><img src={githubpic} alt="" className="github-icon" />munjun0608</a></div>
-              <div className="col"><h3>Youngbin Kang</h3><p>Back-End Dev</p>
-                <a href="https://github.com/0bini" className="github-link"><img src={githubpic} alt="" className="github-icon" />0bini</a></div>
+              <div className="col">
+                <h3>Hyeona Kim</h3>
+                <p>UI/UX Design</p>
+                <a href="https://github.com/ouskxk" className="github-link">
+                  <img src={githubpic} alt="" className="github-icon" />
+                  ouskxk
+                </a>
+              </div>
+              <div className="col">
+                <h3>Jiun Ko</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/suerte223" className="github-link">
+                  <img src={githubpic} alt="" className="github-icon" />
+                  suerte223
+                </a>
+              </div>
+              <div className="col">
+                <h3>Seungbeom Han</h3>
+                <p>Front-End Dev</p>
+                <a href="https://github.com/hsb9838" className="github-link">
+                  <img src={githubpic} alt="" className="github-icon" />
+                  hsb9838
+                </a>
+              </div>
+              <div className="col">
+                <h3>Munjin Yang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/munjun0608" className="github-link">
+                  <img src={githubpic} alt="" className="github-icon" />
+                  munjun0608
+                </a>
+              </div>
+              <div className="col">
+                <h3>Youngbin Kang</h3>
+                <p>Back-End Dev</p>
+                <a href="https://github.com/0bini" className="github-link">
+                  <img src={githubpic} alt="" className="github-icon" />
+                  0bini
+                </a>
+              </div>
             </div>
 
             <div className="tech-stack">

@@ -1,6 +1,6 @@
 // src/Community.js
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, NavLink} from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./Home.css";
 import "./Community.css";
 
@@ -12,7 +12,7 @@ import djangopic from "./img/django.png";
 
 import searchIcon from "./img/Search_alt.png";
 import editIcon from "./img/Edit_fill.png";
-// import문  
+// import문
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
 import circle from "./img/circle.png";
@@ -20,6 +20,24 @@ import plusicon from "./img/plusicon.png";
 
 const POSTS_KEY = "community_posts";
 const PER_PAGE = 4;
+
+// 경과 시간 표시용 함수
+function timeAgo(iso) {
+  if (!iso) return "";
+
+  const created = new Date(iso);
+  const diffMs = Date.now() - created.getTime();
+  if (Number.isNaN(diffMs)) return "";
+
+  const m = Math.floor(diffMs / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+
+  if (m < 1) return "방금 전";
+  if (m < 60) return `${m}분 전`;
+  if (h < 24) return `${h}시간 전`;
+  return `${d}일 전`;
+}
 
 export default function Community() {
   const [query, setQuery] = useState("");
@@ -50,7 +68,7 @@ export default function Community() {
     if (page > totalPages) setPage(totalPages);
     if (page < 1) setPage(1);
   }, [totalPages, page]);
-  
+
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
@@ -69,31 +87,40 @@ export default function Community() {
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
 
-             <nav className="menuicon">
+          <nav className="menuicon">
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => { setShowBellPopup(v => !v); setShowChatPopup(false); }}
+                onClick={() => {
+                  setShowBellPopup((v) => !v);
+                  setShowChatPopup(false);
+                }}
               >
                 <img src={bell} alt="알림 아이콘" className="icon" />
               </button>
               {showBellPopup && (
-                <div className="popup"><p>📢 새 알림이 없습니다.</p></div>
+                <div className="popup">
+                  <p>📢 새 알림이 없습니다.</p>
+                </div>
               )}
             </div>
 
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
-                onClick={() => { setShowChatPopup(v => !v); setShowBellPopup(false); }}
+                onClick={() => {
+                  setShowChatPopup((v) => !v);
+                  setShowBellPopup(false);
+                }}
               >
-                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
+                <a href="/Chat">
+                  <img src={chat} alt="채팅 아이콘" className="icon" />
+                </a>
               </button>
             </div>
           </nav>
         </div>
       </header>
-
 
       <main className="community-container">
         <section className="section">
@@ -104,7 +131,9 @@ export default function Community() {
                 <span className="blue-stick" />
                 <h2 className="comm-title-lg">커뮤니티</h2>
               </div>
-              <p className="section-sub">다른 집사님들과 자유롭게 소통해보세요!</p>
+              <p className="section-sub">
+                다른 집사님들과 자유롭게 소통해보세요!
+              </p>
             </div>
 
             <div className="comm-right">
@@ -116,7 +145,10 @@ export default function Community() {
                     type="text"
                     placeholder="글 제목, 내용 검색"
                     value={query}
-                    onChange={(e) => { setPage(1); setQuery(e.target.value); }}
+                    onChange={(e) => {
+                      setPage(1);
+                      setQuery(e.target.value);
+                    }}
                   />
                 </div>
 
@@ -130,15 +162,25 @@ export default function Community() {
 
           {/* 게시글 리스트 */}
           {current.map((p) => (
-          <Link key={p.id} to={`/community/${p.id}`} className="post-card link-reset">
-            <h3 className="post-title">{p.title}</h3>
-            <p className="post-content">{p.content}</p>
-            <div className="post-meta">
-              <span>{p.author} · {p.timeLabel || ""}</span>
-              <span className="meta-right">좋아요 {p.likes ?? 0}개 댓글 {(p.commentsArr?.length ?? p.comments ?? 0)}개</span>
-            </div>
-          </Link>
-        ))}
+            <Link
+              key={p.id}
+              to={`/community/${p.id}`}
+              className="post-card link-reset"
+            >
+              <h3 className="post-title">{p.title}</h3>
+              <p className="post-content">{p.content}</p>
+              <div className="post-meta">
+                <span>
+                  {p.author} ·{" "}
+                  {timeAgo(p.createdAt) || p.timeLabel || ""}
+                </span>
+                <span className="meta-right">
+                  좋아요 {p.likes ?? 0}개 댓글{" "}
+                  {p.commentsArr?.length ?? p.comments ?? 0}개
+                </span>
+              </div>
+            </Link>
+          ))}
 
           {/* 페이지네이션 */}
           {filtered.length > 0 && (
@@ -146,7 +188,9 @@ export default function Community() {
               <button
                 className="pager-btn"
                 disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() =>
+                  setPage((p) => Math.max(1, p - 1))
+                }
                 aria-label="이전 페이지"
               >
                 〈
@@ -155,7 +199,9 @@ export default function Community() {
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
-                  className={`pager-num ${page === i + 1 ? "is-active" : ""}`}
+                  className={`pager-num ${
+                    page === i + 1 ? "is-active" : ""
+                  }`}
                   onClick={() => setPage(i + 1)}
                   aria-current={page === i + 1 ? "page" : undefined}
                 >
@@ -166,7 +212,9 @@ export default function Community() {
               <button
                 className="pager-btn"
                 disabled={page === totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(totalPages, p + 1))
+                }
                 aria-label="다음 페이지"
               >
                 〉
@@ -188,44 +236,92 @@ export default function Community() {
               <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
-                <a href="https://github.com/ouskxk" className="github-link">
-                  <img src={githubpic} alt="" className="github-icon" />ouskxk
+                <a
+                  href="https://github.com/ouskxk"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt=""
+                    className="github-icon"
+                  />
+                  ouskxk
                 </a>
               </div>
               <div className="col">
                 <h3>Jiun Ko</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/suerte223" className="github-link">
-                  <img src={githubpic} alt="" className="github-icon" />suerte223
+                <a
+                  href="https://github.com/suerte223"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt=""
+                    className="github-icon"
+                  />
+                  suerte223
                 </a>
               </div>
               <div className="col">
                 <h3>Seungbeom Han</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/hsb9838" className="github-link">
-                  <img src={githubpic} alt="" className="github-icon" />hsb9838
+                <a
+                  href="https://github.com/hsb9838"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt=""
+                    className="github-icon"
+                  />
+                  hsb9838
                 </a>
               </div>
               <div className="col">
                 <h3>Munjun Yang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/munjun0608" className="github-link">
-                  <img src={githubpic} alt="" className="github-icon" />munjun0608
+                <a
+                  href="https://github.com/munjun0608"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt=""
+                    className="github-icon"
+                  />
+                  munjun0608
                 </a>
               </div>
               <div className="col">
                 <h3>Youngbin Kang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/0bini" className="github-link">
-                  <img src={githubpic} alt="" className="github-icon" />0bini
+                <a
+                  href="https://github.com/0bini"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt=""
+                    className="github-icon"
+                  />
+                  0bini
                 </a>
               </div>
             </div>
 
             <div className="tech-stack">
               <h3>TECH STACK</h3>
-              <img src={reactpic} alt="React" className="react-icon" />
-              <img src={djangopic} alt="Django" className="django-icon" />
+              <img
+                src={reactpic}
+                alt="React"
+                className="react-icon"
+              />
+              <img
+                src={djangopic}
+                alt="Django"
+                className="django-icon"
+              />
             </div>
           </div>
         </div>
