@@ -15,7 +15,7 @@ import Chat from './Chat';
 import Health from './Health';
 import BcsTest from './BcsTest';
 import Homelogin from './Homelogin';
-
+import Mypage from './Mypage';
 
 export default function App(){
   // ✅ [통합] user, pet 상태를 App.js에서 관리 (예시 데이터)
@@ -71,6 +71,7 @@ export default function App(){
           path="/BcsTest" 
           element={<BcsTest user={currentUser} onUpdateBcs={handleBcsUpdate} />} 
         />
+        <Route path = "/Mypage" element={<Mypage />} />
         
         {/* Fallback 경로 */}
         <Route path="*" element={<Navigate to="/" replace />} />
