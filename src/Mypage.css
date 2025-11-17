@@ -1,380 +1,639 @@
-/* MyPage.css (최종 전체 코드 - 폼 간격 및 스크롤 안정화) */
+/* ================================================
+   A. 공통 & 페이지 레이아웃
+================================================ */
 
-/* ------------------------------------------------ */
-/* A. 공통 & 상단 헤더 스타일 */
-/* ------------------------------------------------ */
 h1.title { 
-    font-size:35px;
-    color : #222;
-    padding-bottom: 20px;
+  font-size: 35px;
+  color : #222;
+  padding-bottom: 20px;
 }
+
 .mypage-container {
-    background-color: #f7f9fc; 
-    min-height: 100vh;
+  background-color: #f7f9fc; 
+  min-height: 100vh;
 }
 
 .mypage-main {
-    max-width: 1200px; 
-    margin: 0 auto;
-    padding: 30px 20px 60px;
-    display: flex;
-    flex-direction: column;
+  max-width: 1200px; 
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+  display: flex;
+  flex-direction: column;
 }
 
 .mypage-header-section {
-    margin-bottom: 40px;
+  margin-bottom: 40px;
 }
 
 .mypage-section.section--intro .title {
-    font-size: 20px;    
-    font-weight: 800;
-    color: #888;
-    margin: 0;
+  font-size: 20px;    
+  font-weight: 800;
+  color: #888;
+  margin: 0;
 }
 
 .mypage-section .description {
-    font-size: 1rem;
-    color: #222;
-    margin-bottom: 30px;
+  font-size: 1rem;
+  color: #222;
+  margin-bottom: 30px;
 }
 
-/* --- 사용자 정보 섹션 --- */
-.user-info-section { margin-bottom: 40px; }
+/* --- 사용자 정보 섹션 (상단) --- */
+.user-info-section { 
+  margin-bottom: 40px; 
+}
 .user-profile-card {
-    background-color: #fff; border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-    padding: 40px 30px; display: flex; align-items: center; gap: 30px;
+  background-color: #fff; 
+  border-radius: 16px; 
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  padding: 40px 30px; 
+  display: flex; 
+  align-items: center; 
+  gap: 30px;
 }
-.user-avatar img { width: 120px; height: 120px; border-radius: 50%; background-color: #d1e5ff; }
-.user-details { flex-grow: 1; }
-.user-nickname { font-size: 1.8rem; font-weight: 700; color: #333; margin-bottom: 5px; }
-.user-id { font-size: 1rem; color: #777; margin-bottom: 2px; }
-.user-email { font-size: 0.9rem; color: #999; }
-.btn-settings {
-    background-color: #f0f4ff; color: #3b82f6; border: 1px solid #d1e5ff;
-    padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 15px; font-weight: 600;
+.user-avatar img { 
+  width: 120px; 
+  height: 120px; 
+  border-radius: 50%; 
+  background-color: #d1e5ff; 
 }
-.btn-group {
-    justify-content: right;
+.user-details { 
+  flex-grow: 1; 
+}
+.user-nickname { 
+  font-size: 1.8rem; 
+  font-weight: 700; 
+  color: #333; 
+  margin-bottom: 5px; 
+}
+.user-id { 
+  font-size: 1rem; 
+  color: #777; 
+  margin-bottom: 2px; 
+}
+.user-email { 
+  font-size: 0.9rem; 
+  color: #999; 
+}
+.btn-settings { 
+  background-color: #f0f4ff; 
+  color: #007bff; 
+  border: 1px solid #d1e5ff; 
+  padding: 8px 20px; 
+  border-radius: 20px; 
+  font-size: 15px; 
+}
+.btn-settings:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
 }
 
-/* ------------------------------------------------ */
-/* B. 나의 반려동물 섹션 (메인 화면) */
-/* ------------------------------------------------ */
+/* ================================================
+   B. 나의 반려동물 섹션 (메인 화면)
+================================================ */
+
+/* "나의 반려동물" 파란색 막대 제목 */
 .section__title--no-bullet { 
-    font-size: 25px; 
-    font-weight: 600; 
-    color: #333; 
-    margin-bottom: 20px; 
-    padding-left: 0; 
-    position: relative;
-    padding-left: 15px; 
+  font-size: 25px; 
+  font-weight: 600; 
+  color: #333; 
+  margin-bottom: 20px; 
+  position: relative;
+  padding-left: 15px; 
 }
 .section__title--no-bullet::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6px; 
-    height: 100%; 
-    max-height: 25px; 
-    background-color: #3b82f6; 
-    border-radius: 3px;
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px; 
+  height: 100%; 
+  max-height: 25px; 
+  background-color: #3b82f6; 
+  border-radius: 3px;
 }
 
-.pet-management-section { margin-bottom: 60px; }
-/* MyPage.css (수정 필요) */
+.pet-management-section { 
+  margin-bottom: 60px; 
+}
 
-/* ------------------------------------------------ */
-/* B. 나의 반려동물 섹션 (안정화) */
-/* ------------------------------------------------ */
-
-/* ⭐️ [수정] 목록과 상세 카드를 나란히 배치하는 최상위 컨테이너 */
+/* 1. 펫 목록 + 펫 상세 (전체 흰색 카드) */
 .pet-list-container { 
-    /* ⚠️ 이 요소는 Flexbox 컨테이너여야 합니다. */
-    display: flex; 
-    gap: 30px; /* 목록과 상세 카드 간의 간격 */
-    align-items: flex-start; /* 상단 정렬 */
-    width: 1130px;
-    flex-grow: 1;
-    background-color: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-    padding: 30px;
+  display: flex; 
+  gap: 30px; 
+  align-items: flex-start; 
+  width: 100%;
+  max-width: 1130px; 
+  flex-grow: 1;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); 
+  padding: 30px;
+  box-sizing: border-box; 
 }
 
+/* 2. 좌측 펫 목록 (냥냥이, 멍멍이...) */
 .pet-list { 
-    /* 목록의 너비는 유지하고, Flexbox가 남은 공간을 상세 카드에 할당합니다. */
-    width: 150px; 
-    flex-shrink: 0; /* 목록이 줄어들지 않도록 설정 */
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
+  width: 200px; 
+  flex-shrink: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+}
+.pet-item { 
+  display: flex; 
+  align-items: center; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  border: 2px solid transparent; 
+  transition: all 0.2s ease-out;
+  gap: 12px;
+}
+.pet-item:not(.pet-item--active):hover {
+  background-color: #f9fafb; 
+}
+.pet-item--active { 
+  background-color: #eff6ff; 
+  border: 2px solid #3b82f6; 
+}
+.pet-item--active:hover { 
+  outline: none;
+  border-color: #2578ff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+.pet-name { 
+  font-size: 15px; 
+  color: #374151; 
+  font-weight: 500; 
+}
+.pet-item--active .pet-name {
+  color: #000000; 
+  font-weight: 600;
+}
+.pet-name--inactive {
+  color: #9ca3af; 
+}
+.pet-color-indicator { 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 8px; 
+  margin-bottom: 0; 
+}
+.pet-color-indicator--pink { background-color: #ff0090; }
+.pet-color-indicator--yellow { background-color: #ffe100; }
+
+.pet-add-button { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px; 
+  background-color: transparent; 
+  border: 2px dashed #d1d5db; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  font-size: 1rem; 
+  color: #6b7280; 
+  cursor: pointer; 
+  transition: all 0.2s ease-out;
+}
+.pet-add-button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+.icon-plus-small {
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-/* ⭐️ [수정/제거] 상세 정보 카드 Wrapper */
-/* 이 클래스는 상세 정보 내용만 담아야 하므로, Flexbox 속성을 제거합니다. */
+/* 3. 우측 펫 상세 정보 */
 .pet-detail-card-wrapper {
-    /* display: flex; (제거) */
-    /* gap: 30px; (제거) */
-    /* align-items: flex-start; (제거) */
-    
-    flex-grow: 1; /* 남은 공간을 차지하도록 유지 */
-    background-color: #fff;
-    padding: 0; /* padding은 .pet-list-container에서 관리하므로 제거 */
-    /* ... 나머지 스타일 유지 ... */
+  flex-grow: 1;
+  min-width: 0; 
+}
+.pet-name-and-edit { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 12px; 
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.pet-detail-name { 
+  font-size: 25px;
+  font-weight: 600; 
+  color: #111827; 
+}
+.btn-edit-pet { 
+  background-color: #f0f4ff; 
+  color: #007bff; 
+  border: 1px solid #d1e5ff; 
+  padding: 8px 20px; 
+  border-radius: 20px; 
+  font-size: 15px; 
+}
+.btn-edit-pet:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+}
+.pet-description-line { 
+  font-size: 16px;
+  color: #222;  
+  line-height: 1.6; 
+  margin-top: 0;
+  margin-bottom: 24px; 
+  text-align: center;
 }
 
-/* ------------------------------------------------ */
-/* C. 펫 아이템 스타일 (유지) */
-/* ------------------------------------------------ */
-
-.pet-item { display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
-.pet-item--active { background-color: #fff; border: 2px solid #3b82f6; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
-.pet-color-indicator { width: 60px; height: 60px; border-radius: 10px; margin-bottom: 5px; }
-.pet-name { font-size: 1rem; color: #333; font-weight: 500; }
-.pet-add-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background-color: #f0f0f0; border: none; padding: 10px; border-radius: 12px; font-size: 1rem; color: #777; cursor: pointer; }
-.pet-name-and-edit { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.pet-detail-name { font-size: 1.25rem; font-weight: 700; color: #333; }
-.btn-edit-pet { background-color: #f0f4ff; color: #3b82f6; border: 1px solid #d1e5ff; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
-.pet-description-line { font-size: 1rem; color: #555; line-height: 1.6; margin-top: 5px; margin-bottom: 30px; font-weight: 500; }
-/* MyPage.css (해당 부분만 발췌) */
-
-/* ... (이전 코드들 유지) ... */
-
-/* ------------------------------------------------ */
-/* B. 나의 반려동물 섹션 (메인 화면) */
-/* ------------------------------------------------ */
-
-/* ... (이전 코드들 유지) ... */
-
+/* 4. 하단 2단 카드 (일정 & 활동 분석) */
 .pet-dashboard-summary { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; /* ⭐️ 2열로 균등하게 나눕니다. */
-    gap: 30px; 
-    margin-top: 20px; 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 24px; 
+}
+.upcoming-events-mypage,
+.weekly-activity-mypage {
+  background-color: #f9fafb; 
+  border-radius: 12px;
+  padding: 20px; 
+  border: 1px solid #f3f4f6;
+  height: 100%; 
+  box-sizing: border-box;
+}
+/* '다가오는 일정' 카드만 패딩 다르게 (필요시 .upcoming-events-mypage padding 수정) */
+.upcoming-events-mypage {
+  padding: 10px;
 }
 
-.upcoming-events-mypage { 
-    padding: 15px; 
-    border: 1px solid #e0e0e0; 
-    border-radius: 10px; 
-    background-color: #fff; 
-    box-shadow: none; 
-    /* ⚠️ 여기를 수정합니다: grid-column: span 2; 속성을 제거합니다. */
-    /* grid-column: span 2;  <-- 이 줄을 제거 */
+/* 5. 카드 내부 헤더 (다가오는 일정, 주간 활동 분석) */
+.section-header-inline {
+  display: flex;
+  justify-content: space-between !important; 
+  align-items: baseline; 
+  margin-bottom: 15px; 
+}
+.section-header-inline > h3 {
+  font-size: 18px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  margin: 0; 
+  color: #1f2937;
 }
 
-.upcoming-events-mypage h2.section-header-inline--title { 
-    display: flex; justify-content: space-between; align-items: center; 
-    font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 15px; 
+/* 6. "자세히 보기" 링크 */
+.view-more { 
+  font-size: 13px;
+  color: #007bff; 
+  text-decoration: none; 
+  font-weight: 400; 
+  white-space: nowrap; 
 }
-.view-more { font-size: 0.9rem; color: #888; text-decoration: none; font-weight: 500; }
-.event-item-mypage--detail { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-.event-icon-box { background-color: #fcebeb; border-radius: 8px; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; }
-.event-icon-emoji { font-size: 24px; }
-.event-item-text { flex-grow: 1; display: flex; flex-direction: column; }
-.event-title { font-size: 1.05rem; font-weight: 600; color: #333; line-height: 1.4; }
-.event-date { font-size: 0.9rem; color: #888; }
+.view-more:hover {
+  text-decoration: none;
+}
 
+/* '정기 검진일' 아이템 */
+.event-item-mypage--detail { 
+  background-color: #fff; 
+  border: 1px solid #e5e7eb; 
+  border-radius: 8px; 
+  padding: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); 
+}
+
+/* 7. 주간 활동 분석 차트 */
+.activity-chart-box {
+  position: relative; 
+  margin-top: 10px;
+  padding-left: 35px; 
+}
+.chart-y-axis-labels {
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-between; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  font-size: 12px;
+  color: #9ca3af; 
+  text-align: right;
+  width: 30px; 
+}
+.chart-x-labels-only {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+.chart-svg {
+  width: 100%;
+  height: 150px; 
+  display: block;
+}
+
+/* ================================================
+   C. 모달 공통 스타일
+================================================ */
 
 .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);
-    display: flex; justify-content: center; align-items: center; z-index: 1000; 
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center; z-index: 1000; 
 }
-
 .modal-content {
-    /* ⭐️ 스크롤 활성화 및 중앙 고정 */
-    width: 700px; 
+    width: 500px; 
     max-width: 90vw;
-    max-height: 95vh; /* ⭐️ 뷰포트 높이 제한 및 스크롤 */
-    
+    max-height: 80vh; 
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
     z-index: 10000;
-    
     overflow-y: auto; 
     background: #fff;
     border-radius: 16px;
-    padding: 28px 28px 34px;
+    padding: 28px 28px 10px;
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
 }
-
-.modal-title { font-size: 30px; font-weight: 600; margin-bottom: 25px; color: #333; }
-.modal-close-btn { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 2rem; color: #999; cursor: pointer; }
+.modal-title { 
+  font-size: 30px; 
+  font-weight: 600; 
+  margin-bottom: 25px; 
+  color: #333; 
+}
+.modal-close-btn { 
+  position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 2rem; color: #999; cursor: pointer; 
+}
 .modal-body form {
-    margin-top: 0; 
-    width: 100%;
+  margin-top: 0; 
+  width: 100%;
+  max-height: 50vh;
 }
 
-/* ⭐️ 모달 섹션 그룹 설정 */
+/* ================================================
+   D. 모달 폼 내부 스타일 (섹션, 폼 그룹)
+================================================ */
+
 .modal-section-group {
-    margin-top: 40px; 
-    margin-bottom: 25px;
-    padding-top: 15px;
-    border-top: 1px solid #f0f0f0; 
+  margin-bottom: 24px; 
 }
-.modal-section-group:first-of-type {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-}
-
-/* ⭐️ 폼 섹션 제목 스타일 (파란 막대와 검은 텍스트) */
 .modal-section-title {
-    display: flex;
-    align-items: center;
-    font-size: 20px; 
-    font-weight: 700;
-    margin-bottom: 25px; 
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px; 
+  font-size: 25px;
+  font-weight: 600;
 }
 .section-title-bar {
-    width: 5px; 
-    height: 22px; 
-    background-color: #007bff; 
-    border-radius: 3px;
-    margin-right: 8px;
-    display: inline-block;
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: #007bff;
+  border-radius: 3px;
+  margin-right: 8px;
 }
-.section-title-text {
-    color: #222; /* 검은색 텍스트 */
+.form-group {
+    margin-bottom: 16px;
 }
-
-/* ⭐️ 폼 그룹 공통 스타일 (간격 조정) */
-.form-group { 
-    display: flex; flex-direction: column; 
-    gap: 8px; /* 레이블과 입력 필드 사이 간격 */
-    margin-bottom: 30px; /* ⭐️ 모든 폼 그룹의 하단 간격을 넓게 확보 */
-}
-.form-group label { 
-    font-weight: 700; 
-    color: #222; 
-    font-size: 16px; 
-}
-
-
-/* ⭐️ 2열 구조 (그리드 기반) */
 .form-row-two-cols {
     display: grid;
-    grid-template-columns: 1fr 1fr; 
-    gap: 25px 40px; 
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
 }
-.form-row-two-cols > .form-group {
-    margin-bottom: 0; /* 부모가 간격을 관리 */
+.form-row-two-cols .form-group {
+    margin-bottom:0;
 }
-
-
-/* ⭐️ 입력 필드 스타일 통일 */
-.form-group input, 
-.form-group select, 
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222; 
+  margin-bottom: 8px; /* ⭐️ 라벨과 입력창 사이 간격 */
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="date"],
 .form-group textarea {
-    padding: 12px 14px; 
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px; 
-    height: 46px; 
-    box-sizing: border-box;
-    transition: 0.2s;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB; 
+  border-radius: 6px; 
+  font-size: 15px;
+  box-sizing: border-box; 
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group textarea:focus {
+  border-color: #3b82f6; 
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); 
+  outline: none;
+}
+.form-group input[type="date"] {
+  color: #6B7280; 
+}
+.form-group input[type="date"]:valid {
+  color: #111827; 
 }
 
-/* ⭐️ 호버/포커스 효과 (유지) */
-input:focus {
-    outline: none;
-    border-color: #2578ff;
-    box-shadow: 0 0 0 3px rgba(37,120,255, 0.1);
-}
-
-/* ⭐️ 라디오 버튼 그룹 스타일 통일 */
+/* 폼: 라디오 버튼 (버튼 스타일) */
 .radio-group-horizontal {
-    display: flex;
-    gap: 30px; 
-    align-items: center;
-    padding-top: 0px; 
-    min-height: 46px; 
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
 }
 .radio-group-horizontal label {
-    font-weight: 500;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 10px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px; 
+  border-radius: 6px; 
+  cursor: pointer;
+  font-size: 13.4px;
+  font-weight: 500;
+  color: #374151; 
+  transition: all 0.2s;
+  flex-grow: 1; 
+  margin-bottom: 0; 
 }
-.radio-group-horizontal input[type="radio"] {
-    width: 20px; 
-    height: 20px;
-    accent-color: #4a90e2; 
-    cursor: pointer;
-    margin-right: 0; 
-    margin-top: 0;
-    
-    /* 커스텀 라디오 버튼 모양 */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: 2px solid #ccc; 
-    border-radius: 50%; 
-    background-color: #fff;
-    transition: all 0.2s ease;
+
+.radio-group-horizontal input[type="radio"]:checked + label {
+  background-color: #4a90e2; 
+  color: white; 
+  font-weight: 600;
+  align-items: center;
 }
-.radio-group-horizontal input[type="radio"]:checked {
-    border-color: #007bff; 
-    box-shadow: 0 0 0 4px #fff inset; 
-    background-color: #007bff; 
+
+.radio-group-horizontal input[type="radio"]:checked + label:hover {
+  background-color: #4a90e2; 
+  
+}
+
+/* 폼: 파일 선택 버튼 (file-select-file) */
+.file-input-wrapper {
+  margin-top: 8px;
+}
+.file-input-wrapper input[type="file"] {
+  display: none;
+}
+.file-input-display-box {
+  display: flex;
+  align-items: center; 
+  gap: 12px; 
+}
+.file-select-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px; 
+  background-color: #2578ff; 
+  color: #fff !important;
+  border-radius: 20px; 
+  font-size: 15px;
+  font-weight: 400 !important; 
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.file-select-file:hover {
+  background-color: #1d68d9; 
+}
+.file-name-filedisplay {
+  font-size: 15px;
+  font-weight: 500; /* ⭐️ 500px 오타 수정 */
+  color: #888; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#petImage { 
+  display: none; 
 }
 
 
-/* ⭐️ 파일 입력 필드 스타일 */
-.file-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #fff;
-    margin-bottom: 30px; 
+/* ================================================
+   E. 모달 버튼 그룹 (하단)
+================================================ */
+
+/* 버튼 컨테이너 (공통) */
+.form-actions { 
+  display: flex; 
+  margin-top: 30px; 
+  gap: 10px; 
+  margin-bottom: 30px;
+  justify-content: center; /* ⭐️ 기본값 '가운데' 정렬 */
+  align-items: center; 
 }
-.file-select-button {
-    background-color: #f0f0f0;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 0.2s;
-    border: 1px solid #ccc; 
+
+/* '계정 설정' 모달 버튼 (양쪽 끝 정렬) */
+.form-actions.form-actions-settings { 
+  justify-content: space-between;
+} 
+
+/* '정보 수정' 모달 버튼 (양쪽 끝 정렬) */
+.form-actions.form-actions-edit { 
+  justify-content: space-between; 
 }
-.file-name-display {
-    color: #888;
-    font-size: 0.95rem;
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 8px 12px;
-    border: 1px solid #fff; 
-    border-radius: 6px;
-    height: 46px; 
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
+
+/* '회원 탈퇴' 모달 버튼 (가운데 정렬 - 기본값 상속) */
+.form-actions.form-actions-withdraw {
+  justify-content: center;
+} 
+
+/* '취소/저장' 묶음 그룹 */
+.button-group {
+  display: flex;
+  gap: 10px; 
 }
-#petImage { display: none; }
 
-
-/* ------------------------------------------------ */
-/* D. 버튼 스타일 */
-/* ------------------------------------------------ */
-
-.form-actions { display: flex; justify-content: flex-end; margin-top: 30px; gap: 10px; }
-.form-actions-edit { justify-content: space-between; } 
-
+/* 버튼 공통 스타일 (저장) */
 .btn-primary {
-    background: #2578ff; color: #fff; box-shadow: 0 8px 22px rgba(37,120,255,.25); 
-    padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+  background: #2578ff;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(37,120,255,.25);
+  transition: all 0.2s ease-out;
 }
-.btn-cancel { 
-    background: #f3f4f6; color: #222; 
-    padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+.btn-primary:hover {
+  filter: brightness(0.98);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37,120,255,.30);
 }
+
+/* 버튼 공통 스타일 (취소) */
+.btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  transition: all 0.2s ease-out;
+}
+.btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* '탈퇴하기' 텍스트 버튼 */
 .btn.btn-red-text { 
-    background: none; border: none; color: #ff4d4d; font-size:0.95rem; font-weight: 600; padding: 10px 0; cursor: pointer; text-align: left; 
+  background: none; 
+  border: none; 
+  color: #ff0000; 
+  font-size: 15px; 
+  cursor: pointer; 
+  text-align: left; 
+  font-weight: 700;
+}
+
+/* '회원 탈퇴' 모달 내부 텍스트 */
+.withdraw-info h3, .withdraw-info p {
+  text-align: center;
+}
+.withdraw-info h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.withdraw-info p {
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* '반려 동물 삭제' 모달 텍스트 */
+.delete-pet-prompt {
+  color: #222;
+  font-size: 20px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  text-align: center;
+}
+.pet-info-header {
+  color: #222;
+  font-size: 16px;
+  margin-bottom: 10px;
+
+  text-align: center;
+}
+
+/* ================================================
+   F. 스크롤바 스타일
+================================================ */
+
+::-webkit-scrollbar {
+  width: 8px; 
+  height: 8px; 
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1; 
+  background-clip: content-box;
+  border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; 
 }

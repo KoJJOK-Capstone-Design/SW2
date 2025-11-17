@@ -23,7 +23,7 @@ const renderActivityGraph = () => {
     return (
         <div className="activity-chart-placeholder">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart-svg">
-               <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+               <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#007bff" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
         </div>
     );
@@ -44,7 +44,7 @@ const MyPageModal = ({
             case 'settings': return '계정 설정';
             case 'edit': return '정보 수정';
             case 'withdraw': return '회원 탈퇴';
-            case 'deletePet': return '반려동물 삭제';
+            case 'deletePet': return '반려동물 해제';
             default: return '모달';
         }
     };
@@ -56,7 +56,7 @@ const MyPageModal = ({
                 return (
                     <form onSubmit={handleAccountSettingsSave}>
                         <div className="form-group">
-                            <label htmlFor="nickname">별명</label>
+                            <label htmlFor="nickname">닉네임</label>
                             <input 
                                 type="text" 
                                 id="nickname" 
@@ -104,7 +104,7 @@ const MyPageModal = ({
                             >
                                 탈퇴하기
                             </button>
-                            <div>
+                            <div className="button-group">
                                 <button type="button" className="btn btn-cancel" onClick={closeModal}>취소</button>
                                 <button type="submit" className="btn btn-primary">저장</button>
                             </div>
@@ -130,8 +130,8 @@ const MyPageModal = ({
                                     onChange={handlePetFormChange} 
                                 />
                                 <div className="file-input-display-box">
-                                    <label htmlFor="petImage" className="file-select-button">파일 선택</label>
-                                    <span className="file-name-display">
+                                    <label htmlFor="petImage" className="file-select-file">파일 선택</label>
+                                    <span className="file-name-filedisplay">
                                         {petFormData.imageFile ? petFormData.imageFile.name : '선택된 파일 없음'}
                                     </span>
                                 </div>
@@ -259,14 +259,13 @@ const MyPageModal = ({
                 return (
                     <div className="delete-pet-content">
                         <p className="delete-pet-prompt">
-                            **{petInfo.name}**의 정보를 삭제하시겠습니까?
+                            **{petInfo.name}**의 정보를 해제하시겠습니까?
                         </p>
                         <div className="pet-detail-card pet-detail-card--delete-confirm">
                              <div className="pet-info-header">
                                 <span className="pet-name-and-type">
                                     {petInfo.name} ({petInfo.species === 'cat' ? '고양이' : '강아지'})
                                 </span>
-                                <button className="btn btn-delete-pet" onClick={handleDeletePet}>삭제</button>
                             </div>
                             <p className="pet-description-line">
                                 {petInfo.breed}, {petInfo.age}살, {petInfo.neutered ? '중성화 완료' : '중성화 안함'}, {petInfo.weight}kg
@@ -552,10 +551,10 @@ export default function MyPage() {
                                     <div className="pet-color-indicator pet-color-indicator--yellow"></div>
                                     <span className="pet-name pet-name--inactive">멍멍이</span>
                                 </div>
-                                <button className="pet-add-button">
+                                <Link to="/NewFamily" className="pet-add-button">
                                     <span className="icon-plus-small">+</span> 
                                     <span className="pet-add-text">추가하기</span>
-                                </button>
+                        </Link>
                             </div>
 
                             {/* ⭐️ 펫 상세 정보 및 대시보드 요약 (우측) - 인라인화된 내용 */}
@@ -572,13 +571,12 @@ export default function MyPage() {
                                 <div className="pet-dashboard-summary">
                                     {/* 다가오는 일정 */}
                                     <div className="upcoming-events-mypage">
-                                        <h2 className="section-header-inline section-header-inline--title">
-                                            다가오는 일정 
-                                            <Link to="/calendar" className="view-more">자세히 보기</Link>
-                                        </h2>
-                                        
+                                        <div className="section-header-inline">
+                                            <h3>다가오는 일정</h3>
+                                            <Link to="/activity" className="view-more">자세히 보기</Link>
+                                        </div>
                                         {/* ⭐️ 정기 검진일 아이템 (디자인 일치) */}
-                                        <div className="event-item-mypage event-item-mypage--detail">
+                                         {/* <div className="event-item-mypage event-item-mypage--detail">
                                             <div className="event-icon-box">
                                                 <span className="event-icon-emoji">🏥</span>
                                             </div>
@@ -586,7 +584,8 @@ export default function MyPage() {
                                                 <span className="event-title">정기 검진일</span>
                                                 <span className="event-date">10월 15일</span>
                                             </div>
-                                        </div>
+                                        </div> */}
+                                        <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
                                     </div>
 
                                     {/* 주간 활동 분석 */}
@@ -595,18 +594,18 @@ export default function MyPage() {
                                             <h3>주간 활동 분석</h3>
                                             <Link to="/activity" className="view-more">자세히 보기</Link>
                                         </div>
-                                        <div className="activity-chart-box">
+                                        {/* <div className="activity-chart-box">
                                             <div className="chart-y-axis-labels">
                                                 <span>3.50</span><span>3.45</span><span>3.40</span><span>3.35</span><span>3.30</span><span>3.25</span><span>3.20</span>
                                             </div>
-                                            {/* 임시 그래프 SVG */}
                                             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart-svg">
                                                 <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
                                             </svg>
                                             <div className="chart-x-labels-only">
                                                 <span>9월</span><span>10월</span><span>11월</span><span>12월</span><span>1일</span><span>2일</span><span>3일</span><span>4일</span><span>5일</span>
-                                            </div>
-                                        </div>
+                                            </div> 
+                                        </div> */}
+                                        <span className="event-empty">최근 일주일간 활동이 없습니다.</span>
                                     </div>
                                 </div>
                             </div>
