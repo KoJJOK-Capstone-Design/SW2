@@ -1,13 +1,4 @@
-// Calendar.jsx
 import React, { useState, useEffect } from "react";
-import {
-  FaClinicMedical,
-  FaShoppingCart,
-  FaCut,
-  FaBirthdayCake,
-  FaTree,
-  FaCircle,
-} from "react-icons/fa";
 
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
@@ -27,23 +18,17 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-/* ---------------- Local Storage 설정 ---------------- */
-const STORAGE_KEY = 'calendarEvents';
-
-// Local Storage에서 이벤트 기록을 불러오는 함수
-const loadEvents = () => {
+// ⭐️ [추가] Local Storage에서 저장된 일정 데이터를 불러오는 함수
+const getInitialEvents = () => {
   try {
-    const savedEvents = localStorage.getItem(STORAGE_KEY);
-    // 저장된 데이터가 있으면 JSON 파싱, 없으면 빈 배열 사용
+    const savedEvents = localStorage.getItem('petCalendarEvents');
     return savedEvents ? JSON.parse(savedEvents) : [];
   } catch (error) {
-    console.error("Local Storage에서 일정을 불러오는 데 실패했습니다.", error);
+    console.error("Local Storage에서 캘린더 이벤트를 불러오는 중 오류 발생:", error);
     return [];
   }
 };
 
-
-/* ---------------- CustomDatePicker (내부 사용) ---------------- */
 const CustomDatePicker = ({ value, onChange, events }) => {
   const today = new Date();
   const [current, setCurrent] = useState(value ? new Date(value) : new Date());
@@ -73,7 +58,8 @@ const CustomDatePicker = ({ value, onChange, events }) => {
   const isSelected = (d) =>
     value &&
     new Date(value).getDate() === d &&
-    new Date(value).getMonth() === month;
+    new Date(value).getMonth() === month &&
+    new Date(value).getFullYear() === year; // 연도 비교 추가
 
   return (
     <div className="custom-datepicker">
@@ -151,10 +137,8 @@ function formatYMD(d) {
 /* ---------------- Main Calendar Component ---------------- */
 export default function Calendar() {
   const [date, setDate] = useState(new Date());
-  
-  // events 상태를 Local Storage에서 불러온 값으로 초기화합니다.
-  const [events, setEvents] = useState(loadEvents); 
-  
+  // ⭐️ [변경] 초기값을 Local Storage에서 불러오도록 설정
+  const [events, setEvents] = useState(getInitialEvents);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -169,23 +153,23 @@ export default function Calendar() {
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
-  // Local Storage에 데이터를 저장하는 useEffect 훅을 추가합니다.
+  // ⭐️ [추가] events 상태가 변경될 때마다 Local Storage에 저장
   useEffect(() => {
     try {
-      // events 상태가 변경될 때마다 Local Storage에 저장합니다.
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      localStorage.setItem('petCalendarEvents', JSON.stringify(events));
     } catch (error) {
-      console.error("Local Storage에 일정을 저장하는 데 실패했습니다.", error);
+      console.error("Local Storage에 캘린더 이벤트를 저장하는 중 오류 발생:", error);
     }
-  }, [events]); // events가 변경될 때마다 실행됩니다.
-  
+  }, [events]);
+  // --------------------------------------------------------
+
   const CATEGORY_OPTIONS = [
-    { value: "병원", label: "병원 / 약", color: "#FF5757", icon: <FaClinicMedical /> },
-    { value: "쇼핑", label: "쇼핑", color: "#9E47FF", icon: <FaShoppingCart /> },
-    { value: "미용", label: "미용", color: "#FF73AE", icon: <FaCut /> },
-    { value: "생일", label: "생일", color: "#FFC747", icon: <FaBirthdayCake /> },
-    { value: "산책/나들이", label: "산책/나들이", color: "#47B547", icon: <FaTree /> },
-    { value: "기타", label: "기타", color: "#6C757D", icon: <FaCircle /> },
+    { value: "병원", label: "병원 / 약", color: "#ebc3bcff", icon: "🏥" },
+    { value: "쇼핑", label: "쇼핑", color: "#e1faeaff", icon: "🛒" },
+    { value: "미용", label: "미용", color: "#d6ebfaff", icon: "✂️" },
+    { value: "생일", label: "생일", color: "#fff9ecff", icon: "🎂" },
+    { value: "산책/나들이", label: "산책/나들이", color: "#EFE4FF", icon: "🌳" },
+    { value: "기타", label: "기타", color: "#E9ECEF", icon: "⚫" },
   ];
 
   const categoryMeta = CATEGORY_OPTIONS.reduce((acc, cat) => {
@@ -232,7 +216,7 @@ export default function Calendar() {
 
     const meta = categoryMeta[form.category] || categoryMeta["기타"];
     if (editingId) {
-      setEvents((prev) => // setEvents 호출 시 useEffect가 Local Storage에 저장합니다.
+      setEvents((prev) =>
         prev.map((it) =>
           it.id === editingId
             ? { ...it, text: form.text, date: form.date, category: form.category, color: meta.color }
@@ -247,7 +231,7 @@ export default function Calendar() {
         category: form.category,
         color: meta.color,
       };
-      setEvents((prev) => [...prev, newEv]); // setEvents 호출 시 useEffect가 Local Storage에 저장합니다.
+      setEvents((prev) => [...prev, newEv]);
     }
     closeForm();
   };
@@ -264,7 +248,7 @@ export default function Calendar() {
 
   const handleConfirmDelete = () => {
     if (recordToDelete) {
-      setEvents((prev) => prev.filter((e) => e.id !== recordToDelete)); // setEvents 호출 시 useEffect가 Local Storage에 저장합니다.
+      setEvents((prev) => prev.filter((e) => e.id !== recordToDelete));
     }
     setShowDeleteModal(false);
     setRecordToDelete(null);
@@ -366,7 +350,8 @@ export default function Calendar() {
                       className="event-icon"
                       style={{ backgroundColor: categoryMeta[ev.category]?.color || ev.color }}
                     >
-                      {categoryMeta[ev.category]?.icon || <FaCircle />}
+                      {/* ✅✅✅ 기본 아이콘도 이모지로 수정 ✅✅✅ */}
+                      {categoryMeta[ev.category]?.icon || "⚫"}
                     </div>
                     <div className="event-content">
                       <strong>[{ev.category}]</strong> {ev.text}
@@ -406,7 +391,7 @@ export default function Calendar() {
                   <CustomDatePicker
                     value={form.date}
                     onChange={(newDate) => setForm({ ...form, date: newDate })}
-                    events={[]}   // 모달은 이벤트 점 비활성화
+                    events={[]}  // 모달은 이벤트 점 비활성화
                   />
                 </div>
 
@@ -427,6 +412,7 @@ export default function Calendar() {
                       onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
                     >
                       <div>
+                        {/* ✅✅✅ 이모지는 <span> 태그 안에 렌더링됩니다 ✅✅✅ */}
                         <span className="dropdown-icon" style={{ color: getCategory(form.category)?.color }}>
                           {getCategory(form.category)?.icon}
                         </span>{" "}

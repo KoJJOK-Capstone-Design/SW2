@@ -1,6 +1,3 @@
-// ==============================================
-// Health.js — Local Storage Persistence Applied
-// ==============================================
 import React, { useState, useEffect } from "react";
 import "./Health.css";
 import { NavLink, Link } from "react-router-dom";
@@ -40,40 +37,34 @@ ChartJS.register(
   Legend
 );
 
-// Local Storage 키
-const STORAGE_KEY = 'healthRecords';
-
-// Local Storage에서 활동 기록을 불러오는 함수
-const loadRecords = () => {
+// ⭐️ [추가] Local Storage에서 저장된 건강 기록을 불러오는 함수
+const getInitialRecords = () => {
   try {
-    const savedRecords = localStorage.getItem(STORAGE_KEY);
-    // 저장된 데이터가 있으면 JSON 파싱, 없으면 빈 배열 사용
+    const savedRecords = localStorage.getItem('petHealthRecords');
+    // 저장된 데이터가 있으면 JSON 파싱, 없으면 빈 배열 반환
     return savedRecords ? JSON.parse(savedRecords) : [];
   } catch (error) {
-    console.error("Local Storage에서 기록을 불러오는 데 실패했습니다.", error);
+    console.error("Local Storage에서 건강 기록을 불러오는 중 오류 발생:", error);
     return [];
   }
 };
 
 const Health = ({ user, pet }) => {
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
-  
-  // records 상태를 Local Storage에서 불러온 값으로 초기화합니다.
-  const [records, setRecords] = useState(loadRecords); 
-  
+  // ⭐️ [변경] 초기값을 Local Storage에서 가져오도록 설정
+  const [records, setRecords] = useState(getInitialRecords);
   const [activeTab, setActiveTab] = useState("all");
 
-  // Local Storage에 데이터를 저장하는 useEffect 훅을 추가합니다.
+  // ⭐️ [추가] records 상태가 변경될 때마다 Local Storage에 저장
   useEffect(() => {
     try {
-      // records 상태가 변경될 때마다 Local Storage에 저장합니다.
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      localStorage.setItem('petHealthRecords', JSON.stringify(records));
     } catch (error) {
-      console.error("Local Storage에 기록을 저장하는 데 실패했습니다.", error);
+      console.error("Local Storage에 건강 기록을 저장하는 중 오류 발생:", error);
     }
-  }, [records]); // records가 변경될 때마다 실행됩니다.
+  }, [records]);
+  // --------------------------------------------------------
 
-  // ... (나머지 상태 선언)
   // 추가 모달
   const [showModal, setShowModal] = useState(false);
   const [newRecord, setNewRecord] = useState({
@@ -155,7 +146,7 @@ const Health = ({ user, pet }) => {
       date: newRecord.date,
     };
 
-    setRecords([created, ...records]); // setRecords 호출 시 useEffect가 Local Storage에 저장합니다.
+    setRecords([created, ...records]);
     setNewRecord({ type: "", title: "", location: "", date: "" });
     setShowModal(false);
     setIsDropdownOpen(false);
@@ -192,7 +183,7 @@ const Health = ({ user, pet }) => {
       icon: iconMap[recordToEdit.type],
     };
 
-    setRecords(records.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))); // setRecords 호출 시 useEffect가 Local Storage에 저장합니다.
+    setRecords(records.map((r) => (r.id === updatedRecord.id ? updatedRecord : r)));
     setShowEditModal(false);
     setRecordToEdit(null);
     setIsEditDropdownOpen(false);
@@ -202,13 +193,11 @@ const Health = ({ user, pet }) => {
     e.preventDefault();
     handleUpdateSave();
   };
-  
   const closeAddModal = () => {
     setShowModal(false);
     setIsDropdownOpen(false);
     setNewRecord({ type: "", title: "", location: "", date: "" }); // 폼 리셋
   };
-  
   // ============= 삭제 모달 =============
   const handleDeleteClick = (id) => {
     setRecordToDelete(id);
@@ -221,7 +210,7 @@ const Health = ({ user, pet }) => {
   };
 
   const handleConfirmDelete = () => {
-    setRecords(records.filter((r) => r.id !== recordToDelete)); // setRecords 호출 시 useEffect가 Local Storage에 저장합니다.
+    setRecords(records.filter((r) => r.id !== recordToDelete));
     setShowDeleteModal(false);
     setRecordToDelete(null);
   };
@@ -264,7 +253,7 @@ const Health = ({ user, pet }) => {
 
       {/* ============ 추가 모달 ============ */}
       {showModal && (
-        <div className="health-add-overlay" onClick={closeAddModal}>
+        <div className="health-add-overlay" onClick={closeAddModal}> {/* ⭐️ 리셋 함수로 변경 */}
           <div className="health-add-modal" onClick={(e) => e.stopPropagation()}>
             <h2>건강 기록 추가</h2>
             <form onSubmit={handleFormSubmit}>
@@ -484,7 +473,7 @@ const Health = ({ user, pet }) => {
           </div>
         </div>
       )}
-      
+
       {/* ============ 삭제 모달 ============ */}
       {showDeleteModal && (
         <div className="health-modal-overlay" onClick={handleCancelDelete}>
@@ -596,11 +585,11 @@ const Health = ({ user, pet }) => {
             </button>
           </nav>
 
-        <ul className="health-record-list">
+          <ul className="health-record-list">
             {filteredRecords.length > 0 ? (
               filteredRecords.map((record) => (
                 <li key={record.id} className="record-item" data-type={record.type}>
-                  
+
                   <div className="record-icon">{record.icon}</div>
                   <div className="record-content">
                     <span className="record-title">{record.title}</span>

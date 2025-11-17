@@ -58,10 +58,8 @@ body {
     position: relative;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
     margin-right: 30px;
-    padding-left: 10px; /* [추가] 좌우 패딩 */
-    padding-right: 10px; /* [추가] 좌우 패딩 */
-
-    /* [추가] h3와 스크롤 영역을 세로로 정렬 */
+    padding-left: 10px; 
+    padding-right: 10px; 
     display: flex;
     flex-direction: column;
 }
@@ -72,23 +70,19 @@ body {
     margin-bottom: 18px;
     font-size: 25px;
     color: #222;
-    flex-shrink: 0; /* [추가] 제목 영역이 줄어들지 않도록 설정 */
+    flex-shrink: 0; 
 }
 
-/* [추가] 5개 미만일 때의 목록 컨테이너 */
 .event-list {
-    flex-grow: 1; /* 남은 공간을 채움 */
-    overflow-y: hidden; /* 스크롤 없음 */
-    min-height: 0; /* [필수] flex-grow가 올바르게 작동하도록 설정 */
+    flex-grow: 1; 
+    overflow-y: hidden; 
+    min-height: 0;
 }
 
-/* [추가] 5개 이상일 때의 스크롤 컨테이너 */
 .event-list-scrollable {
-    flex-grow: 1; /* 남은 공간을 채움 */
-    overflow-y: auto; /* 스크롤 자동 생성 */
-    min-height: 0; /* [필수] flex-grow가 올바르게 작동하도록 설정 */
-
-    /* 스크롤바가 아이템을 가리지 않도록 오른쪽 패딩 추가 */
+    flex-grow: 1; 
+    overflow-y: auto; 
+    min-height: 0; 
     padding-right: 5px;
 }
 
@@ -99,7 +93,6 @@ body {
     font-size: 1.1rem;
 }
 
-/* ⭐️ [수정] 이벤트 목록 아이템 (원형 아이콘 포함) */
 .event-item {
     display: flex;
     align-items: center;
@@ -236,7 +229,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 650px;
-    height: 650px;
+    height: 580px;
     background: #ffffff;
     border-radius: 18px;
     padding: 30px 40px;
@@ -247,7 +240,7 @@ body {
     flex-direction: column;
     align-items: center;
 }
-/* ⭐ 제목을 정확히 맨 위에 정렬 */
+
 .calendar-page .modal h2 {
     width: 100%;
     text-align: center;
@@ -258,7 +251,6 @@ body {
     padding: 0;
 }
 
-/* ⭐ form은 너비를 꽉 채움 */
 .calendar-page .modal form {
     width: 100%;
     display: flex;
@@ -266,7 +258,6 @@ body {
     align-items: center;
 }
 
-/* ⭐ 날짜 / 일정내용 / 카테고리 가로정렬 */
 .calendar-page .modal-calendar-layout {
     width: 100%;
     display: flex;
@@ -366,8 +357,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* ⭐️ [핵심 추가] 커스텀 드롭다운 스타일 (Activity.css에서 이식) ⭐️ */
-
 .calendar-page .activity-select-wrapper {
     position: relative;
 }
@@ -411,12 +400,12 @@ body {
 }
 .calendar-page .activity-select-options {
     position: absolute;
-    top: calc(100% + 6px); /* 버튼 아래 6px 간격 */
+    top: calc(100% + 6px); 
     left: 0;
     right: 0;
     background: #ffffff;
     border-radius: 12px;
-    max-height: 250px; /* 스크롤 높이 제한 */
+    max-height: 130px; /* 스크롤 높이 제한 */
     overflow-y: auto;
     z-index: 10001; /* 모달 내에서 최상위 */
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
@@ -456,10 +445,6 @@ body {
 }
 
 
-/* --- CustomDatePicker 관련 스타일 --- */
-
-/* * .custom-datepicker (기본 = 메인 캘린더용)
- */
 .custom-datepicker {
     display: flex;
     flex-direction: column;
@@ -474,8 +459,7 @@ body {
     box-sizing: border-box;
 }
 
-/* * .calendar-header (기본 = 메인 캘린더용)
- */
+
 .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -533,13 +517,11 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: 0.2s, color 0.2s;
-
     height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-
     font-size: 14px;
     position: relative;
     padding-top: 6px;
@@ -584,10 +566,6 @@ body {
     background: transparent;
 }
 
-
-/* * ⭐️ [핵심] 모달 내부의 캘린더 스타일 덮어쓰기 ⭐️
- */
-
 .modal-calendar-left .custom-datepicker {
     padding: 10px;
     border-width: 1px;
@@ -609,13 +587,6 @@ body {
     font-size: 13px;
     color: #222;
 }
-
-/*
-.modal-calendar-left .calendar-day-header:first-child,
-.modal-calendar-left .calendar-day-header:last-child {
-  color: #555;
-}
-*/
 
 .modal-calendar-left .calendar-days {
     gap: 3px;
@@ -643,7 +614,6 @@ body {
     color: #222;
     font-weight: bold;
 }
-
 
 /* --- 이벤트 점 스타일 (메인 캘린더 전용) --- */
 .event-dots {
