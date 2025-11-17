@@ -39,7 +39,7 @@ export default function HomeLogin() {
           res.data?.username ||
           res.data?.nickname ||
           res.data?.id ||
-          "멍냥";
+          "냥냥";
 
         setUsername(name);
       } catch (err) {

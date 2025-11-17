@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import axios from "axios";
+
 import "./Dashboard.css";
 import "./Chat.css";
 
+// (이하 생략: import는 그대로 유지)
 import editIcon from "./img/Edit_fill.png";
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -14,43 +17,119 @@ import chat from "./img/chat.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
-export default function Chat() {
-  // ✅ 알림 상태
-  const [openNoti, setOpenNoti] = useState(false);
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem("noti_items");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "n1",
-            user: "냥냥편지",
-            text: "으로부터 새로운 쪽지가 도착했습니다.",
-            time: "5분 전",
-            read: false,
-            avatarColor: "#dbeafe",
-          },
-          {
-            id: "n2",
-            user: "멍멍집사",
-            text: "님이 회원님의 게시글에 댓글을 남겼습니다.",
-            time: "5분 전",
-            read: true,
-            avatarColor: "#e5e7eb",
-          },
-        ];
-  });
-  const hasUnread = useMemo(() => notifications.some((n) => !n.read), [notifications]);
+// ===================== 헬퍼: 이름 결정 로직 =====================
+const getDisplayName = (user) => {
+  const rawNickname = (user?.nickname || "").trim();
+  const rawUsername = (user?.username || "").trim();
+  const rawId = user?.id != null ? String(user.id) : "";
+
+  return (
+    rawNickname || 
+    rawUsername || 
+    (rawId ? `사용자 ${rawId}` : "냥냥")
+  );
+};
+// ==========================================================
+
+// ===================== 헬퍼: Interval Custom Hook =====================
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
 
   useEffect(() => {
-    localStorage.setItem("noti_items", JSON.stringify(notifications));
-  }, [notifications]);
+    savedCallback.current = callback;
+  }, [callback]);
 
-  const markRead = (id) =>
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+// ==========================================================
 
-  // 패널 외부 클릭/ESC로 닫기
+
+export default function Chat() {
+  // (이하 생략: makeDisplayTime, getTimeAgo 헬퍼 함수는 그대로 유지)
+  const makeDisplayTime = (sentAt) => {
+    if (!sentAt) return "";
+    const d = new Date(sentAt);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString("ko-KR", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    if (Number.isNaN(past.getTime())) return dateString; 
+
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds}초 전`;
+    } else if (diffInSeconds < 3600) {
+      return `${Math.floor(diffInSeconds / 60)}분 전`;
+    } else if (diffInSeconds < 86400) {
+      return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+    } else if (diffInSeconds < 2592000) {
+      return `${Math.floor(diffInSeconds / 86400)}일 전`;
+    }
+    return past.toLocaleString("ko-KR", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+
+  // ===================== 로그인 유저 정보 =====================
+  const [currentUser, setCurrentUser] = useState(null); 
+  const [username, setUsername] = useState("멍냥"); 
+
+  // ===================== 쪽지/스레드 상태 =====================
+  const [threads, setThreads] = useState([]); 
+  const [selectedId, setSelectedId] = useState(null);
+  const selected = useMemo(
+    () => threads.find((t) => t.id === selectedId),
+    [threads, selectedId]
+  );
+
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [dmError, setDmError] = useState("");
+
+  // ===================== 헤더 알림 상태 (API 연동) =====================
+  const [openNoti, setOpenNoti] = useState(false);
+  const [notifications, setNotifications] = useState([]); 
+  const [loadingNoti, setLoadingNoti] = useState(false);
+
+  // 🔔🔔🔔 수정: '새로운' 알림이 도착했는지 여부를 나타내는 상태 추가 🔔🔔🔔
+  const [hasNewNotification, setHasNewNotification] = useState(false); 
+
+  // 기존: 알림 목록 중 읽지 않은 것이 하나라도 있으면 true
+  // const hasUnread = useMemo(
+  //   () => notifications.some((n) => !n.is_read), 
+  //   [notifications]
+  // );
+
+  // 🔔🔔🔔 수정: '읽지 않은' 알림이 하나라도 있으면 true (알림창 내부 모두 읽음 버튼 활성화용) 🔔🔔🔔
+  const hasUnreadInList = useMemo(
+    () => notifications.some((n) => !n.is_read), 
+    [notifications]
+  );
+
+  // 마지막으로 알려준 알림 목록의 ID 배열을 저장하는 Ref
+  const lastKnownNotiIds = useRef(new Set()); 
+
+
   const notiBtnRef = useRef(null);
   const notiRef = useRef(null);
   useEffect(() => {
@@ -63,6 +142,8 @@ export default function Chat() {
         !notiBtnRef.current.contains(e.target)
       ) {
         setOpenNoti(false);
+        // 🔔🔔🔔 수정: 알림창 닫을 때 빨간색 뱃지 해제 🔔🔔🔔
+        setHasNewNotification(false);
       }
     };
     const onEsc = (e) => e.key === "Escape" && setOpenNoti(false);
@@ -73,56 +154,120 @@ export default function Chat() {
       document.removeEventListener("keydown", onEsc);
     };
   }, [openNoti]);
+  
+  const markRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  };
+  
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    // 🔔🔔🔔 수정: 모두 읽음 처리 시 빨간색 뱃지 해제 🔔🔔🔔
+    setHasNewNotification(false);
+  }
 
-  // 기존 팝업(채팅용) — 그대로 두고, 벨은 새 패널 사용
-  const [showChatPopup, setShowChatPopup] = useState(false);
+  // ===================== 알림 API 호출 함수 (useCallback으로 안정화) =====================
+  const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return; 
 
-  // ------------------ DM(쪽지함) 기존 코드 ------------------
-  const [threads, setThreads] = useState([
-    {
-      id: "t1",
-      name: "냥냥편지",
-      preview: "안녕하세요",
-      avatar: { bg: "#d9f99d", text: "냥" },
-      messages: [
-        { id: "m1", from: "them", text: "안녕하세요", at: "어제" },
-        { id: "m2", from: "me", text: "안녕하세요", at: "오후 10:23" },
-      ],
-    },
-    {
-      id: "t2",
-      name: "멍돌이주인",
-      preview: "사진 보냈어요",
-      avatar: { bg: "#fecdd3", text: "멍" },
-      messages: [],
-    },
-  ]);
+    console.log("🔔 알림 Polling 시작:", new Date().toLocaleTimeString());
 
-  const [selectedId, setSelectedId] = useState("t1");
-  const selected = useMemo(
-    () => threads.find((t) => t.id === selectedId),
-    [threads, selectedId]
-  );
+    // 🔔🔔🔔 수정: Polling 시 로딩 스피너 보이지 않도록 잠시 주석 처리 🔔🔔
+    // setLoadingNoti(true);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(
+        "https://youngbin.pythonanywhere.com/api/v1/notifications/",
+        { headers }
+      );
 
+      const rawNotifications = Array.isArray(res.data) 
+        ? res.data 
+        : res.data.results || [];
+      
+      const mappedNotifications = rawNotifications.map(n => {
+        // ✅ 수정된 로직: sender_nickname이 없거나 빈 문자열일 경우 sender_id를 사용하도록 강화
+        const senderName = 
+          (n.sender_nickname && n.sender_nickname.trim())
+          ? n.sender_nickname.trim()
+          : n.sender_id
+            ? `사용자 ${n.sender_id}`
+            : "시스템"; // 최종적으로 시스템
+        
+        return {
+          id: n.id,
+          user: senderName, // 👈 수정된 변수 적용
+          text: n.message || "새 알림", 
+          time: getTimeAgo(n.created_at), 
+          rawTime: n.created_at,
+          is_read: n.is_read,
+          avatarColor: n.is_read ? "#e5e7eb" : "#dbeafe", 
+        };
+      });
+
+      mappedNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+      // 🔔🔔🔔 핵심 수정: 새 알림 도착 여부 판단 🔔🔔🔔
+      const newNotiIds = new Set(mappedNotifications.map(n => n.id));
+      
+      // 새로 도착한 읽지 않은 알림이 있는지 확인
+      const newlyArrivedUnread = mappedNotifications.some(n => 
+        !n.is_read && // 읽지 않았고
+        !lastKnownNotiIds.current.has(n.id) // 이전에 없던 알림인 경우
+      );
+
+      if (newlyArrivedUnread) {
+          console.log("🚨 새로운 읽지 않은 알림이 도착했습니다!");
+          setHasNewNotification(true);
+      } else {
+          console.log("✅ 새로 도착한 알림은 없습니다. (뱃지 유지/제거는 다른 로직)");
+      }
+      
+      // 현재 알림 목록의 ID를 저장
+      lastKnownNotiIds.current = newNotiIds;
+      // 알림 목록 상태 업데이트
+      setNotifications(mappedNotifications);
+      
+      console.log("✅ 알림 Polling 성공, 총 알림 수:", mappedNotifications.length);
+
+    } catch (err) {
+      console.error("❌ 알림 Polling 실패:", err.response?.status, err.message);
+    } finally {
+      setLoadingNoti(false);
+    }
+  }, []);
+
+  // 10초마다 알림을 새로고침 (Polling)
+  useInterval(() => {
+    // 🔔🔔🔔 수정: 알림창이 열려있을 때는 Polling을 하지 않아 중복 알림을 막음 🔔🔔
+    if (openNoti) {
+        console.log("🔔 알림창 열림: Polling Skip");
+        return;
+    }
+    fetchNotifications();
+  }, 10000); 
+
+  // (이하 생략: showChatPopup, search, draft, isComposing, recipient, recipientQuery, userSuggestions 상태는 그대로 유지)
+  const [showChatPopup, setShowChatPopup] = useState(false); 
+
+  // ===================== 검색 / 작성 상태 =====================
+  const [search, setSearch] = useState(""); 
+  const [draft, setDraft] = useState(""); 
+
+  // 새 쪽지 모드
   const [isComposing, setIsComposing] = useState(false);
+  const [recipient, setRecipient] = useState(null); 
   const [recipientQuery, setRecipientQuery] = useState("");
-  const [recipient, setRecipient] = useState(null);
+  const [userSuggestions, setUserSuggestions] = useState([]); 
 
-  const [search, setSearch] = useState("");
-  const [draft, setDraft] = useState("");
-
-  const suggestions = useMemo(
-    () =>
-      threads
-        .map((t) => ({ name: t.name, avatar: t.avatar }))
-        .filter((s) => s.name.toLowerCase().includes(recipientQuery.toLowerCase())),
-    [threads, recipientQuery]
-  );
-
-  const filtered = useMemo(
+  const filteredThreads = useMemo(
     () =>
       threads.filter((t) =>
-        (t.name + (t.preview || "")).toLowerCase().includes(search.toLowerCase())
+        (t.name + (t.preview || ""))
+          .toLowerCase()
+          .includes(search.toLowerCase())
       ),
     [threads, search]
   );
@@ -133,86 +278,420 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedId, selected?.messages.length]);
 
-  // 작성/전송
+
+  // ===================== 프로필 + 쪽지 + 최초 알림 API 호출 =====================
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setDmError("로그인이 필요합니다. 다시 로그인 후 이용해주세요.");
+      setLoadingMessages(false);
+      return;
+    }
+
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const fetchAll = async () => {
+      try {
+        setLoadingMessages(true);
+        setDmError("");
+
+        const [userRes, msgRes] = await Promise.all([
+          axios.get(
+            "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
+            { headers }
+          ),
+          axios.get(
+            "https://youngbin.pythonanywhere.com/api/v1/messages/",
+            { headers }
+          ),
+        ]);
+
+        const user = userRes.data;
+        setCurrentUser(user);
+
+        setUsername(getDisplayName(user));
+
+        // 최초 알림 로딩 시에는 loadingNoti 상태를 사용
+        setLoadingNoti(true);
+        try {
+            const notiRes = await axios.get(
+              "https://youngbin.pythonanywhere.com/api/v1/notifications/",
+              { headers }
+            );
+
+            const rawNotifications = Array.isArray(notiRes.data) 
+              ? notiRes.data 
+              : notiRes.data.results || [];
+            
+            const mappedNotifications = rawNotifications.map(n => {
+                const senderName = 
+                  (n.sender_nickname && n.sender_nickname.trim())
+                  ? n.sender_nickname.trim()
+                  : n.sender_id
+                    ? `사용자 ${n.sender_id}`
+                    : "시스템";
+                
+                return {
+                  id: n.id,
+                  user: senderName, 
+                  text: n.message || "새 알림", 
+                  time: getTimeAgo(n.created_at), 
+                  rawTime: n.created_at,
+                  is_read: n.is_read,
+                  avatarColor: n.is_read ? "#e5e7eb" : "#dbeafe", 
+                };
+              });
+
+            mappedNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+            // 최초 로딩 시, 읽지 않은 알림이 있으면 뱃지 표시
+            if (mappedNotifications.some(n => !n.is_read)) {
+                setHasNewNotification(true);
+            }
+
+            // 최초 알림 ID 세트 저장
+            lastKnownNotiIds.current = new Set(mappedNotifications.map(n => n.id));
+
+            setNotifications(mappedNotifications);
+        } catch (err) {
+            console.error("❌ 최초 알림 로딩 실패:", err.response?.status, err.message);
+        } finally {
+            setLoadingNoti(false);
+        }
+        // fetchNotifications(); // 기존: 여기서 최초 알림 로딩 (위로 분리)
+
+        const meId = String(user.id);
+        const messages = Array.isArray(msgRes.data)
+          ? msgRes.data
+          : msgRes.data.results || [];
+
+        // (이하 생략: 메시지 스레드 그룹화 로직은 그대로 유지)
+        const threadsMap = {};
+
+        messages.forEach((msg) => {
+          const isMeSender = String(msg.sender) === meId;
+
+          const partnerIdRaw = isMeSender ? msg.receiver : msg.sender;
+          const partnerId =
+            partnerIdRaw !== null && partnerIdRaw !== undefined
+              ? String(partnerIdRaw)
+              : "unknown";
+
+          const partnerInfo = isMeSender
+            ? {
+                nickname: msg.receiver_nickname,
+                username: msg.receiver_username, 
+                id: msg.receiver,
+              }
+            : {
+                nickname: msg.sender_nickname,
+                username: msg.sender_username, 
+                id: msg.sender,
+              };
+
+          const nick = getDisplayName(partnerInfo);
+
+
+          if (!threadsMap[partnerId]) {
+            threadsMap[partnerId] = {
+              id: partnerId,
+              name: nick,
+              avatar: {
+                bg: "#e2e8f0",
+                text: nick[0] || "친",
+              },
+              messages: [],
+              preview: "",
+            };
+          }
+
+          threadsMap[partnerId].messages.push({
+            id: msg.id,
+            from: isMeSender ? "me" : "them",
+            text: msg.content,
+            at: makeDisplayTime(msg.sent_at),
+            rawTime: msg.sent_at,
+            is_read: msg.is_read,
+          });
+        });
+
+        const threadsArr = Object.values(threadsMap);
+
+        threadsArr.forEach((t) => {
+          t.messages.sort(
+            (a, b) =>
+              new Date(a.rawTime).getTime() -
+              new Date(b.rawTime).getTime()
+          );
+          const last = t.messages[t.messages.length - 1];
+          t.preview = last ? last.text : "";
+        });
+
+        threadsArr.sort((a, b) => {
+          const at =
+            a.messages[a.messages.length - 1]?.rawTime || 0;
+          const bt =
+            b.messages[b.messages.length - 1]?.rawTime || 0;
+          return new Date(bt).getTime() - new Date(at).getTime();
+        });
+
+        setThreads(threadsArr);
+        setSelectedId(threadsArr[0]?.id || null);
+      } catch (err) {
+        console.error(
+          "데이터 불러오기 실패:",
+          err.response?.status,
+          err.response?.data || err.message
+        );
+        if (err.response?.status === 401) {
+          setDmError("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
+        } else {
+          setDmError("데이터를 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    fetchAll();
+  }, [fetchNotifications]); 
+
+  // (이하 생략: 유저 검색, 새 쪽지 모드, 메시지 전송 로직은 그대로 유지)
+
+  // ===================== 새 쪽지: 유저 검색 API =====================
+  useEffect(() => {
+    const q = recipientQuery.trim();
+    if (!q) {
+      setUserSuggestions([]);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const controller = new AbortController();
+
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(
+          "https://youngbin.pythonanywhere.com/api/v1/users/search/",
+          {
+            params: { q }, 
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          }
+        );
+
+        const raw = Array.isArray(res.data)
+          ? res.data
+          : res.data.results || [];
+
+        const meId = currentUser ? String(currentUser.id) : null;
+
+        const mapped = raw
+          .filter((u) => (meId ? String(u.id) !== meId : true))
+          .map((u) => {
+            const displayName = getDisplayName(u);
+
+            return {
+              id: String(u.id),
+              name: displayName,
+              avatar: {
+                bg: "#e2e8f0",
+                text: displayName[0] || "친",
+              },
+            };
+          });
+
+        setUserSuggestions(mapped);
+      } catch (err) {
+        if (err.name === "CanceledError") return;
+        console.error("유저 검색 실패:", err.response?.data || err.message);
+        setUserSuggestions([]);
+      }
+    };
+
+    fetchUsers();
+
+    return () => controller.abort();
+  }, [recipientQuery, currentUser]);
+
+  // ===================== 새 쪽지 모드 =====================
   const startCompose = () => {
     setIsComposing(true);
+    setSelectedId(null); 
     setRecipient(null);
     setRecipientQuery("");
     setDraft("");
   };
+
   const cancelCompose = () => {
     setIsComposing(false);
     setRecipient(null);
     setRecipientQuery("");
+    setDraft(""); 
+    if (threads.length > 0) {
+      setSelectedId(threads[0].id);
+    }
   };
-  const pickRecipient = (r) => setRecipient(r);
 
-  const handleSend = () => {
-    if (!draft.trim()) return;
+  const pickRecipient = (r) => {
+    setRecipient(r);
+    setUserSuggestions([]); 
+  };
 
-    if (isComposing) {
-      if (!recipient) return;
+  // ===================== 공통 메시지 전송 함수 (POST /messages/) =====================
+  const postMessage = async (receiverId, text, headers) => {
+    const res = await axios.post(
+      "https://youngbin.pythonanywhere.com/api/v1/messages/",
+      {
+        receiver: receiverId,
+        content: text,
+      },
+      { headers }
+    );
 
-      let thread = threads.find((t) => t.name === recipient.name);
-      let threadId = thread?.id;
+    const msg = res.data;
 
-      if (!thread) {
-        threadId = "t" + (Date.now() % 100000);
-        thread = {
-          id: threadId,
-          name: recipient.name,
-          preview: "",
-          avatar: recipient.avatar || {
-            bg: "#e9e9e9",
-            text: recipient.name?.[0] || "친",
-          },
-          messages: [],
-        };
-        setThreads((prev) => [...prev, thread]);
-      }
+    const msgItem = {
+      id: msg.id,
+      from: "me",
+      text: msg.content,
+      at: makeDisplayTime(msg.sent_at),
+      rawTime: msg.sent_at,
+      is_read: msg.is_read,
+    };
 
-      const msg = {
-        id: "m" + Date.now(),
-        from: "me",
-        text: draft.trim(),
-        at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
+    return { msg, msgItem };
+  };
 
-      setThreads((prev) =>
-        prev.map((t) =>
-          t.id === threadId ? { ...t, messages: [...t.messages, msg], preview: msg.text } : t
-        )
-      );
+  // ===================== 전송 =====================
+  const handleSend = async () => {
+    const text = draft.trim();
+    if (!text) return;
 
-      setSelectedId(threadId);
-      setIsComposing(false);
-      setRecipient(null);
-      setRecipientQuery("");
-      setDraft("");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("로그인이 필요합니다.");
       return;
     }
 
-    const msg = {
-      id: "m" + Date.now(),
-      from: "me",
-      text: draft.trim(),
-      at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-    setThreads((prev) =>
-      prev.map((t) =>
-        t.id === selectedId ? { ...t, messages: [...t.messages, msg], preview: msg.text } : t
-      )
-    );
-    setDraft("");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    // ---- 새 쪽지 모드 ----
+    if (isComposing) {
+      if (!recipient || !recipient.id) {
+        alert("받는 사람을 선택해주세요.");
+        return;
+      }
+
+      const receiverId = recipient.id;
+
+      try {
+        const { msg, msgItem } = await postMessage(
+          receiverId,
+          text,
+          headers
+        );
+
+        setThreads((prev) => {
+          let exists = false;
+          let updated = prev.filter((t) => t.id !== String(receiverId)); 
+
+          const existingThread = prev.find((t) => t.id === String(receiverId));
+          if (existingThread) {
+            exists = true;
+            const updatedThread = {
+              ...existingThread,
+              messages: [...existingThread.messages, msgItem],
+              preview: msgItem.text,
+            };
+            updated.unshift(updatedThread);
+          }
+
+          if (!exists) {
+            const nick = getDisplayName({
+                nickname: msg.receiver_nickname || recipient.name,
+                username: msg.receiver_username,
+                id: receiverId
+            });
+
+            const newThread = {
+              id: String(receiverId),
+              name: nick,
+              avatar: {
+                bg: "#e2e8f0",
+                text: nick[0] || "친",
+              },
+              messages: [msgItem],
+              preview: msgItem.text,
+            };
+
+            updated.unshift(newThread); 
+          }
+
+          return updated;
+        });
+
+        setSelectedId(String(receiverId));
+        setIsComposing(false);
+        setRecipient(null);
+        setRecipientQuery("");
+        setDraft("");
+      } catch (err) {
+        console.error(
+          "쪽지 전송 실패:",
+          err.response?.data || err.message
+        );
+        alert("쪽지 전송에 실패했습니다.");
+      }
+
+      return;
+    }
+
+    // ---- 기존 대화방에서 전송 ----
+    if (!selected) return;
+
+    const receiverId = selected.id;
+
+    try {
+      const { msgItem } = await postMessage(receiverId, text, headers);
+
+      setThreads((prev) => {
+        let sentThread = null;
+        const otherThreads = prev.filter(t => {
+            if (t.id === String(receiverId)) {
+                sentThread = {
+                    ...t,
+                    messages: [...t.messages, msgItem],
+                    preview: msgItem.text,
+                };
+                return false;
+            }
+            return true;
+        });
+        
+        return [sentThread, ...otherThreads].filter(Boolean);
+      });
+
+      setDraft("");
+    } catch (err) {
+      console.error(
+        "쪽지 전송 실패:",
+        err.response?.data || err.message
+      );
+      alert("쪽지 전송에 실패했습니다.");
+    }
   };
 
+  // ===================== 렌더링 =====================
   return (
     <div className="app">
       {/* 헤더 */}
       <header className="nav">
         <div className="nav-inner">
           <div className="brand">
-            <a href='./dashboard'>
+            <a href="./dashboard">
               <img src={logoBlue} alt="paw logo" className="paw" />
               <span className="brand-text">멍냥멍냥</span>
             </a>
@@ -226,16 +705,18 @@ export default function Chat() {
           </nav>
 
           <nav className="menuicon">
+            {/* 프로필 */}
             <div className="profile">
               <div className="profile__avatar">
                 <img
-                  src="https://i.pravatar.cc/80?img=11" // 테스트용 랜덤 이미지
+                  src="https://i.pravatar.cc/80?img=11"
                   alt="프로필"
                 />
               </div>
-              <span className="profile__name">냥냥</span>
+              <span className="profile__name">{username}</span>
             </div>
-            {/* ✅ 알림 벨 */}
+
+            {/* 알림 벨 */}
             <div className="icon-wrapper bell">
               <button
                 ref={notiBtnRef}
@@ -247,40 +728,62 @@ export default function Chat() {
                 }}
               >
                 <img src={bell} alt="" className="icon" aria-hidden />
-                {hasUnread && <span className="bell__dot" aria-hidden />}
+                {/* 🔔🔔🔔 수정: hasUnread -> hasNewNotification 사용 🔔🔔🔔 */}
+                {hasNewNotification && <span className="bell__dot" aria-hidden />} 
               </button>
 
               {openNoti && (
                 <div ref={notiRef} className="noti">
                   <div className="noti__header">
                     <strong>알림</strong>
-                    <button className="noti__allread" onClick={markAllRead}>
+                    <button
+                      className="noti__allread"
+                      onClick={markAllRead}
+                      // 🔔🔔🔔 수정: hasUnread -> hasUnreadInList 사용 🔔🔔🔔
+                      disabled={!hasUnreadInList} 
+                    >
                       모두 읽음
                     </button>
                   </div>
                   <ul className="noti__list">
-                    {notifications.length === 0 && (
+                    {loadingNoti && (
+                      <li className="noti__empty">알림 불러오는 중...</li>
+                    )}
+                    {!loadingNoti && notifications.length === 0 && (
                       <li className="noti__empty">알림이 없습니다.</li>
                     )}
-                    {notifications.map((n) => (
+                    {!loadingNoti && notifications.map((n) => (
                       <li
                         key={n.id}
-                        className={`noti__item ${n.read ? "is-read" : "is-unread"}`}
+                        className={`noti__item ${
+                          !n.is_read ? "is-unread" : "is-read" 
+                        }`}
                         onClick={() => markRead(n.id)}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => e.key === "Enter" && markRead(n.id)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && markRead(n.id)
+                        }
                         title="클릭하면 읽음 처리"
                       >
-                        <div className="noti__avatar" style={{ background: n.avatarColor }} />
+                        <div
+                          className="noti__avatar"
+                          style={{ background: n.avatarColor }}
+                        />
                         <div className="noti__body">
                           <div className="noti__text">
                             <b>{n.user}</b>
                             <span>{n.text}</span>
                           </div>
                           <div className="noti__meta">
-                            <span className="noti__time">{n.time}</span>
-                            {!n.read && <span className="noti__badge">안 읽음</span>}
+                            <span className="noti__time">
+                              {n.time}
+                            </span>
+                            {!n.is_read && (
+                              <span className="noti__badge">
+                                안 읽음
+                              </span>
+                            )}
                           </div>
                         </div>
                       </li>
@@ -290,10 +793,10 @@ export default function Chat() {
               )}
             </div>
 
-            {/* 기존 채팅 팝업(간단 안내) */}
+            {/* 채팅 아이콘 (현재 페이지지만 유지) */}
             <div className="icon-wrapper">
               <button className="icon-btn">
-                <a href='./Chat'>
+                <a href="./Chat">
                   <img src={chat} alt="채팅 아이콘" className="icon" />
                 </a>
               </button>
@@ -301,20 +804,27 @@ export default function Chat() {
           </nav>
         </div>
       </header>
-
-      {/* 본문 */}
+      
+      {/* (이하 생략: main, footer는 그대로 유지) */}
       <main className="dm">
         {/* 좌측: 쪽지함 */}
         <aside className="inbox">
           <div className="inbox__title">
             <p className="message">쪽지함</p>
-            <button className="icon-btn" aria-label="새 쪽지" onClick={startCompose}>
+            <button
+              className="icon-btn"
+              aria-label="새 쪽지"
+              onClick={startCompose}
+            >
               <img className="icon-img" src={editIcon} alt="새 쪽지" />
             </button>
           </div>
 
           <label className="search">
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="search__icon" />
+            <FontAwesomeIcon
+              icon={faMagnifyingGlass}
+              className="search__icon"
+            />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -322,90 +832,147 @@ export default function Chat() {
             />
           </label>
 
-          <ul className="threadlist">
-            {filtered.map((t) => (
-              <li
-                key={t.id}
-                className={"thread" + (t.id === selectedId ? " is-active" : "")}
-                onClick={() => {
-                  setSelectedId(t.id);
-                  setIsComposing(false);
-                }}
-              >
-                <div className="avatar" style={{ background: t.avatar.bg }}>
-                  {t.avatar.text}
-                </div>
-                <div className="thread__meta">
-                  <div className="thread__name">{t.name}</div>
-                  <div className="thread__preview">{t.preview}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {loadingMessages ? (
+            <div className="inbox__loading">쪽지 불러오는 중...</div>
+          ) : dmError ? (
+            <div className="inbox__error">{dmError}</div>
+          ) : threads.length === 0 && !isComposing ? (
+            <div className="inbox__empty">
+              아직 주고받은 쪽지가 없어요.
+            </div>
+          ) : (
+            <ul className="threadlist">
+              {filteredThreads.map((t) => (
+                <li
+                  key={t.id}
+                  className={
+                    "thread" + (t.id === selectedId && !isComposing ? " is-active" : "")
+                  }
+                  onClick={() => {
+                    setSelectedId(t.id);
+                    setIsComposing(false);
+                  }}
+                >
+                  <div
+                    className="avatar"
+                    style={{ background: t.avatar.bg }}
+                  >
+                    {t.avatar.text}
+                  </div>
+                  <div className="thread__meta">
+                    <div className="thread__name">{t.name}</div>
+                    <div className="thread__preview">
+                      {t.preview}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </aside>
 
-        {/* 우측: 대화/작성 */}
+        {/* 우측: 대화/작성 영역 */}
         <section className="chat">
-          {isComposing ? (
+          {loadingMessages ? (
+            <div className="empty">
+              <p className="empty__hint">쪽지를 불러오는 중입니다...</p>
+            </div>
+          ) : dmError ? (
+            <div className="empty">
+              <p className="empty__hint">{dmError}</p>
+            </div>
+          ) : isComposing ? (
             <>
+              {/* 새 쪽지 모드 */}
               {!recipient ? (
+                // 1. 받는 사람 검색
                 <div className="compose">
                   <div className="compose__title">받는 사람 검색</div>
                   <input
                     className="compose__search"
-                    placeholder="사용자 이름을 입력하세요."
+                    placeholder="닉네임 또는 아이디를 입력하세요."
                     value={recipientQuery}
-                    onChange={(e) => setRecipientQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const first = suggestions[0];
-                        if (first) pickRecipient(first);
-                        else
-                          pickRecipient({
-                            name: recipientQuery.trim(),
-                            avatar: {
-                              bg: "#e2e8f0",
-                              text: (recipientQuery[0] || "친").toUpperCase(),
-                            },
-                          });
-                      }
-                    }}
+                    onChange={(e) =>
+                      setRecipientQuery(e.target.value)
+                    }
                   />
                   <ul className="compose__suggest">
-                    {suggestions.map((s) => (
-                      <li key={s.name} className="compose__item" onClick={() => pickRecipient(s)}>
-                        <span className="compose__avatar" style={{ background: s.avatar?.bg }}>
+                    {userSuggestions.map((s) => (
+                      <li
+                        key={s.id}
+                        className="compose__item"
+                        onClick={() => pickRecipient(s)}
+                      >
+                        <span
+                          className="compose__avatar"
+                          style={{ background: s.avatar?.bg }}
+                        >
                           {s.avatar?.text || s.name[0]}
                         </span>
-                        <span className="compose__name">{s.name}</span>
+                        <span className="compose__name">
+                          {s.name}
+                        </span>
                       </li>
                     ))}
+
+                    {userSuggestions.length === 0 &&
+                      recipientQuery.trim() && (
+                        <li className="compose__empty">
+                          검색 결과가 없습니다.
+                        </li>
+                      )}
                   </ul>
-                  <button className="compose__cancel" onClick={cancelCompose}>취소</button>
+                  <button
+                    className="compose__cancel"
+                    onClick={cancelCompose}
+                  >
+                    취소
+                  </button>
                 </div>
               ) : (
+                // 2. 받는 사람 선택 완료 및 메시지 작성 준비
                 <>
                   <div className="compose__header">
-                    <span className="compose__avatar" style={{ background: recipient.avatar?.bg }}>
-                      {recipient.avatar?.text || recipient.name[0]}
+                    <span
+                      className="compose__avatar"
+                      style={{ background: recipient.avatar?.bg }}
+                    >
+                      {recipient.avatar?.text ||
+                        recipient.name[0]}
                     </span>
                     <div className="compose__to">
-                      <div className="compose__to-label">받는 사람</div>
-                      <div className="compose__to-name">{recipient.name}</div>
+                      <div className="compose__to-label">
+                        받는 사람
+                      </div>
+                      <div className="compose__to-name">
+                        {recipient.name}
+                      </div>
                     </div>
-                    <button className="compose__cancel--link" onClick={cancelCompose}>다시 선택</button>
+                    <button
+                      className="compose__cancel--link"
+                      onClick={() => setRecipient(null)} // 다시 검색 모드로
+                    >
+                      다시 선택
+                    </button>
                   </div>
 
                   <div className="empty">
-                    <p className="empty__hint">대화를 시작해보세요.</p>
+                    <p className="empty__hint">
+                      **{recipient.name}**님과의 대화를 시작해보세요.
+                    </p>
                   </div>
                 </>
               )}
 
+              {/* 새 쪽지 입력 창 */}
               <div className="composer">
                 <input
                   className="composer__input"
-                  placeholder={recipient ? "메시지 보내기…" : "받는 사람을 먼저 선택하세요"}
+                  placeholder={
+                    recipient
+                      ? "메시지 보내기…"
+                      : "받는 사람을 먼저 선택하세요"
+                  }
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -420,50 +987,78 @@ export default function Chat() {
                 </button>
               </div>
             </>
+          ) : !selected ? (
+            <div className="empty">
+              <p className="empty__hint">
+                {threads.length === 0
+                  ? "아직 대화가 없습니다. 새 쪽지를 보내 대화를 시작해보세요."
+                  : "쪽지함에서 대화할 상대를 선택하세요."}
+              </p>
+            </div>
+          ) : selected.messages.length === 0 ? (
+            <div className="empty">
+              <p className="empty__hint">
+                **{selected.name}**님과의 새로운 대화를 시작해보세요.
+              </p>
+            </div>
           ) : (
+            // 기존 대화방
             <>
-              {selected?.messages.length === 0 ? (
-                <div className="empty">
-                  <p className="empty__hint">새로운 대화를 시작해보세요.</p>
-                </div>
-              ) : (
-                <ul className="messages">
-                  {selected?.messages.map((m, i) => {
-                    const prev = selected.messages[i - 1];
-                    const isThem = m.from === "them";
-                    const showProfile = isThem && (!prev || prev.from !== "them");
-                    return (
-                      <li key={m.id} className={"msg " + (isThem ? "msg--them" : "msg--me")}>
-                        {isThem ? (
-                          <>
-                            <div
-                              className={"msg__avatar" + (showProfile ? "" : " is-hidden")}
-                              style={{ background: selected.avatar.bg }}
-                            >
-                              {selected.avatar.text}
-                            </div>
-                            <div className="msg__content">
-                              {showProfile && <div className="msg__name">{selected.name}</div>}
-                              <div className="msg__row">
-                                <span className="msg__bubble">{m.text}</span>
-                              </div>
-                              <span className="msg__time">{m.at}</span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="msg__content msg__content--me">
-                            <span className="msg__time">{m.at}</span>
-                            <div className="msg__row">
-                              <span className="msg__bubble">{m.text}</span>
-                            </div>
+              <ul className="messages">
+                {selected.messages.map((m, i) => {
+                  const prev = selected.messages[i - 1];
+                  const isThem = m.from === "them";
+                  const showProfile =
+                    isThem && (!prev || prev.from !== "them");
+                  return (
+                    <li
+                      key={m.id}
+                      className={
+                        "msg " + (isThem ? "msg--them" : "msg--me")
+                      }
+                    >
+                      {isThem ? (
+                        <>
+                          <div
+                            className={
+                              "msg__avatar" +
+                              (showProfile ? "" : " is-hidden")
+                            }
+                            style={{ background: selected.avatar.bg }}
+                          >
+                            {selected.avatar.text}
                           </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </ul>
-              )}
+                          <div className="msg__content">
+                            {showProfile && (
+                              <div className="msg__name">
+                                {selected.name}
+                              </div>
+                            )}
+                            <div className="msg__row">
+                              <span className="msg__bubble">
+                                {m.text}
+                              </span>
+                            </div>
+                            <span className="msg__time">
+                              {m.at}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="msg__content msg__content--me">
+                          <span className="msg__time">{m.at}</span>
+                          <div className="msg__row">
+                            <span className="msg__bubble">
+                              {m.text}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </ul>
 
               <div className="composer">
                 <input
@@ -473,7 +1068,11 @@ export default function Chat() {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 />
-                <button className="composer__send" onClick={handleSend} disabled={!draft.trim()}>
+                <button
+                  className="composer__send"
+                  onClick={handleSend}
+                  disabled={!draft.trim()}
+                >
                   전송
                 </button>
               </div>
@@ -495,36 +1094,76 @@ export default function Chat() {
               <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
-                <a href="https://github.com/ouskxk" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" /> ouskxk
+                <a
+                  href="https://github.com/ouskxk"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />{" "}
+                  ouskxk
                 </a>
               </div>
               <div className="col">
                 <h3>Jiun Ko</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/suerte223" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" /> suerte223
+                <a
+                  href="https://github.com/suerte223"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />{" "}
+                  suerte223
                 </a>
               </div>
               <div className="col">
                 <h3>Seungbeom Han</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/hsb9838" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" /> hsb9838
+                <a
+                  href="https://github.com/hsb9838"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />{" "}
+                  hsb9838
                 </a>
               </div>
               <div className="col">
                 <h3>Munjun Yang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/munjun0608" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" /> munjun0608
+                <a
+                  href="https://github.com/munjun0608"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />{" "}
+                  munjun0608
                 </a>
               </div>
               <div className="col">
                 <h3>Youngbin Kang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/0bini" className="github-link">
-                  <img src={githubpic} alt="GitHub Logo" className="github-icon" /> 0bini
+                <a
+                  href="https://github.com/0bini"
+                  className="github-link"
+                >
+                  <img
+                    src={githubpic}
+                    alt="GitHub Logo"
+                    className="github-icon"
+                  />{" "}
+                  0bini
                 </a>
               </div>
             </div>
@@ -532,7 +1171,11 @@ export default function Chat() {
             <div className="tech-stack">
               <h3>TECH STACK</h3>
               <img src={reactpic} alt="React Logo" className="react-icon" />
-              <img src={djangopic} alt="Django Logo" className="django-icon" />
+              <img
+                src={djangopic}
+                alt="Django Logo"
+                className="django-icon"
+              />
             </div>
           </div>
         </div>

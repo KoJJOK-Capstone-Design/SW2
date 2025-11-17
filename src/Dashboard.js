@@ -1,9 +1,9 @@
-// src/Dashboard.js
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import "./Dashboard.css";
 import "./Activity.css";
+import "./Health.css";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -15,6 +15,32 @@ import bell from "./img/bell.png";
 import chat from "./img/chat.png";
 import circle from "./img/circle.png";
 import plusicon from "./img/plusicon.png";
+
+// ================== Local Storage 캘린더 관련 상수 및 함수 ==================
+const CALENDAR_STORAGE_KEY = 'calendarEvents'; // Calendar.jsx와 동일한 키
+
+/**
+ * 날짜 문자열을 받아 오늘로부터의 D-day를 계산합니다.
+ * @param {string} dateStr 'YYYY-MM-DD' 형식의 날짜
+ * @returns {number} 오늘(0), 내일(1), 어제(-1) 등
+ */
+const getDDay = (dateStr) => {
+  if (!dateStr) return 9999; // 유효하지 않은 날짜는 뒤로 보냄
+
+  const today = new Date();
+  // 시간 정보를 초기화하여 정확한 날짜 차이만 계산
+  today.setHours(0, 0, 0, 0);
+
+  const scheduleDate = new Date(dateStr);
+  scheduleDate.setHours(0, 0, 0, 0);
+
+  const diffTime = scheduleDate.getTime() - today.getTime();
+  // Math.round를 사용하여 시간대 차이로 인한 반올림 오류 방지
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+  return diffDays;
+};
+// =======================================================================
+
 
 export default function Dashboard() {
   // ================== 오늘 날짜 ==================
@@ -72,7 +98,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
 
-  // 다가오는 일정
+  // 다가오는 일정 (Local Storage 일정 포함)
   const [upcomingSchedules, setUpcomingSchedules] = useState([]);
 
   // 건강 추세
@@ -117,7 +143,7 @@ export default function Dashboard() {
   // ================== 체중 그래프 path 계산 ==================
   const chartPath = useMemo(() => {
     if (!healthTrend?.graph_data || healthTrend.graph_data.length === 0) {
-      // 데이터 없으면 예전 데모용 곡선 대신, 가로선
+      // 데이터 없으면 가로선 표시
       return "M5,45 L95,45";
     }
 
@@ -152,7 +178,7 @@ export default function Dashboard() {
     return "event__badge";
   };
 
-  // ================== 대시보드 API 호출 ==================
+  // ================== 대시보드 API 호출 및 로컬 스케줄 병합 ==================
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -160,16 +186,42 @@ export default function Dashboard() {
         setError("");
 
         const token = localStorage.getItem("token");
-        const petId = localStorage.getItem("pet_id"); // 로그인/펫 선택 시 저장해둔다고 가정
+        const petId = localStorage.getItem("pet_id");
 
         if (!token) {
           setError("로그인이 필요합니다. 먼저 로그인 후 다시 시도해 주세요.");
+          setLoading(false);
           return;
         }
 
         if (!petId) {
           setError("반려동물 정보를 찾을 수 없습니다. 펫 등록 후 이용해 주세요.");
+          setLoading(false);
           return;
+        }
+
+        // 1. 로컬 캘린더 일정 불러오기 및 가공
+        let combinedSchedules = [];
+        try {
+            const savedEvents = localStorage.getItem(CALENDAR_STORAGE_KEY);
+            if (savedEvents) {
+                const events = JSON.parse(savedEvents);
+                const todayDDay = getDDay(new Date().toISOString().slice(0, 10)); // 오늘 D-day (0)
+
+                const localSchedules = events
+                    .map(event => ({
+                        // 로컬 일정 ID 충돌 방지를 위해 접두사 추가
+                        id: `local-${event.id}`, 
+                        content: `[${event.category}] ${event.text}`,
+                        schedule_date: event.date,
+                        d_day: getDDay(event.date), // D-day 계산
+                    }))
+                    .filter(schedule => schedule.d_day >= todayDDay); // 오늘 또는 미래 일정만 포함
+
+                combinedSchedules = localSchedules;
+            }
+        } catch (localErr) {
+            console.error("Local Calendar events load error:", localErr);
         }
 
         const url = `https://youngbin.pythonanywhere.com/api/v1/pets/dashboard/${petId}/`;
@@ -194,10 +246,23 @@ export default function Dashboard() {
           );
         }
 
-        // upcoming_schedules
+        // 2. API 일정 불러와 로컬 일정과 병합 및 정렬
         if (Array.isArray(data.upcoming_schedules)) {
-          setUpcomingSchedules(data.upcoming_schedules);
+            // API 일정에도 충돌 방지 접두사 추가 (선택 사항이지만 안전함)
+            const apiSchedules = data.upcoming_schedules.map(s => ({
+                ...s,
+                id: `api-${s.id}` 
+            }));
+            
+            // API 일정 병합
+            combinedSchedules = [...combinedSchedules, ...apiSchedules];
         }
+
+        // d_day 기준으로 정렬 (가장 가까운 일정부터)
+        combinedSchedules.sort((a, b) => a.d_day - b.d_day);
+        
+        // 최종적으로 upcomingSchedules 상태 업데이트
+        setUpcomingSchedules(combinedSchedules);
 
         // health_trend
         if (data.health_trend) {
@@ -261,10 +326,9 @@ export default function Dashboard() {
           </nav>
 
           <nav className="menuicon">
-            {/* 🔹 프로필 영역 추가 */}
+            {/* 🔹 프로필 영역 */}
             <div className="profile">
               <div className="profile__avatar">
-                {/* 필요하면 실제 프로필 사진 URL로 교체 */}
                 <img
                   src="https://i.pravatar.cc/80?img=11"
                   alt="프로필"
@@ -401,6 +465,7 @@ export default function Dashboard() {
                   <div key={s.id} className="event">
                     <span className="event__icon event__icon--steth" />
                     <div className="event__body">
+                      {/* Local Storage 이벤트는 [카테고리] 접두사가 이미 붙어있습니다. */}
                       <div className="event__title">{s.content}</div>
                       <div className="event__date">{s.schedule_date}</div>
                     </div>
