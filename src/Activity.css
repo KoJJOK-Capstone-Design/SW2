@@ -530,3 +530,15 @@
     width: 28px;
   }
 }
+
+/* ⭐️ 차트 높이를 위한 스타일 ⭐️ */
+.graph-box {
+  border: 1px solid #e5e5e5;
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: #222;
+  height: 500px !important;
+  margin-top: 10px; /* ⭐️ 위 섹션과의 간격 (조절 가능) */
+}

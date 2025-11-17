@@ -1,6 +1,3 @@
-// ==============================================
-// Health.js  — Full Fixed Version
-// ==============================================
 import React, { useState, useEffect } from "react";
 import "./Health.css";
 import { NavLink, Link } from "react-router-dom";

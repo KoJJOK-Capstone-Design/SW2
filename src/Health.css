@@ -194,7 +194,7 @@
   margin-right: 15px;
 }
 
-/* ⬇️ 3. 아이콘 배경색 ⬇️ */
+
 .record-item[data-type="vax"] .record-icon {
   background-color: #F4E9FF;
   /* 예방접종: 파란색 */

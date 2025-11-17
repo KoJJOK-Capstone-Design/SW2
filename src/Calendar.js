@@ -1,13 +1,4 @@
-// Calendar.jsx
 import React, { useState, useEffect } from "react";
-import {
-  FaClinicMedical,
-  FaShoppingCart,
-  FaCut,
-  FaBirthdayCake,
-  FaTree,
-  FaCircle,
-} from "react-icons/fa";
 
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
@@ -27,7 +18,6 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-/* ---------------- CustomDatePicker (내부 사용) ---------------- */
 const CustomDatePicker = ({ value, onChange, events }) => {
   const today = new Date();
   const [current, setCurrent] = useState(value ? new Date(value) : new Date());
@@ -151,12 +141,12 @@ export default function Calendar() {
   const [showChatPopup, setShowChatPopup] = useState(false);
 
   const CATEGORY_OPTIONS = [
-    { value: "병원", label: "병원 / 약", color: "#FF5757", icon: <FaClinicMedical /> },
-    { value: "쇼핑", label: "쇼핑", color: "#9E47FF", icon: <FaShoppingCart /> },
-    { value: "미용", label: "미용", color: "#FF73AE", icon: <FaCut /> },
-    { value: "생일", label: "생일", color: "#FFC747", icon: <FaBirthdayCake /> },
-    { value: "산책/나들이", label: "산책/나들이", color: "#47B547", icon: <FaTree /> },
-    { value: "기타", label: "기타", color: "#6C757D", icon: <FaCircle /> },
+    { value: "병원", label: "병원 / 약", color: "#ebc3bcff", icon: "🏥" },
+    { value: "쇼핑", label: "쇼핑", color: "#e1faeaff", icon: "🛒" },
+    { value: "미용", label: "미용", color: "#d6ebfaff", icon: "✂️" },
+    { value: "생일", label: "생일", color: "#fff9ecff", icon: "🎂" },
+    { value: "산책/나들이", label: "산책/나들이", color: "#EFE4FF", icon: "🌳" },
+    { value: "기타", label: "기타", color: "#E9ECEF", icon: "⚫" },
   ];
 
   const categoryMeta = CATEGORY_OPTIONS.reduce((acc, cat) => {
@@ -337,7 +327,8 @@ export default function Calendar() {
                       className="event-icon"
                       style={{ backgroundColor: categoryMeta[ev.category]?.color || ev.color }}
                     >
-                      {categoryMeta[ev.category]?.icon || <FaCircle />}
+                      {/* ✅✅✅ 기본 아이콘도 이모지로 수정 ✅✅✅ */}
+                      {categoryMeta[ev.category]?.icon || "⚫"}
                     </div>
                     <div className="event-content">
                       <strong>[{ev.category}]</strong> {ev.text}
@@ -377,7 +368,7 @@ export default function Calendar() {
                   <CustomDatePicker
                     value={form.date}
                     onChange={(newDate) => setForm({ ...form, date: newDate })}
-                    events={[]}   // 모달은 이벤트 점 비활성화
+                    events={[]}  // 모달은 이벤트 점 비활성화
                   />
                 </div>
 
@@ -398,6 +389,7 @@ export default function Calendar() {
                       onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
                     >
                       <div>
+                        {/* ✅✅✅ 이모지는 <span> 태그 안에 렌더링됩니다 ✅✅✅ */}
                         <span className="dropdown-icon" style={{ color: getCategory(form.category)?.color }}>
                           {getCategory(form.category)?.icon}
                         </span>{" "}
