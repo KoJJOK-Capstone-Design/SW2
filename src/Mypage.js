@@ -5,7 +5,6 @@ import { Link, NavLink } from "react-router-dom";
 import "./Dashboard.css";
 import "./Mypage.css"; 
 
-// 이미지들 불러오기
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
 import githubpic from "./img/github.png";
@@ -23,7 +22,7 @@ const renderActivityGraph = () => {
     return (
         <div className="activity-chart-placeholder">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart-svg">
-               <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#007bff" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#007bff" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
         </div>
     );
