@@ -1,6 +1,7 @@
 // src/CommunityWrite.js
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Home.css";
 import "./CommunityWrite.css";
 
@@ -9,14 +10,58 @@ import logoGray from "./img/logo_gray.png";
 import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
+import bell from "./img/bell.png";
+import chat from "./img/chat.png";
 
-const KEY = "community_posts";
+import { createPost } from "./lib/communityApi";
 
 export default function CommunityWrite() {
   const nav = useNavigate();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  
+  // 로그인 상태 및 사용자 정보
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
+  const [showBellPopup, setShowBellPopup] = useState(false);
+  const [showChatPopup, setShowChatPopup] = useState(false);
+
+  // 로그인 상태 확인 및 사용자 정보 가져오기
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const name =
+            res.data?.nickname ||
+            res.data?.username ||
+            res.data?.id ||
+            "멍냥";
+          setUsername(name);
+          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
+          if (res.data?.profile_image || res.data?.avatar) {
+            const imgUrl = res.data.profile_image || res.data.avatar;
+            setUserProfileImage(
+              imgUrl.startsWith("http")
+                ? imgUrl
+                : `https://youngbin.pythonanywhere.com${imgUrl}`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+          setIsLoggedIn(false);
+        });
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
 
   // 파일 / 첨부 이미지 정보
   const [files, setFiles] = useState([]);           // File[]
@@ -62,7 +107,7 @@ export default function CommunityWrite() {
       const editor = editorRef.current;
       if (!editor) return;
 
-      newAttachments.forEach((att) => {
+      newAttachments.forEach((att, index) => {
         const img = document.createElement("img");
         img.src = att.dataUrl;
         img.alt = "첨부 이미지";
@@ -73,6 +118,35 @@ export default function CommunityWrite() {
         img.style.display = "block";
         img.style.marginTop = "8px";
         img.style.borderRadius = "8px";
+        img.style.cursor = "pointer"; // 삭제 가능함을 표시
+
+        // 이미지에 인덱스 정보 저장 (삭제 시 files 배열에서도 제거하기 위해)
+        img.dataset.attachmentIndex = index;
+
+        // 더블클릭 시 이미지 삭제
+        img.addEventListener("dblclick", () => {
+          const attachmentIndex = parseInt(img.dataset.attachmentIndex);
+          
+          // files 배열에서 해당 인덱스의 파일 제거
+          setFiles((prevFiles) => {
+            const newFiles = [...prevFiles];
+            newFiles.splice(attachmentIndex, 1);
+            return newFiles;
+          });
+          
+          // attachments 배열에서도 제거
+          setAttachments((prevAttachments) => {
+            const newAttachments = [...prevAttachments];
+            newAttachments.splice(attachmentIndex, 1);
+            return newAttachments;
+          });
+          
+          // DOM에서 이미지 제거
+          img.remove();
+          
+          // 이미지 삭제 후 텍스트 상태 갱신
+          setContent(editor.innerText);
+        });
 
         editor.appendChild(img);
       });
@@ -82,27 +156,35 @@ export default function CommunityWrite() {
     });
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return alert("제목을 입력해 주세요.");
     if (!content.trim()) return alert("내용을 입력해 주세요.");
 
-    const now = new Date();
-    const newPost = {
-      id: Date.now(),
-      title: title.trim(),
-      content: content.trim(), // 텍스트만 저장
-      author: "냥냥",
-      likes: 0,
-      comments: 0,
-      createdAt: now.toISOString(), // 시간은 ISO로 저장
-      attachments, // {name, size, dataUrl}[]
-    };
-
-    const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
-    saved.unshift(newPost);
-    localStorage.setItem(KEY, JSON.stringify(saved));
-    nav("/community");
+    try {
+      // 첫 번째 이미지 파일만 전송 (API가 단일 이미지만 받는 경우)
+      const imageFile = files.length > 0 ? files[0] : null;
+      
+      const response = await createPost({
+        title: title.trim(),
+        content: content.trim(),
+        image: imageFile,
+      });
+      
+      console.log("게시글 작성 응답:", response);
+      console.log("응답 이미지 필드:", {
+        image: response?.image,
+        image_url: response?.image_url,
+        attachment: response?.attachment,
+        photo: response?.photo,
+        allKeys: response ? Object.keys(response) : [],
+      });
+      
+      nav("/community");
+    } catch (error) {
+      console.error("게시글 작성 실패:", error);
+      alert("게시글 작성에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   return (
@@ -121,10 +203,55 @@ export default function CommunityWrite() {
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
 
-          <nav className="menulink">
-            <NavLink to="/signup">회원가입</NavLink>
-            <NavLink to="/signin">로그인</NavLink>
-          </nav>
+          {isLoggedIn ? (
+            <nav className="menuicon">
+              {/* 프로필 */}
+              <div className="profile">
+                <div className="profile__avatar">
+                  <img src={userProfileImage} alt="프로필" />
+                </div>
+                <span className="profile__name">{username}</span>
+              </div>
+
+              {/* 알림 벨 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowBellPopup((v) => !v);
+                    setShowChatPopup(false);
+                  }}
+                >
+                  <img src={bell} alt="알림 아이콘" className="icon" />
+                </button>
+                {showBellPopup && (
+                  <div className="popup">
+                    <p>📢 새 알림이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 채팅 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowChatPopup((v) => !v);
+                    setShowBellPopup(false);
+                  }}
+                >
+                  <NavLink to="/Chat">
+                    <img src={chat} alt="채팅 아이콘" className="icon" />
+                  </NavLink>
+                </button>
+              </div>
+            </nav>
+          ) : (
+            <nav className="menulink">
+              <NavLink to="/signup">회원가입</NavLink>
+              <NavLink to="/signin">로그인</NavLink>
+            </nav>
+          )}
         </div>
       </header>
 

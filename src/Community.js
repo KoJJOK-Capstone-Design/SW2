@@ -1,6 +1,7 @@
 // src/Community.js
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import axios from "axios";
 import "./Home.css";
 import "./Community.css";
 
@@ -18,7 +19,8 @@ import chat from "./img/chat.png";
 import circle from "./img/circle.png";
 import plusicon from "./img/plusicon.png";
 
-const POSTS_KEY = "community_posts";
+import { getPosts } from "./lib/communityApi";
+
 const PER_PAGE = 4;
 
 // 경과 시간 표시용 함수
@@ -43,10 +45,36 @@ export default function Community() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState([]);
+  
+  // 로그인 상태 및 사용자 정보
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
 
+  // API에서 게시글 목록 가져오기
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem(POSTS_KEY) || "[]");
-    setPosts(saved);
+    const loadPosts = async () => {
+      try {
+        const data = await getPosts();
+        // API 응답을 프론트엔드 형식으로 변환
+        const mappedPosts = Array.isArray(data) ? data.map((p) => ({
+          id: p.id,
+          title: p.title,
+          content: p.content,
+          author: typeof p.author === "object" ? p.author.username || p.author.nickname || "익명" : p.author || "익명",
+          createdAt: p.created_at,
+          updatedAt: p.updated_at,
+          likes: p.like_count || (Array.isArray(p.likes) ? p.likes.length : 0),
+          likedBy: Array.isArray(p.likes) ? p.likes : [],
+          comments: 0, // 댓글 수는 상세 페이지에서 가져옴
+          image: p.image,
+        })) : [];
+        setPosts(mappedPosts);
+      } catch (error) {
+        console.error("게시글 목록 로딩 실패:", error);
+      }
+    };
+    loadPosts();
   }, []);
 
   const filtered = useMemo(() => {
@@ -72,6 +100,41 @@ export default function Community() {
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
+  // 로그인 상태 확인 및 사용자 정보 가져오기
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const name =
+            res.data?.nickname ||
+            res.data?.username ||
+            res.data?.id ||
+            "멍냥";
+          setUsername(name);
+          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
+          if (res.data?.profile_image || res.data?.avatar) {
+            const imgUrl = res.data.profile_image || res.data.avatar;
+            setUserProfileImage(
+              imgUrl.startsWith("http")
+                ? imgUrl
+                : `https://youngbin.pythonanywhere.com${imgUrl}`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+          setIsLoggedIn(false);
+        });
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
   return (
     <div className="home">
       <header className="nav">
@@ -87,38 +150,55 @@ export default function Community() {
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
 
-          <nav className="menuicon">
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowBellPopup((v) => !v);
-                  setShowChatPopup(false);
-                }}
-              >
-                <img src={bell} alt="알림 아이콘" className="icon" />
-              </button>
-              {showBellPopup && (
-                <div className="popup">
-                  <p>📢 새 알림이 없습니다.</p>
+          {isLoggedIn ? (
+            <nav className="menuicon">
+              {/* 프로필 */}
+              <div className="profile">
+                <div className="profile__avatar">
+                  <img src={userProfileImage} alt="프로필" />
                 </div>
-              )}
-            </div>
+                <span className="profile__name">{username}</span>
+              </div>
 
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowChatPopup((v) => !v);
-                  setShowBellPopup(false);
-                }}
-              >
-                <a href="/Chat">
-                  <img src={chat} alt="채팅 아이콘" className="icon" />
-                </a>
-              </button>
-            </div>
-          </nav>
+              {/* 알림 벨 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowBellPopup((v) => !v);
+                    setShowChatPopup(false);
+                  }}
+                >
+                  <img src={bell} alt="알림 아이콘" className="icon" />
+                </button>
+                {showBellPopup && (
+                  <div className="popup">
+                    <p>📢 새 알림이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 채팅 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowChatPopup((v) => !v);
+                    setShowBellPopup(false);
+                  }}
+                >
+                  <NavLink to="/Chat">
+                    <img src={chat} alt="채팅 아이콘" className="icon" />
+                  </NavLink>
+                </button>
+              </div>
+            </nav>
+          ) : (
+            <nav className="menulink">
+              <NavLink to="/signup">회원가입</NavLink>
+              <NavLink to="/signin">로그인</NavLink>
+            </nav>
+          )}
         </div>
       </header>
 
@@ -172,7 +252,7 @@ export default function Community() {
               <div className="post-meta">
                 <span>
                   {p.author} ·{" "}
-                  {timeAgo(p.createdAt) || p.timeLabel || ""}
+                  {timeAgo(p.createdAt) || ""}
                 </span>
                 <span className="meta-right">
                   좋아요 {p.likes ?? 0}개 댓글{" "}
