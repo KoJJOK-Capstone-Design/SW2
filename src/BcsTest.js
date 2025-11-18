@@ -89,6 +89,13 @@ const BcsTest = ({ user, onUpdateBcs }) => {
   // 로그인 상태 확인 및 사용자 정보 가져오기
   useEffect(() => {
     const token = localStorage.getItem("token");
+    
+    // LocalStorage에서 저장된 프로필 이미지 URL을 먼저 확인
+    const storedImageUrl = localStorage.getItem("user_profile_image_url");
+    if (storedImageUrl) {
+      setUserProfileImage(storedImageUrl);
+    }
+    
     if (token) {
       setIsLoggedIn(true);
       axios
@@ -102,14 +109,21 @@ const BcsTest = ({ user, onUpdateBcs }) => {
             res.data?.id ||
             "멍냥";
           setUsername(name);
-          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
-          if (res.data?.profile_image || res.data?.avatar) {
-            const imgUrl = res.data.profile_image || res.data.avatar;
-            setUserProfileImage(
-              imgUrl.startsWith("http")
-                ? imgUrl
-                : `https://youngbin.pythonanywhere.com${imgUrl}`
-            );
+          
+          // 프로필 이미지 우선순위: localStorage > API 응답 > 기본 이미지
+          const apiImageUrl = res.data?.profile_image || res.data?.avatar || res.data?.user_profile_image_url;
+          const finalImageUrl = storedImageUrl || 
+            (apiImageUrl 
+              ? (apiImageUrl.startsWith("http")
+                  ? apiImageUrl
+                  : `https://youngbin.pythonanywhere.com${apiImageUrl}`)
+              : null);
+          
+          if (finalImageUrl) {
+            setUserProfileImage(finalImageUrl);
+            if (!storedImageUrl && finalImageUrl) {
+              localStorage.setItem("user_profile_image_url", finalImageUrl);
+            }
           }
         })
         .catch((err) => {

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
-import { Link, NavLink } from "react-router-dom"; 
+import { Link, NavLink, useNavigate } from "react-router-dom"; 
 
 import "./Dashboard.css";
 import "./Mypage.css"; 
@@ -15,6 +15,71 @@ import bell from "./img/bell.png";
 import chat from "./img/chat.png";
 import plusicon from "./img/plusicon.png"; 
 
+
+// 알림 관련 헬퍼 함수들
+const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    if (Number.isNaN(past.getTime())) return dateString;
+    
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return `${diffInSeconds}초 전`;
+    } else if (diffInSeconds < 3600) {
+        return `${Math.floor(diffInSeconds / 60)}분 전`;
+    } else if (diffInSeconds < 86400) {
+        return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+    } else if (diffInSeconds < 2592000) {
+        return `${Math.floor(diffInSeconds / 86400)}일 전`;
+    }
+    return past.toLocaleString("ko-KR", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
+const cleanAlertText = (message) => {
+    if (!message) return "새 알림";
+    const match = message.match(/^'[^']+'님으로부터 (.*)/);
+    if (match && match.length > 1) {
+        return match[1].trim();
+    }
+    const matchNoQuote = message.match(/^([^']+)님으로부터 (.*)/);
+    if (matchNoQuote && matchNoQuote.length > 2) {
+        return matchNoQuote[2].trim();
+    }
+    return message;
+};
+
+const extractNickname = (message) => {
+    let match = message.match(/'([^']+)'님으로부터/);
+    if (match) return match[1];
+    match = message.match(/^([^']+)님으로부터/);
+    if (match) return match[1];
+    return null;
+};
+
+// Interval Custom Hook
+function useInterval(callback, delay) {
+    const savedCallback = React.useRef();
+    
+    React.useEffect(() => {
+        savedCallback.current = callback;
+    }, [callback]);
+    
+    React.useEffect(() => {
+        function tick() {
+            savedCallback.current();
+        }
+        if (delay !== null) {
+            let id = setInterval(tick, delay);
+            return () => clearInterval(id);
+        }
+    }, [delay]);
+}
 
 // =========================================================
 // 🧩 임시 그래프 렌더링 함수 (JSX 내에서 직접 사용)
@@ -170,7 +235,7 @@ const MyPageModal = ({
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="petBirth">생년월일</label>
-                                    <input type="date" id="petBirth" name="birthdate" value={petFormData.birthdate} onChange={handlePetFormChange} />
+                                    <input type="date" id="petBirth" name="birthdate" value={petFormData.birth_date || ""} onChange={handlePetFormChange} />
                                 </div>
                             </div>
                         </section>
@@ -302,6 +367,8 @@ const MyPageModal = ({
 // =========================================================
 
 export default function MyPage() {
+    const navigate = useNavigate();
+    
     // 닉네임 상태
     const [username, setUsername] = useState("VV");
     const [userEmail, setUserEmail] = useState("wldns@naver.com");
@@ -345,8 +412,60 @@ export default function MyPage() {
         activityGraph: [{ value: 1 }, { value: 3 }, { value: 2 }, { value: 4 }, { value: 3 }, { value: 5 }] 
     });
     
+    // 반려동물 목록 상태
+    const [petsList, setPetsList] = useState([]);
+    const [selectedPetId, setSelectedPetId] = useState(null);
+    const [upcomingSchedules, setUpcomingSchedules] = useState([]);
+    const [weeklyActivity, setWeeklyActivity] = useState([]);
+    
     const [showBellPopup, setShowBellPopup] = useState(false);
     const [showChatPopup, setShowChatPopup] = useState(false);
+    
+    // 알림 관련 상태
+    const [notifications, setNotifications] = useState([]);
+    const [loadingNoti, setLoadingNoti] = useState(false);
+    const [hasNewNotification, setHasNewNotification] = useState(false);
+    const lastKnownNotiIds = useRef(new Set());
+    const notiBtnRef = useRef(null);
+    const notiRef = useRef(null);
+
+    // 나이 계산 함수
+    const calculateAge = (birthDate) => {
+        if (!birthDate) return 0;
+        const birth = new Date(birthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    // 일정 날짜 포맷팅 함수
+    const formatScheduleDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const today = new Date();
+        const diffTime = date - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) return "지난 일정";
+        if (diffDays === 0) return "오늘";
+        if (diffDays === 1) return "내일";
+        return `D-${diffDays}`;
+    };
+
+    // 카테고리별 색상 반환 함수
+    const getCategoryColor = (category) => {
+        const colors = {
+            "병원/약": "#f59e0b",
+            "예방접종": "#ef4444",
+            "검진": "#3b82f6",
+            "기타": "#10b981"
+        };
+        return colors[category] || "#6b7280";
+    };
 
     // API 호출: 닉네임, ID, 이미지 URL 가져오기
     useEffect(() => {
@@ -387,6 +506,303 @@ export default function MyPage() {
 
         fetchUser();
     }, []);
+
+    // 반려동물 목록 가져오기
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const fetchPets = async () => {
+            try {
+                const res = await axios.get(
+                    "https://youngbin.pythonanywhere.com/api/v1/pets/",
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                
+                if (res.data && res.data.length > 0) {
+                    setPetsList(res.data);
+                    // 첫 번째 반려동물을 기본 선택
+                    const firstPet = res.data[0];
+                    setSelectedPetId(firstPet.id);
+                    // localStorage에 pet_id 저장 (다른 페이지에서 사용)
+                    localStorage.setItem("pet_id", String(firstPet.id));
+                    // 선택된 반려동물 정보 설정
+                    setPetInfo({
+                        id: firstPet.id,
+                        name: firstPet.name,
+                        species: firstPet.species === "고양이" ? "cat" : "dog",
+                        breed: firstPet.breed,
+                        age: calculateAge(firstPet.birth_date),
+                        neutered: firstPet.is_neutered,
+                        weight: firstPet.weight,
+                        upcoming: [],
+                        activityGraph: []
+                    });
+                    // 폼 데이터도 업데이트
+                    setPetFormData(prev => ({
+                        ...prev,
+                        name: firstPet.name,
+                        species: firstPet.species,
+                        breed: firstPet.breed,
+                        birth_date: firstPet.birth_date,
+                        gender: firstPet.gender,
+                        neutered: firstPet.is_neutered,
+                        weight: firstPet.weight.toString(),
+                        memo: firstPet.special_notes || "",
+                        target_activity_minutes: firstPet.target_activity_minutes?.toString() || "45",
+                        imageUrl: firstPet.profile_photo || null
+                    }));
+                }
+            } catch (err) {
+                console.error("반려동물 목록 불러오기 실패:", err.response?.data || err.message);
+            }
+        };
+
+        fetchPets();
+    }, []);
+
+    // 선택된 반려동물의 다가오는 일정 가져오기
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token || !selectedPetId) return;
+
+        const fetchDashboard = async () => {
+            try {
+                const res = await axios.get(
+                    `https://youngbin.pythonanywhere.com/api/v1/pets/dashboard/${selectedPetId}/`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                
+                if (res.data?.upcoming_schedules) {
+                    setUpcomingSchedules(res.data.upcoming_schedules);
+                    // petInfo의 upcoming 업데이트
+                    setPetInfo(prev => ({
+                        ...prev,
+                        upcoming: res.data.upcoming_schedules.map(schedule => ({
+                            id: schedule.id,
+                            content: schedule.content,
+                            date: formatScheduleDate(schedule.schedule_date),
+                            color: getCategoryColor(schedule.category)
+                        }))
+                    }));
+                }
+            } catch (err) {
+                console.error("다가오는 일정 불러오기 실패:", err.response?.data || err.message);
+            }
+        };
+
+        fetchDashboard();
+    }, [selectedPetId]);
+
+    // 선택된 반려동물의 주간 활동 분석 가져오기
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token || !selectedPetId) return;
+
+        const fetchActivities = async () => {
+            try {
+                const res = await axios.get(
+                    `https://youngbin.pythonanywhere.com/api/v1/pets/activities/${selectedPetId}/`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                
+                if (res.data?.weekly_analysis) {
+                    // 일요일부터 순서대로 정렬
+                    const dayOrder = ['일', '월', '화', '수', '목', '금', '토'];
+                    const dayOrderEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const dayOrderNum = [0, 1, 2, 3, 4, 5, 6]; // 일요일=0, 월요일=1, ...
+                    
+                    // weekly_analysis를 일요일부터 순서대로 정렬
+                    const sortedActivity = [...res.data.weekly_analysis].sort((a, b) => {
+                        const getDayIndex = (item) => {
+                            if (item.day) {
+                                const dayStr = String(item.day).toLowerCase();
+                                // 한국어 요일
+                                const koIndex = dayOrder.findIndex(d => dayStr.includes(d));
+                                if (koIndex !== -1) return koIndex;
+                                // 영어 요일
+                                const enIndex = dayOrderEn.findIndex(d => dayStr.includes(d.toLowerCase()));
+                                if (enIndex !== -1) return enIndex;
+                            }
+                            // day_of_week 필드가 숫자인 경우
+                            if (item.day_of_week !== undefined) {
+                                return item.day_of_week;
+                            }
+                            return 0;
+                        };
+                        return getDayIndex(a) - getDayIndex(b);
+                    });
+                    
+                    // 만약 정렬이 제대로 안 되었다면, day_of_week나 인덱스 기반으로 재정렬
+                    let finalActivity = sortedActivity;
+                    if (sortedActivity.length === 7) {
+                        // day_of_week 필드가 있으면 그것을 사용
+                        const hasDayOfWeek = sortedActivity.some(item => item.day_of_week !== undefined);
+                        if (hasDayOfWeek) {
+                            finalActivity = dayOrderNum.map(dayNum => 
+                                sortedActivity.find(item => item.day_of_week === dayNum) || 
+                                sortedActivity.find(item => item.day === dayOrder[dayNum]) ||
+                                sortedActivity.find(item => item.day === dayOrderEn[dayNum]) ||
+                                { duration: 0, day: dayOrder[dayNum] }
+                            );
+                        } else {
+                            // day 필드로 정렬 시도
+                            finalActivity = dayOrder.map(day => 
+                                sortedActivity.find(item => String(item.day).includes(day)) ||
+                                sortedActivity.find(item => String(item.day).includes(dayOrderEn[dayOrder.indexOf(day)])) ||
+                                { duration: 0, day: day }
+                            );
+                        }
+                    }
+                    
+                    setWeeklyActivity(finalActivity);
+                    // petInfo의 activityGraph 업데이트
+                    setPetInfo(prev => ({
+                        ...prev,
+                        activityGraph: finalActivity.map(item => ({ value: item.duration }))
+                    }));
+                }
+            } catch (err) {
+                console.error("주간 활동 분석 불러오기 실패:", err.response?.data || err.message);
+            }
+        };
+
+        fetchActivities();
+    }, [selectedPetId]);
+    
+    // 알림 읽음 처리 함수들
+    const markNotificationAsReadOnServer = async (id) => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        try {
+            await axios.post(
+                `https://youngbin.pythonanywhere.com/api/v1/notifications/${id}/read/`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+        } catch (err) {
+            console.error(`알림 ${id} 서버 읽음 처리 실패:`, err);
+        }
+    };
+
+    const markAllNotificationsReadOnServer = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        try {
+            await axios.post(
+                "https://youngbin.pythonanywhere.com/api/v1/notifications/read-all/",
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+        } catch (err) {
+            console.error("모든 알림 서버 읽음 처리 실패:", err);
+        }
+    };
+
+    const markRead = (id) => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+        );
+        markNotificationAsReadOnServer(id);
+    };
+
+    const markAllRead = () => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+        setHasNewNotification(false);
+        markAllNotificationsReadOnServer();
+    };
+
+    const hasUnreadInList = useMemo(
+        () => notifications.some((n) => !n.is_read),
+        [notifications]
+    );
+
+    // 알림 패널 외부 클릭/ESC로 닫기
+    useEffect(() => {
+        if (!showBellPopup) return;
+        const onClick = (e) => {
+            if (
+                notiRef.current &&
+                !notiRef.current.contains(e.target) &&
+                notiBtnRef.current &&
+                !notiBtnRef.current.contains(e.target)
+            ) {
+                setShowBellPopup(false);
+                setHasNewNotification(false);
+            }
+        };
+        const onEsc = (e) => e.key === "Escape" && setShowBellPopup(false);
+        document.addEventListener("mousedown", onClick);
+        document.addEventListener("keydown", onEsc);
+        return () => {
+            document.removeEventListener("mousedown", onClick);
+            document.removeEventListener("keydown", onEsc);
+        };
+    }, [showBellPopup]);
+
+    // 알림 API 호출 함수
+    const fetchNotifications = useCallback(async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+            const headers = { Authorization: `Bearer ${token}` };
+            const res = await axios.get(
+                "https://youngbin.pythonanywhere.com/api/v1/notifications/",
+                { headers }
+            );
+
+            const rawNotifications = Array.isArray(res.data)
+                ? res.data
+                : res.data.results || [];
+
+            const mappedNotifications = rawNotifications.map((n) => {
+                const senderName =
+                    n.sender_nickname && n.sender_nickname.trim()
+                        ? n.sender_nickname.trim()
+                        : n.sender_id
+                        ? `사용자 ${n.sender_id}`
+                        : extractNickname(n.message || "") || "알 수 없는 사용자";
+
+                const cleanedText = cleanAlertText(n.message);
+
+                return {
+                    id: n.id,
+                    user: senderName,
+                    text: cleanedText,
+                    time: getTimeAgo(n.created_at),
+                    rawTime: n.created_at,
+                    is_read: n.is_read,
+                    avatarColor: n.is_read ? "#e5e7eb" : "#dbeafe",
+                };
+            });
+
+            setNotifications(mappedNotifications);
+
+            // 새 알림 감지
+            const currentIds = new Set(mappedNotifications.map((n) => n.id));
+            const prevIds = lastKnownNotiIds.current;
+            const hasNew = mappedNotifications.some((n) => !n.is_read) ||
+                (prevIds.size > 0 && Array.from(currentIds).some((id) => !prevIds.has(id)));
+
+            setHasNewNotification(hasNew);
+            lastKnownNotiIds.current = currentIds;
+        } catch (err) {
+            console.error("알림 불러오기 실패:", err);
+        } finally {
+            setLoadingNoti(false);
+        }
+    }, []);
+
+    // 초기 알림 로드 및 주기적 폴링
+    useEffect(() => {
+        setLoadingNoti(true);
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+    useInterval(() => {
+        fetchNotifications();
+    }, 10000);
     
     // 모달 열기 핸들러
     const openModal = (view) => {
@@ -420,6 +836,9 @@ export default function MyPage() {
             } else {
                 setPetFormData(prev => ({ ...prev, imageFile: null, imageUrl: null }));
             }
+        } else if (e.target.name === "birthdate") {
+            // birthdate 필드 처리
+            setPetFormData({ ...petFormData, birth_date: e.target.value });
         } else {
             setPetFormData({ ...petFormData, [e.target.name]: e.target.value });
         }
@@ -431,40 +850,349 @@ export default function MyPage() {
     };
 
     // 저장 핸들러 (반려동물)
-    const handlePetInfoSave = (e) => {
+    const handlePetInfoSave = async (e) => {
         e.preventDefault();
-        alert("반려동물 정보가 저장되었습니다. (실제 서버 업로드는 백엔드 연동 필요)");
-        closeModal();
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            
+            // 필수 필드 추가
+            if (petFormData.name) formData.append("name", petFormData.name);
+            if (petFormData.species) formData.append("species", petFormData.species);
+            if (petFormData.breed) formData.append("breed", petFormData.breed);
+            if (petFormData.birth_date) formData.append("birth_date", petFormData.birth_date);
+            if (petFormData.gender) formData.append("gender", petFormData.gender);
+            if (petFormData.neutered !== null) formData.append("is_neutered", petFormData.neutered);
+            if (petFormData.weight) formData.append("weight", parseFloat(petFormData.weight));
+            if (petFormData.target_activity_minutes) formData.append("target_activity_minutes", parseInt(petFormData.target_activity_minutes));
+            if (petFormData.memo) formData.append("special_notes", petFormData.memo);
+            
+            // 이미지 파일 추가
+            if (petFormData.imageFile) {
+                formData.append("profile_photo", petFormData.imageFile);
+            }
+
+            if (petInfo && petInfo.id) {
+                // 기존 반려동물 수정 (PATCH)
+                const res = await axios.patch(
+                    `https://youngbin.pythonanywhere.com/api/v1/pets/${petInfo.id}/`,
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                );
+                
+                alert("반려동물 정보가 수정되었습니다.");
+                // 목록 새로고침
+                const petsRes = await axios.get(
+                    "https://youngbin.pythonanywhere.com/api/v1/pets/",
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (petsRes.data) {
+                    setPetsList(petsRes.data);
+                    const updatedPet = petsRes.data.find(p => p.id === petInfo.id);
+                    if (updatedPet) {
+                        const profilePhotoUrl = updatedPet.profile_photo 
+                            ? (updatedPet.profile_photo.startsWith('http') 
+                                ? updatedPet.profile_photo 
+                                : `https://youngbin.pythonanywhere.com${updatedPet.profile_photo}`)
+                            : null;
+                        
+                        setPetInfo({
+                            id: updatedPet.id,
+                            name: updatedPet.name,
+                            species: updatedPet.species === "고양이" ? "cat" : "dog",
+                            breed: updatedPet.breed,
+                            age: calculateAge(updatedPet.birth_date),
+                            neutered: updatedPet.is_neutered,
+                            weight: updatedPet.weight,
+                            upcoming: petInfo.upcoming,
+                            activityGraph: petInfo.activityGraph
+                        });
+                        
+                        // localStorage에 pet_id 저장 (업데이트된 반려동물)
+                        localStorage.setItem("pet_id", String(updatedPet.id));
+                        
+                        // 프로필 이미지도 업데이트
+                        if (profilePhotoUrl) {
+                            setUserProfileImageUrl(profilePhotoUrl);
+                            localStorage.setItem("user_profile_image_url", profilePhotoUrl);
+                        }
+                        
+                        // 폼 데이터도 업데이트
+                        setPetFormData(prev => ({
+                            ...prev,
+                            imageUrl: profilePhotoUrl,
+                            imageFile: null
+                        }));
+                    }
+                }
+            } else {
+                // 새 반려동물 추가 (POST)
+                const res = await axios.post(
+                    "https://youngbin.pythonanywhere.com/api/v1/pets/",
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                );
+                
+                alert("반려동물이 추가되었습니다.");
+                // 목록 새로고침
+                const petsRes = await axios.get(
+                    "https://youngbin.pythonanywhere.com/api/v1/pets/",
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (petsRes.data) {
+                    setPetsList(petsRes.data);
+                    setSelectedPetId(res.data.id);
+                    // localStorage에 새로 추가된 반려동물의 id 저장
+                    localStorage.setItem("pet_id", String(res.data.id));
+                }
+            }
+            
+            closeModal();
+        } catch (err) {
+            console.error("반려동물 정보 저장 실패:", err.response?.data || err.message);
+            alert(`반려동물 정보 저장 실패: ${err.response?.data?.message || err.message}`);
+        }
     };
 
     // 저장 핸들러 (계정 설정)
-    const handleAccountSettingsSave = (e) => {
+    const handleAccountSettingsSave = async (e) => {
         e.preventDefault();
-        alert(`계정 정보 (닉네임: ${accountFormData.nickname})가 저장되었습니다.`);
-        setUsername(accountFormData.nickname); 
-        closeModal();
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const updateData = {};
+            
+            // 닉네임이 변경되었으면 추가 (빈 문자열 체크)
+            if (accountFormData.nickname && accountFormData.nickname.trim() !== "" && accountFormData.nickname !== username) {
+                updateData.nickname = accountFormData.nickname.trim();
+            }
+            
+            // 새 비밀번호가 입력되었으면 추가
+            if (accountFormData.newPassword && accountFormData.newPassword.trim() !== "") {
+                if (accountFormData.newPassword !== accountFormData.confirmNewPassword) {
+                    alert("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+                    return;
+                }
+                if (accountFormData.newPassword.length < 8) {
+                    alert("비밀번호는 최소 8자 이상이어야 합니다.");
+                    return;
+                }
+                updateData.new_password = accountFormData.newPassword;
+            }
+
+            // 변경할 데이터가 없으면 리턴
+            if (Object.keys(updateData).length === 0) {
+                alert("변경할 정보가 없습니다.");
+                return;
+            }
+
+            console.log("계정 정보 수정 요청 데이터:", updateData);
+
+            const res = await axios.patch(
+                "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
+                updateData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            alert("계정 정보가 수정되었습니다.");
+            setUsername(res.data?.nickname || accountFormData.nickname);
+            setAccountFormData(prev => ({
+                ...prev,
+                newPassword: '',
+                confirmNewPassword: '',
+                currentPassword: ''
+            }));
+            closeModal();
+        } catch (err) {
+            console.error("계정 정보 수정 실패:", err.response?.data || err.message);
+            console.error("에러 상세:", err.response);
+            
+            // 에러 메시지 파싱
+            let errorMessage = "계정 정보 수정에 실패했습니다.";
+            if (err.response?.data) {
+                if (typeof err.response.data === 'string') {
+                    errorMessage = err.response.data;
+                } else if (err.response.data.message) {
+                    errorMessage = err.response.data.message;
+                } else if (err.response.data.error) {
+                    errorMessage = err.response.data.error;
+                } else if (err.response.data.nickname) {
+                    errorMessage = `닉네임 오류: ${Array.isArray(err.response.data.nickname) ? err.response.data.nickname[0] : err.response.data.nickname}`;
+                } else if (err.response.data.new_password) {
+                    errorMessage = `비밀번호 오류: ${Array.isArray(err.response.data.new_password) ? err.response.data.new_password[0] : err.response.data.new_password}`;
+                } else {
+                    errorMessage = JSON.stringify(err.response.data);
+                }
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            alert(`계정 정보 수정 실패: ${errorMessage}`);
+        }
     };
 
     // 탈퇴 핸들러
-    const handleWithdraw = () => {
+    const handleWithdraw = async () => {
+        if (!window.confirm("회원 탈퇴를 계속 진행하시겠습니까?\n탈퇴 시 모든 정보가 삭제되며 복구할 수 없습니다.")) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
         try {
-            if (window.confirm("회원 탈퇴를 계속 진행하시겠습니까?")) {
-                alert("회원 탈퇴가 완료되었습니다.");
+            // 탈퇴 API 호출 (DELETE 메서드 사용)
+            console.log("탈퇴 API 호출 시작...");
+            const response = await axios.delete(
+                "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+            
+            console.log("탈퇴 API 응답:", response.data);
+            console.log("탈퇴 API 상태 코드:", response.status);
+
+            // 탈퇴 성공 시 처리
+            // localStorage 정리
+            localStorage.removeItem("token");
+            localStorage.removeItem("pet_id");
+            localStorage.removeItem("user_profile_image_url");
+            
+            // 모달 닫기
+            if (typeof closeModal === 'function') {
+                closeModal();
+            }
+            
+            alert("회원 탈퇴가 완료되었습니다.");
+            
+            // 홈 페이지로 리다이렉트
+            navigate("/");
+            
+        } catch (err) {
+            console.error("회원 탈퇴 실패:", err.response?.data || err.message);
+            
+            // 404, 405, 501 등 서버에서 탈퇴 API를 지원하지 않는 경우
+            // 클라이언트 측에서만 로그아웃 처리
+            if (err.response?.status === 404 || err.response?.status === 405 || err.response?.status === 501) {
+                // API 엔드포인트가 없거나 지원하지 않는 경우에도 로컬 정리
+                localStorage.removeItem("token");
+                localStorage.removeItem("pet_id");
+                localStorage.removeItem("user_profile_image_url");
+                
+                // 모달 닫기
                 if (typeof closeModal === 'function') {
                     closeModal();
                 }
+                
+                alert("회원 탈퇴가 완료되었습니다.\n(서버에서 탈퇴 API를 지원하지 않아 로컬 정보만 삭제되었습니다.)");
+                navigate("/");
+            } else {
+                let errorMessage = "회원 탈퇴에 실패했습니다.";
+                if (err.response?.data) {
+                    if (typeof err.response.data === 'string') {
+                        errorMessage = err.response.data;
+                    } else if (err.response.data.detail) {
+                        errorMessage = err.response.data.detail;
+                    } else if (err.response.data.message) {
+                        errorMessage = err.response.data.message;
+                    } else if (err.response.data.error) {
+                        errorMessage = err.response.data.error;
+                    } else {
+                        errorMessage = JSON.stringify(err.response.data);
+                    }
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                alert(`회원 탈퇴 실패: ${errorMessage}`);
             }
-        } catch (error) {
-            console.error("handleWithdraw 함수 실행 중 오류 발생:", error);
-            alert("회원 탈퇴 처리 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
         }
     };
     
-    const handleDeletePet = () => {
-        if (window.confirm(`${petInfo.name}의 정보를 삭제하시겠습니까?`)) {
+    const handleDeletePet = async () => {
+        if (!window.confirm(`${petInfo.name}의 정보를 삭제하시겠습니까?`)) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            await axios.delete(
+                `https://youngbin.pythonanywhere.com/api/v1/pets/${petInfo.id}/`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
             alert(`${petInfo.name} 정보가 삭제되었습니다.`);
-            setPetInfo(null); // 더미 데이터 삭제
+            
+            // 목록에서 제거
+            const updatedList = petsList.filter(p => p.id !== petInfo.id);
+            setPetsList(updatedList);
+            
+            // 다른 반려동물이 있으면 첫 번째로 선택
+            if (updatedList.length > 0) {
+                const firstPet = updatedList[0];
+                setSelectedPetId(firstPet.id);
+                // localStorage에 pet_id 저장
+                localStorage.setItem("pet_id", String(firstPet.id));
+                setPetInfo({
+                    id: firstPet.id,
+                    name: firstPet.name,
+                    species: firstPet.species === "고양이" ? "cat" : "dog",
+                    breed: firstPet.breed,
+                    age: calculateAge(firstPet.birth_date),
+                    neutered: firstPet.is_neutered,
+                    weight: firstPet.weight,
+                    upcoming: [],
+                    activityGraph: []
+                });
+            } else {
+                setPetInfo(null);
+                setSelectedPetId(null);
+                // 반려동물이 없으면 localStorage에서 pet_id 제거
+                localStorage.removeItem("pet_id");
+            }
+            
             closeModal();
+        } catch (err) {
+            console.error("반려동물 삭제 실패:", err.response?.data || err.message);
+            alert(`반려동물 삭제 실패: ${err.response?.data?.message || err.message}`);
         }
     };
 
@@ -496,11 +1224,74 @@ export default function MyPage() {
                             </div>
                         </Link>
 
-                        <div className="icon-wrapper">
-                            <button className="icon-btn" onClick={() => { setShowBellPopup((v) => !v); setShowChatPopup(false); }}>
+                        <div className="icon-wrapper bell">
+                            <button
+                                ref={notiBtnRef}
+                                className="icon-btn bell__btn"
+                                onClick={() => {
+                                    setShowBellPopup((v) => !v);
+                                    setShowChatPopup(false);
+                                }}
+                                type="button"
+                            >
                                 <img src={bell} alt="알림 아이콘" className="icon" />
+                                {hasNewNotification && <span className="bell__dot" />}
                             </button>
-                            {showBellPopup && (<div className="popup"><p>📢 새 알림이 없습니다.</p></div>)}
+                            {showBellPopup && (
+                                <div ref={notiRef} className="noti">
+                                    <div className="noti__header">
+                                        <strong>알림</strong>
+                                        <button
+                                            className="noti__allread"
+                                            onClick={markAllRead}
+                                            disabled={!hasUnreadInList}
+                                        >
+                                            모두 읽음
+                                        </button>
+                                    </div>
+                                    <ul className="noti__list">
+                                        {loadingNoti && (
+                                            <li className="noti__empty">알림 불러오는 중...</li>
+                                        )}
+                                        {!loadingNoti && notifications.length === 0 && (
+                                            <li className="noti__empty">알림이 없습니다.</li>
+                                        )}
+                                        {!loadingNoti &&
+                                            notifications.map((n) => (
+                                                <li
+                                                    key={n.id}
+                                                    className={`noti__item ${
+                                                        !n.is_read ? "is-unread" : "is-read"
+                                                    }`}
+                                                    onClick={() => markRead(n.id)}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onKeyDown={(e) =>
+                                                        e.key === "Enter" && markRead(n.id)
+                                                    }
+                                                    title="클릭하면 읽음 처리"
+                                                >
+                                                    <div
+                                                        className="noti__avatar"
+                                                        style={{ background: n.avatarColor }}
+                                                    />
+                                                    <div className="noti__body">
+                                                        <div className="noti__text">
+                                                            <b>{n.user}</b>
+                                                            <span>{n.text}</span>
+                                                        </div>
+                                                        <div className="noti__meta">
+                                                            <span className="noti__time">{n.time}</span>
+                                                            {!n.is_read && (
+                                                                <span className="noti__badge">안 읽음</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
 
                         <div className="icon-wrapper">
@@ -542,16 +1333,74 @@ export default function MyPage() {
                         <div className="pet-list-container">
                             {/* ⭐️ 펫 목록 (좌측) */}
                             <div className="pet-list">
-                                {/* ⭐️ 활성화된 펫: 배경 투명, 글자색 진함 */}
-                                <div className="pet-item pet-item--active">
-                                    <div className="pet-color-indicator pet-color-indicator--pink"></div>
-                                    <span className="pet-name">냥냥이</span>
-                                </div>
-                                {/* ⭐️ 비활성화된 펫: 배경 투명, 글자색 연함 */}
-                                <div className="pet-item">
-                                    <div className="pet-color-indicator pet-color-indicator--yellow"></div>
-                                    <span className="pet-name pet-name--inactive">멍멍이</span>
-                                </div>
+                                {petsList.map((pet, index) => {
+                                    const isActive = selectedPetId === pet.id;
+                                    const colorIndicators = ["pink", "yellow", "blue", "green", "purple"];
+                                    const colorClass = `pet-color-indicator--${colorIndicators[index % colorIndicators.length]}`;
+                                    
+                                    // 현재 선택된 반려동물이고 이미지가 선택된 경우 미리보기 이미지 사용
+                                    const displayImage = isActive && petFormData.imageUrl 
+                                        ? petFormData.imageUrl 
+                                        : (pet.profile_photo 
+                                            ? (pet.profile_photo.startsWith('http') 
+                                                ? pet.profile_photo 
+                                                : `https://youngbin.pythonanywhere.com${pet.profile_photo}`)
+                                            : null);
+                                    
+                                    return (
+                                        <div 
+                                            key={pet.id}
+                                            className={`pet-item ${isActive ? "pet-item--active" : ""}`}
+                                            onClick={() => {
+                                                setSelectedPetId(pet.id);
+                                                // localStorage에 pet_id 저장 (다른 페이지에서 사용)
+                                                localStorage.setItem("pet_id", String(pet.id));
+                                                setPetInfo({
+                                                    id: pet.id,
+                                                    name: pet.name,
+                                                    species: pet.species === "고양이" ? "cat" : "dog",
+                                                    breed: pet.breed,
+                                                    age: calculateAge(pet.birth_date),
+                                                    neutered: pet.is_neutered,
+                                                    weight: pet.weight,
+                                                    upcoming: [],
+                                                    activityGraph: []
+                                                });
+                                                setPetFormData(prev => ({
+                                                    ...prev,
+                                                    name: pet.name,
+                                                    species: pet.species,
+                                                    breed: pet.breed,
+                                                    birth_date: pet.birth_date,
+                                                    gender: pet.gender,
+                                                    neutered: pet.is_neutered,
+                                                    weight: pet.weight.toString(),
+                                                    memo: pet.special_notes || "",
+                                                    target_activity_minutes: pet.target_activity_minutes?.toString() || "45",
+                                                    imageUrl: pet.profile_photo 
+                                                        ? (pet.profile_photo.startsWith('http') 
+                                                            ? pet.profile_photo 
+                                                            : `https://youngbin.pythonanywhere.com${pet.profile_photo}`)
+                                                        : null
+                                                }));
+                                            }}
+                                            style={{ cursor: "pointer" }}
+                                        >
+                                            {displayImage ? (
+                                                <img 
+                                                    src={displayImage} 
+                                                    alt={pet.name}
+                                                    className="pet-list-thumbnail"
+                                                />
+                                            ) : (
+                                                <div className={`pet-color-indicator ${colorClass}`}></div>
+                                            )}
+                                            <span className={isActive ? "pet-name" : "pet-name pet-name--inactive"}>
+                                                {pet.name}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                                 <Link to="/NewFamily" className="pet-add-button">
                                     <span className="icon-plus-small">+</span> 
                                     <span className="pet-add-text">추가하기</span>
@@ -559,15 +1408,18 @@ export default function MyPage() {
                             </div>
 
                             {/* ⭐️ 펫 상세 정보 및 대시보드 요약 (우측) - 인라인화된 내용 */}
-                            <div className="pet-detail-card-wrapper">
-                                <div className="pet-name-and-edit">
-                                    <span className="pet-detail-name">냥냥이 (고양이)</span>
-                                    <button className="btn btn-edit-pet" onClick={() => openModal('edit')}>정보 수정</button>
-                                </div>
-                                
-                                <p className="pet-description-line">
-                                    코리안숏헤어, 2살, 중성화 완료, 4.2kg
-                                </p>
+                            {petInfo ? (
+                                <div className="pet-detail-card-wrapper">
+                                    <div className="pet-name-and-edit">
+                                        <span className="pet-detail-name">
+                                            {petInfo.name} ({petInfo.species === "cat" ? "고양이" : "강아지"})
+                                        </span>
+                                        <button className="btn btn-edit-pet" onClick={() => openModal('edit')}>정보 수정</button>
+                                    </div>
+                                    
+                                    <p className="pet-description-line">
+                                        {petInfo.breed}, {petInfo.age}살, {petInfo.neutered ? "중성화 완료" : "중성화 안함"}, {petInfo.weight}kg
+                                    </p>
 
                                 <div className="pet-dashboard-summary">
                                     {/* 다가오는 일정 */}
@@ -576,17 +1428,21 @@ export default function MyPage() {
                                             <h3>다가오는 일정</h3>
                                             <Link to="/calendar" className="view-more">자세히 보기</Link>
                                         </div>
-                                        {/* ⭐️ 정기 검진일 아이템 (디자인 일치) */}
-                                         {/* <div className="event-item-mypage event-item-mypage--detail">
-                                            <div className="event-icon-box">
-                                                <span className="event-icon-emoji">🏥</span>
-                                            </div>
-                                            <div className="event-item-text">
-                                                <span className="event-title">정기 검진일</span>
-                                                <span className="event-date">10월 15일</span>
-                                            </div>
-                                        </div> */}
-                                        <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
+                                        {petInfo.upcoming && petInfo.upcoming.length > 0 ? (
+                                            petInfo.upcoming.map((event) => (
+                                                <div key={event.id} className="event-item-mypage event-item-mypage--detail">
+                                                    <div className="event-icon-box">
+                                                        <span className="event-icon-emoji">🏥</span>
+                                                    </div>
+                                                    <div className="event-item-text">
+                                                        <span className="event-title">{event.content}</span>
+                                                        <span className="event-date">{event.date}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
+                                        )}
                                     </div>
 
                                     {/* 주간 활동 분석 */}
@@ -606,10 +1462,163 @@ export default function MyPage() {
                                                 <span>9월</span><span>10월</span><span>11월</span><span>12월</span><span>1일</span><span>2일</span><span>3일</span><span>4일</span><span>5일</span>
                                             </div> 
                                         </div> */}
-                                        <span className="event-empty">최근 일주일간 활동이 없습니다.</span>
+                                        {weeklyActivity && weeklyActivity.length > 0 ? (
+                                            <div className="activity-chart-box-mypage">
+                                                <svg viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet" className="chart-svg-mypage">
+                                                    {/* 그리드 라인 */}
+                                                    <defs>
+                                                        <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                            <stop offset="0%" stopColor="#D6E4FF" stopOpacity="0.3" />
+                                                            <stop offset="100%" stopColor="#D6E4FF" stopOpacity="0" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    
+                                                    {/* Y축 그리드 라인 */}
+                                                    {[0, 1, 2, 3, 4].map((i) => (
+                                                        <line
+                                                            key={`grid-y-${i}`}
+                                                            x1="30"
+                                                            y1={20 + (i * 20)}
+                                                            x2="280"
+                                                            y2={20 + (i * 20)}
+                                                            stroke="#F0F0F0"
+                                                            strokeWidth="1"
+                                                        />
+                                                    ))}
+                                                    
+                                                    {/* 최대값 계산 */}
+                                                    {(() => {
+                                                        const maxValue = Math.max(...weeklyActivity.map(item => item.duration || 0));
+                                                        const maxY = maxValue > 0 ? maxValue : 100;
+                                                        const step = maxY / 4;
+                                                        
+                                                        return (
+                                                            <>
+                                                                {/* Y축 레이블 */}
+                                                                {[0, 1, 2, 3, 4].map((i) => {
+                                                                    const value = Math.round(maxY - (i * step));
+                                                                    return (
+                                                                        <text
+                                                                            key={`y-label-${i}`}
+                                                                            x="25"
+                                                                            y={25 + (i * 20)}
+                                                                            textAnchor="end"
+                                                                            fontSize="10"
+                                                                            fill="#666"
+                                                                        >
+                                                                            {value}
+                                                                        </text>
+                                                                    );
+                                                                })}
+                                                                
+                                                                {/* 데이터 영역 채우기 */}
+                                                                <path
+                                                                    d={`M 30 ${100} ${weeklyActivity.map((item, idx) => {
+                                                                        const x = 30 + (idx * 35);
+                                                                        const value = item.duration || 0;
+                                                                        const y = 100 - (value / maxY * 80);
+                                                                        return `L ${x} ${y}`;
+                                                                    }).join(" ")} L ${30 + ((weeklyActivity.length - 1) * 35)} ${100} Z`}
+                                                                    fill="url(#areaGradient)"
+                                                                />
+                                                                
+                                                                {/* 데이터 라인 */}
+                                                                <path
+                                                                    d={`M ${weeklyActivity.map((item, idx) => {
+                                                                        const x = 30 + (idx * 35);
+                                                                        const value = item.duration || 0;
+                                                                        const y = 100 - (value / maxY * 80);
+                                                                        return idx === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+                                                                    }).join(" ")}`}
+                                                                    fill="none"
+                                                                    stroke="#3b82f6"
+                                                                    strokeWidth="2.5"
+                                                                    strokeLinejoin="round"
+                                                                    strokeLinecap="round"
+                                                                />
+                                                                
+                                                                {/* 데이터 포인트 */}
+                                                                {weeklyActivity.map((item, idx) => {
+                                                                    const x = 30 + (idx * 35);
+                                                                    const value = item.duration || 0;
+                                                                    const y = 100 - (value / maxY * 80);
+                                                                    return (
+                                                                        <g key={`point-${idx}`}>
+                                                                            <circle
+                                                                                cx={x}
+                                                                                cy={y}
+                                                                                r="4"
+                                                                                fill="#3b82f6"
+                                                                                stroke="#fff"
+                                                                                strokeWidth="2"
+                                                                            />
+                                                                            {/* 값 표시 */}
+                                                                            <text
+                                                                                x={x}
+                                                                                y={y - 8}
+                                                                                textAnchor="middle"
+                                                                                fontSize="9"
+                                                                                fill="#3b82f6"
+                                                                                fontWeight="600"
+                                                                            >
+                                                                                {value}
+                                                                            </text>
+                                                                        </g>
+                                                                    );
+                                                                })}
+                                                            </>
+                                                        );
+                                                    })()}
+                                                    
+                                                    {/* X축 레이블 - 일요일부터 순서대로 */}
+                                                    {weeklyActivity.map((item, idx) => {
+                                                        const x = 30 + (idx * 35);
+                                                        const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+                                                        // item.day가 있으면 사용, 없으면 dayLabels의 인덱스 사용
+                                                        let dayLabel = item.day;
+                                                        if (!dayLabel || dayLabel === '') {
+                                                            dayLabel = dayLabels[idx % 7];
+                                                        } else {
+                                                            // 영어 요일을 한국어로 변환
+                                                            const dayMap = {
+                                                                'Sun': '일', 'Sunday': '일',
+                                                                'Mon': '월', 'Monday': '월',
+                                                                'Tue': '화', 'Tuesday': '화',
+                                                                'Wed': '수', 'Wednesday': '수',
+                                                                'Thu': '목', 'Thursday': '목',
+                                                                'Fri': '금', 'Friday': '금',
+                                                                'Sat': '토', 'Saturday': '토'
+                                                            };
+                                                            const dayStr = String(dayLabel);
+                                                            dayLabel = dayMap[dayStr] || dayLabels[idx % 7];
+                                                        }
+                                                        return (
+                                                            <text
+                                                                key={`x-label-${idx}`}
+                                                                x={x}
+                                                                y={115}
+                                                                textAnchor="middle"
+                                                                fontSize="11"
+                                                                fill="#666"
+                                                                fontWeight="500"
+                                                            >
+                                                                {dayLabel}
+                                                            </text>
+                                                        );
+                                                    })}
+                                                </svg>
+                                            </div>
+                                        ) : (
+                                            <span className="event-empty">최근 일주일간 활동이 없습니다.</span>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                                </div>
+                            ) : (
+                                <div className="pet-detail-card-wrapper">
+                                    <p className="event-empty">등록된 반려동물이 없습니다.</p>
+                                </div>
+                            )}
                         </div>
                     </section>
                 </div>

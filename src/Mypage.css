@@ -104,12 +104,12 @@ h1.title {
 
 /* "나의 반려동물" 파란색 막대 제목 */
 .section__title--no-bullet { 
-  font-size: 25px; 
+  font-size: 32px; 
   font-weight: 600; 
   color: #333; 
-  margin-bottom: 20px; 
+  margin-bottom: 30px; 
   position: relative;
-  padding-left: 15px; 
+  padding-left: 18px; 
 }
 .section__title--no-bullet::before {
   content: '';
@@ -117,9 +117,9 @@ h1.title {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 6px; 
+  width: 8px; 
   height: 100%; 
-  max-height: 25px; 
+  max-height: 32px; 
   background-color: #3b82f6; 
   border-radius: 3px;
 }
@@ -131,35 +131,35 @@ h1.title {
 /* 1. 펫 목록 + 펫 상세 (전체 흰색 카드) */
 .pet-list-container { 
   display: flex; 
-  gap: 30px; 
+  gap: 40px; 
   align-items: flex-start; 
   width: 100%;
-  max-width: 1130px; 
+  max-width: 1400px; 
   flex-grow: 1;
   background-color: #fff;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); 
-  padding: 30px;
+  padding: 40px;
   box-sizing: border-box; 
 }
 
 /* 2. 좌측 펫 목록 (냥냥이, 멍멍이...) */
 .pet-list { 
-  width: 200px; 
+  width: 260px; 
   flex-shrink: 0; 
   display: flex; 
   flex-direction: column; 
-  gap: 12px; 
+  gap: 16px; 
 }
 .pet-item { 
   display: flex; 
   align-items: center; 
-  padding: 12px 16px; 
-  border-radius: 10px; 
+  padding: 16px 20px; 
+  border-radius: 12px; 
   cursor: pointer; 
   border: 2px solid transparent; 
   transition: all 0.2s ease-out;
-  gap: 12px;
+  gap: 16px;
 }
 .pet-item:not(.pet-item--active):hover {
   background-color: #f9fafb; 
@@ -174,7 +174,7 @@ h1.title {
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 .pet-name { 
-  font-size: 15px; 
+  font-size: 18px; 
   color: #374151; 
   font-weight: 500; 
 }
@@ -186,17 +186,17 @@ h1.title {
   color: #9ca3af; 
 }
 .pet-color-indicator { 
-  width: 40px; 
-  height: 40px; 
-  border-radius: 8px; 
+  width: 50px; 
+  height: 50px; 
+  border-radius: 10px; 
   margin-bottom: 0; 
 }
 .pet-color-indicator--pink { background-color: #ff0090; }
 .pet-color-indicator--yellow { background-color: #ffe100; }
 .pet-list-thumbnail {
-  width: 40px; 
-  height: 40px; 
-  border-radius: 8px; /* pet-color-indicator와 동일한 모서리 둥글기 */
+  width: 50px; 
+  height: 50px; 
+  border-radius: 10px; /* pet-color-indicator와 동일한 모서리 둥글기 */
   object-fit: cover; /* 이미지가 잘리지 않고 컨테이너를 채우도록 */
   flex-shrink: 0; /* 크기가 줄어들지 않도록 고정 */
 }
@@ -204,12 +204,12 @@ h1.title {
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  gap: 8px; 
+  gap: 10px; 
   background-color: transparent; 
   border: 2px dashed #d1d5db; 
-  padding: 12px 16px; 
-  border-radius: 10px; 
-  font-size: 1rem; 
+  padding: 16px 20px; 
+  border-radius: 12px; 
+  font-size: 1.1rem; 
   color: #6b7280; 
   cursor: pointer; 
   transition: all 0.2s ease-out;
@@ -219,7 +219,7 @@ h1.title {
   border-color: #9ca3af;
 }
 .icon-plus-small {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 600;
 }
 
@@ -232,12 +232,12 @@ h1.title {
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  margin-bottom: 12px; 
-  padding-bottom: 12px;
+  margin-bottom: 16px; 
+  padding-bottom: 16px;
   border-bottom: 1px solid #e5e7eb;
 }
 .pet-detail-name { 
-  font-size: 25px;
+  font-size: 32px;
   font-weight: 600; 
   color: #111827; 
 }
@@ -245,20 +245,20 @@ h1.title {
   background-color: #f0f4ff; 
   color: #007bff; 
   border: 1px solid #d1e5ff; 
-  padding: 8px 20px; 
+  padding: 10px 24px; 
   border-radius: 20px; 
-  font-size: 15px; 
+  font-size: 16px; 
 }
 .btn-edit-pet:hover {
   background-color: #eff6ff;
   border-color: #93c5fd;
 }
 .pet-description-line { 
-  font-size: 16px;
+  font-size: 18px;
   color: #222;  
   line-height: 1.6; 
   margin-top: 0;
-  margin-bottom: 24px; 
+  margin-bottom: 30px; 
   text-align: center;
 }
 
@@ -266,20 +266,20 @@ h1.title {
 .pet-dashboard-summary { 
   display: grid; 
   grid-template-columns: 1fr 1fr; 
-  gap: 24px; 
+  gap: 30px; 
 }
 .upcoming-events-mypage,
 .weekly-activity-mypage {
   background-color: #f9fafb; 
-  border-radius: 12px;
-  padding: 20px; 
+  border-radius: 16px;
+  padding: 28px; 
   border: 1px solid #f3f4f6;
   height: 100%; 
   box-sizing: border-box;
 }
 /* '다가오는 일정' 카드만 패딩 다르게 (필요시 .upcoming-events-mypage padding 수정) */
 .upcoming-events-mypage {
-  padding: 10px;
+  padding: 20px;
 }
 
 /* 5. 카드 내부 헤더 (다가오는 일정, 주간 활동 분석) */
@@ -287,10 +287,10 @@ h1.title {
   display: flex;
   justify-content: space-between !important; 
   align-items: baseline; 
-  margin-bottom: 15px; 
+  margin-bottom: 20px; 
 }
 .section-header-inline > h3 {
-  font-size: 18px; 
+  font-size: 22px; 
   font-weight: 600; 
   white-space: nowrap; 
   margin: 0; 
@@ -299,7 +299,7 @@ h1.title {
 
 /* 6. "자세히 보기" 링크 */
 .view-more { 
-  font-size: 13px;
+  font-size: 15px;
   color: #007bff; 
   text-decoration: none; 
   font-weight: 400; 
@@ -326,6 +326,17 @@ h1.title {
   position: relative; 
   margin-top: 10px;
   padding-left: 35px; 
+}
+.activity-chart-box-mypage {
+  position: relative; 
+  margin-top: 15px;
+  width: 100%;
+  min-height: 220px;
+}
+.chart-svg-mypage {
+  width: 100%;
+  height: 220px; 
+  display: block;
 }
 .chart-y-axis-labels {
   display: flex;

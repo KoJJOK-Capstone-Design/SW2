@@ -1,6 +1,7 @@
 // src/Activity.js
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import "./Home.css";
 import "./Activity.css";
 import { NavLink, Link } from "react-router-dom";
@@ -49,11 +50,77 @@ const WEEK_LABELS = ["일요일", "월요일", "화요일", "수요일", "목요
 // ✅ 수정됨: API_BASE 경로 수정
 const API_BASE = "https://youngbin.pythonanywhere.com/api/v1/pets";
 
+// 알림 관련 헬퍼 함수들
+const getTimeAgo = (dateString) => {
+  const now = new Date();
+  const past = new Date(dateString);
+  if (Number.isNaN(past.getTime())) return dateString;
+  
+  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}초 전`;
+  } else if (diffInSeconds < 3600) {
+    return `${Math.floor(diffInSeconds / 60)}분 전`;
+  } else if (diffInSeconds < 86400) {
+    return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+  } else if (diffInSeconds < 2592000) {
+    return `${Math.floor(diffInSeconds / 86400)}일 전`;
+  }
+  return past.toLocaleString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const cleanAlertText = (message) => {
+  if (!message) return "새 알림";
+  const match = message.match(/^'[^']+'님으로부터 (.*)/);
+  if (match && match.length > 1) {
+    return match[1].trim();
+  }
+  const matchNoQuote = message.match(/^([^']+)님으로부터 (.*)/);
+  if (matchNoQuote && matchNoQuote.length > 2) {
+    return matchNoQuote[2].trim();
+  }
+  return message;
+};
+
+const extractNickname = (message) => {
+  let match = message.match(/'([^']+)'님으로부터/);
+  if (match) return match[1];
+  match = message.match(/^([^']+)님으로부터/);
+  if (match) return match[1];
+  return null;
+};
+
+// Interval Custom Hook
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+  
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+  
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+
 // localStorage 에서 pet_id / token 가져오기
 const getPetId = () => {
   const stored = localStorage.getItem("pet_id");
+  if (!stored) return null;
   const n = parseInt(stored, 10);
-  return Number.isNaN(n) ? 1 : n;
+  return Number.isNaN(n) ? null : n;
 };
 
 const getToken = () => localStorage.getItem("token");
@@ -69,20 +136,58 @@ async function apiRequest(path, options = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // 요청 정보 로깅
+  console.log("API 요청:", {
+    url: path,
+    method: options.method || "GET",
+    headers: { ...headers, Authorization: token ? "Bearer ***" : "없음" },
+    body: options.body ? JSON.parse(options.body) : null
+  });
+
   const res = await fetch(path, {
     ...options,
     headers,
   });
 
   const text = await res.text();
+  console.log("API 응답:", {
+    status: res.status,
+    statusText: res.statusText,
+    headers: Object.fromEntries(res.headers.entries()),
+    body: text
+  });
+
   if (!res.ok) {
     console.error("API Error:", res.status, text);
-    alert(
-      `API 오류 (${res.status})\n${
-        text || "서버에서 에러 메시지를 보내지 않았습니다."
-      }`
-    );
-    throw new Error(`API Error ${res.status}`);
+    
+    // 에러 메시지 파싱
+    let errorMessage = text || "서버에서 에러 메시지를 보내지 않았습니다.";
+    try {
+      const errorJson = JSON.parse(text);
+      if (errorJson.error) {
+        errorMessage = errorJson.error;
+      } else if (errorJson.detail) {
+        errorMessage = errorJson.detail;
+      } else if (errorJson.message) {
+        errorMessage = errorJson.message;
+      } else if (typeof errorJson === 'object') {
+        // 객체 전체를 문자열로 변환
+        errorMessage = JSON.stringify(errorJson, null, 2);
+      }
+    } catch (e) {
+      // JSON 파싱 실패 시 원본 텍스트 사용
+      console.error("에러 메시지 파싱 실패:", e);
+    }
+    
+    // 404 오류인 경우 더 친절한 메시지
+    if (res.status === 404) {
+      if (errorMessage.includes("반려동물") || errorMessage.includes("pet")) {
+        errorMessage = "반려동물 정보를 찾을 수 없습니다.\n마이페이지에서 반려동물을 등록해주세요.";
+      }
+    }
+    
+    alert(`API 오류 (${res.status})\n${errorMessage}`);
+    throw new Error(`API Error ${res.status}: ${errorMessage}`);
   }
 
   if (!text) return null;
@@ -128,6 +233,7 @@ function mapActivityToWalk(a) {
 
 // ====== 컴포넌트 ======
 export default function Activity() {
+  const location = useLocation();
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
   
@@ -136,9 +242,182 @@ export default function Activity() {
   const [username, setUsername] = useState("");
   const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
 
+  // 알림 관련 상태
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNoti, setLoadingNoti] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const lastKnownNotiIds = useRef(new Set());
+  const notiBtnRef = useRef(null);
+  const notiRef = useRef(null);
+
+  // 알림 읽음 처리 함수들
+  const markNotificationAsReadOnServer = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      await axios.post(
+        `https://youngbin.pythonanywhere.com/api/v1/notifications/${id}/read/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error(`알림 ${id} 서버 읽음 처리 실패:`, err);
+    }
+  };
+
+  const markAllNotificationsReadOnServer = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      await axios.post(
+        "https://youngbin.pythonanywhere.com/api/v1/notifications/read-all/",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("모든 알림 서버 읽음 처리 실패:", err);
+    }
+  };
+
+  const markRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+    markNotificationAsReadOnServer(id);
+  };
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setHasNewNotification(false);
+    markAllNotificationsReadOnServer();
+  };
+
+  const hasUnreadInList = useMemo(
+    () => notifications.some((n) => !n.is_read),
+    [notifications]
+  );
+
+  // 알림 패널 외부 클릭/ESC로 닫기
+  useEffect(() => {
+    if (!showBellPopup) return;
+    const onClick = (e) => {
+      if (
+        notiRef.current &&
+        !notiRef.current.contains(e.target) &&
+        notiBtnRef.current &&
+        !notiBtnRef.current.contains(e.target)
+      ) {
+        setShowBellPopup(false);
+        setHasNewNotification(false);
+      }
+    };
+    const onEsc = (e) => e.key === "Escape" && setShowBellPopup(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [showBellPopup]);
+
+  // 알림 API 호출 함수
+  const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(
+        "https://youngbin.pythonanywhere.com/api/v1/notifications/",
+        { headers }
+      );
+
+      const rawNotifications = Array.isArray(res.data)
+        ? res.data
+        : res.data.results || [];
+
+      const mappedNotifications = rawNotifications.map((n) => {
+        const senderName =
+          n.sender_nickname && n.sender_nickname.trim()
+            ? n.sender_nickname.trim()
+            : n.sender_id
+            ? `사용자 ${n.sender_id}`
+            : extractNickname(n.message || "") || "알 수 없는 사용자";
+
+        const cleanedText = cleanAlertText(n.message);
+
+        return {
+          id: n.id,
+          user: senderName,
+          text: cleanedText,
+          time: getTimeAgo(n.created_at),
+          rawTime: n.created_at,
+          is_read: n.is_read,
+          avatarColor: n.is_read ? "#e5e7eb" : "#dbeafe",
+        };
+      });
+
+      const uniqueNotifications = mappedNotifications.reduce((acc, current) => {
+        const isDuplicate = acc.some(
+          (item) =>
+            Math.abs(new Date(item.rawTime) - new Date(current.rawTime)) < 5000 &&
+            ((item.user === current.user && item.text === current.text) ||
+              ((current.user === "알 수 없는 사용자" ||
+                current.text === "새 쪽지가 도착했습니다.") &&
+                item.user !== "알 수 없는 사용자" &&
+                current.text.includes(item.user)))
+        );
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      uniqueNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+      const newNotiIds = new Set(uniqueNotifications.map((n) => n.id));
+      const newlyArrivedUnread = uniqueNotifications.some(
+        (n) => !n.is_read && !lastKnownNotiIds.current.has(n.id)
+      );
+
+      if (newlyArrivedUnread) {
+        setHasNewNotification(true);
+      }
+
+      lastKnownNotiIds.current = newNotiIds;
+      setNotifications(uniqueNotifications);
+    } catch (err) {
+      console.error("알림 불러오기 실패:", err);
+    } finally {
+      setLoadingNoti(false);
+    }
+  }, []);
+
+  // 초기 알림 로드
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingNoti(true);
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // 10초마다 알림 새로고침
+  useInterval(() => {
+    if (showBellPopup) return;
+    fetchNotifications();
+  }, 10000);
+
   // 로그인 상태 확인 및 사용자 정보 가져오기
   useEffect(() => {
     const token = localStorage.getItem("token");
+    
+    // LocalStorage에서 저장된 프로필 이미지 URL을 먼저 확인
+    const storedImageUrl = localStorage.getItem("user_profile_image_url");
+    if (storedImageUrl) {
+      setUserProfileImage(storedImageUrl);
+    }
+    
     if (token) {
       setIsLoggedIn(true);
       axios
@@ -152,14 +431,21 @@ export default function Activity() {
             res.data?.id ||
             "멍냥";
           setUsername(name);
-          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
-          if (res.data?.profile_image || res.data?.avatar) {
-            const imgUrl = res.data.profile_image || res.data.avatar;
-            setUserProfileImage(
-              imgUrl.startsWith("http")
-                ? imgUrl
-                : `https://youngbin.pythonanywhere.com${imgUrl}`
-            );
+          
+          // 프로필 이미지 우선순위: localStorage > API 응답 > 기본 이미지
+          const apiImageUrl = res.data?.profile_image || res.data?.avatar || res.data?.user_profile_image_url;
+          const finalImageUrl = storedImageUrl || 
+            (apiImageUrl 
+              ? (apiImageUrl.startsWith("http")
+                  ? apiImageUrl
+                  : `https://youngbin.pythonanywhere.com${apiImageUrl}`)
+              : null);
+          
+          if (finalImageUrl) {
+            setUserProfileImage(finalImageUrl);
+            if (!storedImageUrl && finalImageUrl) {
+              localStorage.setItem("user_profile_image_url", finalImageUrl);
+            }
           }
         })
         .catch((err) => {
@@ -196,19 +482,70 @@ export default function Activity() {
     loadActivities();
   }, []);
 
+  // 페이지 이동 후 돌아올 때 데이터 다시 불러오기
+  useEffect(() => {
+    // Activity 페이지로 이동할 때마다 데이터 다시 불러오기
+    if (location.pathname === '/activity' || location.pathname === '/Activity') {
+      loadActivities();
+    }
+  }, [location.pathname]);
+
+  // 페이지 포커스 시 데이터 다시 불러오기 (다른 탭에서 돌아올 때)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (location.pathname === '/activity' || location.pathname === '/Activity') {
+        loadActivities();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [location.pathname]);
+
   async function loadActivities() {
     try {
       setLoading(true);
       const petId = getPetId();
+      
+      // pet_id가 없으면 반려동물 등록 안내
+      if (!petId) {
+        alert("반려동물을 먼저 등록해주세요.\n마이페이지에서 반려동물을 추가할 수 있습니다.");
+        setWalks([]);
+        return;
+      }
+      
       // ✅ 수정됨: URL 경로 수정
       const data = await apiRequest(`${API_BASE}/activities/${petId}/`, {
         method: "GET",
       });
-      const arr = Array.isArray(data) ? data : [];
+      
+      console.log("활동 데이터 로드 응답:", data);
+      
+      // API 응답이 배열인지 확인 (다양한 응답 형식 대응)
+      let arr = [];
+      if (Array.isArray(data)) {
+        arr = data;
+      } else if (data && Array.isArray(data.recent_logs)) {
+        // API 응답이 {recent_logs: [...]} 형식인 경우
+        arr = data.recent_logs;
+      } else if (data && Array.isArray(data.activities)) {
+        arr = data.activities;
+      } else if (data && Array.isArray(data.logs)) {
+        arr = data.logs;
+      } else if (data && typeof data === 'object' && data.id) {
+        // 단일 객체인 경우 배열로 변환
+        arr = [data];
+      }
+      
       const mapped = arr.map(mapActivityToWalk);
+      console.log("매핑된 활동 데이터:", mapped);
       setWalks(mapped);
     } catch (e) {
       console.error(e);
+      // 404 오류인 경우 반려동물 정보가 없다는 메시지 표시
+      if (e.message && e.message.includes("404")) {
+        setWalks([]);
+        // alert는 apiRequest 함수에서 이미 표시되므로 중복 표시하지 않음
+      }
     } finally {
       setLoading(false);
     }
@@ -249,11 +586,20 @@ export default function Activity() {
 
     try {
       const petId = getPetId();
+      
+      // pet_id가 없으면 반려동물 등록 안내
+      if (!petId) {
+        alert("반려동물을 먼저 등록해주세요.\n마이페이지에서 반려동물을 추가할 수 있습니다.");
+        return;
+      }
+      
       const payload = {
         log_type: form.type,
         duration: v.minutesNum,
       };
       if (v.distanceNum != null) payload.distance = v.distanceNum;
+
+      console.log("활동 저장 요청:", { petId, payload });
 
       // ✅ 수정됨: POST URL 경로 수정
       const created = await apiRequest(`${API_BASE}/activities/logs/${petId}/`, {
@@ -261,24 +607,23 @@ export default function Activity() {
         body: JSON.stringify(payload),
       });
 
-      const newWalk = created && created.id
-        ? mapActivityToWalk(created)
-        : {
-            id: Date.now(),
-            type: form.type,
-            title: `${form.type} 기록`,
-            minutes: v.minutesNum,
-            km: v.distanceNum,
-            date: formatDate(),
-            rawDate: new Date(),
-          };
+      console.log("활동 저장 성공:", created);
 
-      setWalks((prev) => [...prev, newWalk]);
+      // 저장 성공 후 서버에서 최신 데이터 다시 불러오기
+      await loadActivities();
+
+      alert("활동 기록이 저장되었습니다.");
       setShowModal(false);
       setIsAddDropdownOpen(false);
       setForm({ type: "선택하세요", minutes: "", distance: "" });
     } catch (err) {
-      console.error(err);
+      console.error("활동 저장 실패:", err);
+      console.error("에러 상세:", err.message, err.stack);
+      let errorMessage = "활동 기록 저장에 실패했습니다.";
+      if (err.message) {
+        errorMessage += `\n${err.message}`;
+      }
+      alert(errorMessage);
     }
   };
 
@@ -296,9 +641,13 @@ export default function Activity() {
         method: "DELETE",
       });
 
-      setWalks((prev) => prev.filter((w) => w.id !== targetId));
+      console.log("활동 삭제 성공");
+
+      // 삭제 성공 후 서버에서 최신 데이터 다시 불러오기
+      await loadActivities();
     } catch (err) {
-      console.error(err);
+      console.error("활동 삭제 실패:", err);
+      alert("활동 기록 삭제에 실패했습니다. 다시 시도해주세요.");
     } finally {
       closeConfirm();
     }
@@ -344,22 +693,15 @@ export default function Activity() {
         body: JSON.stringify(payload),
       });
 
-      const updatedWalk = updated && updated.id
-        ? mapActivityToWalk(updated)
-        : {
-            id: edit.id,
-            type: edit.type,
-            title: `${edit.type} 기록`,
-            minutes: v.minutesNum,
-            km: v.distanceNum,
-          };
+      console.log("활동 수정 성공:", updated);
 
-      setWalks((prev) =>
-        prev.map((w) => (w.id === updatedWalk.id ? { ...w, ...updatedWalk } : w))
-      );
+      // 수정 성공 후 서버에서 최신 데이터 다시 불러오기
+      await loadActivities();
+
       closeEdit();
     } catch (err) {
-      console.error(err);
+      console.error("활동 수정 실패:", err);
+      alert("활동 기록 수정에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -466,19 +808,71 @@ export default function Activity() {
               </Link>
 
               {/* 알림 벨 */}
-              <div className="icon-wrapper">
+              <div className="icon-wrapper bell">
                 <button
-                  className="icon-btn"
+                  ref={notiBtnRef}
+                  className="icon-btn bell__btn"
                   onClick={() => {
                     setShowBellPopup((v) => !v);
                     setShowChatPopup(false);
                   }}
                 >
                   <img src={bell} alt="알림 아이콘" className="icon" />
+                  {hasNewNotification && <span className="bell__dot" />}
                 </button>
                 {showBellPopup && (
-                  <div className="popup">
-                    <p>📢 새 알림이 없습니다.</p>
+                  <div ref={notiRef} className="noti">
+                    <div className="noti__header">
+                      <strong>알림</strong>
+                      <button
+                        className="noti__allread"
+                        onClick={markAllRead}
+                        disabled={!hasUnreadInList}
+                      >
+                        모두 읽음
+                      </button>
+                    </div>
+                    <ul className="noti__list">
+                      {loadingNoti && (
+                        <li className="noti__empty">알림 불러오는 중...</li>
+                      )}
+                      {!loadingNoti && notifications.length === 0 && (
+                        <li className="noti__empty">알림이 없습니다.</li>
+                      )}
+                      {!loadingNoti &&
+                        notifications.map((n) => (
+                          <li
+                            key={n.id}
+                            className={`noti__item ${
+                              !n.is_read ? "is-unread" : "is-read"
+                            }`}
+                            onClick={() => markRead(n.id)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && markRead(n.id)
+                            }
+                            title="클릭하면 읽음 처리"
+                          >
+                            <div
+                              className="noti__avatar"
+                              style={{ background: n.avatarColor }}
+                            />
+                            <div className="noti__body">
+                              <div className="noti__text">
+                                <b>{n.user}</b>
+                                <span>{n.text}</span>
+                              </div>
+                              <div className="noti__meta">
+                                <span className="noti__time">{n.time}</span>
+                                {!n.is_read && (
+                                  <span className="noti__badge">안 읽음</span>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
                   </div>
                 )}
               </div>

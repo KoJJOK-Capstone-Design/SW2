@@ -17,17 +17,43 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 유효성 검증
+    if (!formData.username || !formData.username.trim()) {
+      alert('아이디를 입력해주세요.');
+      return;
+    }
+    if (!formData.password || formData.password.length < 8) {
+      alert('비밀번호는 최소 8자 이상이어야 합니다.');
+      return;
+    }
+    if (!formData.email || !formData.email.trim()) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+    if (!formData.nickname || !formData.nickname.trim()) {
+      alert('닉네임을 입력해주세요.');
+      return;
+    }
+
     try {
       const payload = {
-        username: formData.username,          // ✅ 백엔드용 필드명
+        username: formData.username.trim(),
         password: formData.password,
-        email: formData.email,
-        nickname: formData.nickname,
+        email: formData.email.trim(),
+        nickname: formData.nickname.trim(),
       };
+
+      console.log('회원가입 요청 데이터:', payload);
 
       const res = await axios.post(
         'https://youngbin.pythonanywhere.com/api/v1/users/register/',
-        payload
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
 
       console.log('회원가입 성공:', res.data);
@@ -36,8 +62,46 @@ function Signup() {
 
       window.location.href = '/signin';
     } catch (err) {
-      console.log('회원가입 에러:', err.response?.data || err.message);
-      alert('회원가입에 실패했습니다. 다시 시도해 주세요.');
+      console.error('회원가입 에러:', err.response?.data || err.message);
+      console.error('에러 상세:', err.response);
+      
+      // 에러 메시지 파싱
+      let errorMessage = '회원가입에 실패했습니다.';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else {
+          // 필드별 에러 메시지 처리
+          const fieldErrors = [];
+          if (err.response.data.username) {
+            fieldErrors.push(`아이디: ${Array.isArray(err.response.data.username) ? err.response.data.username[0] : err.response.data.username}`);
+          }
+          if (err.response.data.password) {
+            fieldErrors.push(`비밀번호: ${Array.isArray(err.response.data.password) ? err.response.data.password[0] : err.response.data.password}`);
+          }
+          if (err.response.data.email) {
+            fieldErrors.push(`이메일: ${Array.isArray(err.response.data.email) ? err.response.data.email[0] : err.response.data.email}`);
+          }
+          if (err.response.data.nickname) {
+            fieldErrors.push(`닉네임: ${Array.isArray(err.response.data.nickname) ? err.response.data.nickname[0] : err.response.data.nickname}`);
+          }
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join('\n');
+          } else {
+            errorMessage = JSON.stringify(err.response.data);
+          }
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      alert(`회원가입 실패:\n${errorMessage}`);
     }
   };
 
