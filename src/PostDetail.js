@@ -1,6 +1,6 @@
 // src/PostDetail.js
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import "./Home.css";
 import "./Community.css";
 import axios from "axios";
@@ -498,7 +498,7 @@ export default function PostDetail() {
           {currentUser ? (
             <nav className="menuicon">
               {/* 프로필 */}
-              <div className="profile">
+              <Link to="/mypage" className="profile">
                 <div className="profile__avatar">
                   <img
                     src="https://i.pravatar.cc/80?img=11"
@@ -506,7 +506,7 @@ export default function PostDetail() {
                   />
                 </div>
                 <span className="profile__name">{currentUser.username}</span>
-              </div>
+              </Link>
 
               {/* 알림 벨 */}
               <div className="icon-wrapper">

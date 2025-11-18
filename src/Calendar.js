@@ -462,12 +462,12 @@ export default function Calendar() {
 
           <nav className="menuicon">
             {/* 프로필 */}
-            <div className="profile">
+            <Link to="/mypage" className="profile">
               <div className="profile__avatar">
                 <img src={userProfileImage} alt="프로필" />
               </div>
               <span className="profile__name">{username}</span>
-            </div>
+            </Link>
 
             <div className="icon-wrapper">
               <button

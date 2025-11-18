@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 import "./Dashboard.css";
@@ -327,7 +328,7 @@ export default function Dashboard() {
 
           <nav className="menuicon">
             {/* 🔹 프로필 영역 */}
-            <div className="profile">
+            <Link to="/mypage" className="profile">
               <div className="profile__avatar">
                 <img
                   src="https://i.pravatar.cc/80?img=11"
@@ -335,7 +336,7 @@ export default function Dashboard() {
                 />
               </div>
               <span className="profile__name">{username}</span>
-            </div>
+            </Link>
 
             <div className="icon-wrapper">
               <button

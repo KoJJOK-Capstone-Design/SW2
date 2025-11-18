@@ -1,6 +1,6 @@
 // src/NewFamily.js
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, NavLink, Link } from "react-router-dom";
 import axios from "axios";
 import "./NewFamily.css";
 
@@ -271,13 +271,13 @@ export default function NewFamily() {
           </nav>
 
           <nav className="menuicon">
-            <div className="profile">
+            <Link to="/mypage" className="profile">
               <div className="profile__avatar">
                 <img src="https://i.pravatar.cc/80?img=11" alt="프로필" />
               </div>
               {/* ✅ 여기에서 username이 닉네임/아이디로 표시됨 */}
               <span className="profile__name">{username}</span>
-            </div>
+            </Link>
 
             {/* 알림 벨 */}
             <div className="icon-wrapper bell">
