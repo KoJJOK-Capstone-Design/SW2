@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
 
 import bell from "./img/bell.png";
@@ -20,6 +20,71 @@ import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
 const API_BASE = "https://youngbin.pythonanywhere.com/api/v1/pets";
+
+// 알림 관련 헬퍼 함수들
+const getTimeAgo = (dateString) => {
+  const now = new Date();
+  const past = new Date(dateString);
+  if (Number.isNaN(past.getTime())) return dateString;
+  
+  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}초 전`;
+  } else if (diffInSeconds < 3600) {
+    return `${Math.floor(diffInSeconds / 60)}분 전`;
+  } else if (diffInSeconds < 86400) {
+    return `${Math.floor(diffInSeconds / 3600)}시간 전`;
+  } else if (diffInSeconds < 2592000) {
+    return `${Math.floor(diffInSeconds / 86400)}일 전`;
+  }
+  return past.toLocaleString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const cleanAlertText = (message) => {
+  if (!message) return "새 알림";
+  const match = message.match(/^'[^']+'님으로부터 (.*)/);
+  if (match && match.length > 1) {
+    return match[1].trim();
+  }
+  const matchNoQuote = message.match(/^([^']+)님으로부터 (.*)/);
+  if (matchNoQuote && matchNoQuote.length > 2) {
+    return matchNoQuote[2].trim();
+  }
+  return message;
+};
+
+const extractNickname = (message) => {
+  let match = message.match(/'([^']+)'님으로부터/);
+  if (match) return match[1];
+  match = message.match(/^([^']+)님으로부터/);
+  if (match) return match[1];
+  return null;
+};
+
+// Interval Custom Hook
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+  
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+  
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
 
 // API 요청 헬퍼 함수
 const getToken = () => localStorage.getItem("token");
@@ -207,9 +272,182 @@ export default function Calendar() {
   const [username, setUsername] = useState("멍냥");
   const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
 
+  // 알림 관련 상태
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNoti, setLoadingNoti] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const lastKnownNotiIds = useRef(new Set());
+  const notiBtnRef = useRef(null);
+  const notiRef = useRef(null);
+
+  // 알림 읽음 처리 함수들
+  const markNotificationAsReadOnServer = async (id) => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      await axios.post(
+        `https://youngbin.pythonanywhere.com/api/v1/notifications/${id}/read/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error(`알림 ${id} 서버 읽음 처리 실패:`, err);
+    }
+  };
+
+  const markAllNotificationsReadOnServer = async () => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      await axios.post(
+        "https://youngbin.pythonanywhere.com/api/v1/notifications/read-all/",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("모든 알림 서버 읽음 처리 실패:", err);
+    }
+  };
+
+  const markRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+    markNotificationAsReadOnServer(id);
+  };
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setHasNewNotification(false);
+    markAllNotificationsReadOnServer();
+  };
+
+  const hasUnreadInList = useMemo(
+    () => notifications.some((n) => !n.is_read),
+    [notifications]
+  );
+
+  // 알림 패널 외부 클릭/ESC로 닫기
+  useEffect(() => {
+    if (!showBellPopup) return;
+    const onClick = (e) => {
+      if (
+        notiRef.current &&
+        !notiRef.current.contains(e.target) &&
+        notiBtnRef.current &&
+        !notiBtnRef.current.contains(e.target)
+      ) {
+        setShowBellPopup(false);
+        setHasNewNotification(false);
+      }
+    };
+    const onEsc = (e) => e.key === "Escape" && setShowBellPopup(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [showBellPopup]);
+
+  // 알림 API 호출 함수
+  const fetchNotifications = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(
+        "https://youngbin.pythonanywhere.com/api/v1/notifications/",
+        { headers }
+      );
+
+      const rawNotifications = Array.isArray(res.data)
+        ? res.data
+        : res.data.results || [];
+
+      const mappedNotifications = rawNotifications.map((n) => {
+        const senderName =
+          n.sender_nickname && n.sender_nickname.trim()
+            ? n.sender_nickname.trim()
+            : n.sender_id
+            ? `사용자 ${n.sender_id}`
+            : extractNickname(n.message || "") || "알 수 없는 사용자";
+
+        const cleanedText = cleanAlertText(n.message);
+
+        return {
+          id: n.id,
+          user: senderName,
+          text: cleanedText,
+          time: getTimeAgo(n.created_at),
+          rawTime: n.created_at,
+          is_read: n.is_read,
+          avatarColor: n.is_read ? "#e5e7eb" : "#dbeafe",
+        };
+      });
+
+      const uniqueNotifications = mappedNotifications.reduce((acc, current) => {
+        const isDuplicate = acc.some(
+          (item) =>
+            Math.abs(new Date(item.rawTime) - new Date(current.rawTime)) < 5000 &&
+            ((item.user === current.user && item.text === current.text) ||
+              ((current.user === "알 수 없는 사용자" ||
+                current.text === "새 쪽지가 도착했습니다.") &&
+                item.user !== "알 수 없는 사용자" &&
+                current.text.includes(item.user)))
+        );
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      uniqueNotifications.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+      const newNotiIds = new Set(uniqueNotifications.map((n) => n.id));
+      const newlyArrivedUnread = uniqueNotifications.some(
+        (n) => !n.is_read && !lastKnownNotiIds.current.has(n.id)
+      );
+
+      if (newlyArrivedUnread) {
+        setHasNewNotification(true);
+      }
+
+      lastKnownNotiIds.current = newNotiIds;
+      setNotifications(uniqueNotifications);
+    } catch (err) {
+      console.error("알림 불러오기 실패:", err);
+    } finally {
+      setLoadingNoti(false);
+    }
+  }, []);
+
+  // 초기 알림 로드
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    setLoadingNoti(true);
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // 10초마다 알림 새로고침
+  useInterval(() => {
+    if (showBellPopup) return;
+    fetchNotifications();
+  }, 10000);
+
   // 프로필 정보 가져오기
   useEffect(() => {
     const token = localStorage.getItem("token");
+    
+    // LocalStorage에서 저장된 프로필 이미지 URL을 먼저 확인
+    const storedImageUrl = localStorage.getItem("user_profile_image_url");
+    if (storedImageUrl) {
+      setUserProfileImage(storedImageUrl);
+    }
+    
     if (token) {
       axios
         .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
@@ -222,14 +460,21 @@ export default function Calendar() {
             res.data?.id ||
             "멍냥";
           setUsername(name);
-          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
-          if (res.data?.profile_image || res.data?.avatar) {
-            const imgUrl = res.data.profile_image || res.data.avatar;
-            setUserProfileImage(
-              imgUrl.startsWith("http")
-                ? imgUrl
-                : `https://youngbin.pythonanywhere.com${imgUrl}`
-            );
+          
+          // 프로필 이미지 우선순위: localStorage > API 응답 > 기본 이미지
+          const apiImageUrl = res.data?.profile_image || res.data?.avatar || res.data?.user_profile_image_url;
+          const finalImageUrl = storedImageUrl || 
+            (apiImageUrl 
+              ? (apiImageUrl.startsWith("http")
+                  ? apiImageUrl
+                  : `https://youngbin.pythonanywhere.com${apiImageUrl}`)
+              : null);
+          
+          if (finalImageUrl) {
+            setUserProfileImage(finalImageUrl);
+            if (!storedImageUrl && finalImageUrl) {
+              localStorage.setItem("user_profile_image_url", finalImageUrl);
+            }
           }
         })
         .catch((err) => {
@@ -255,6 +500,11 @@ export default function Calendar() {
     const petId = getPetId();
     if (!petId) {
       console.warn("pet_id가 없습니다.");
+      // pet_id가 없으면 반려동물 등록 안내 (한 번만 표시)
+      if (!localStorage.getItem("pet_id_warning_shown")) {
+        alert("반려동물을 먼저 등록해주세요.\n마이페이지에서 반려동물을 추가할 수 있습니다.");
+        localStorage.setItem("pet_id_warning_shown", "true");
+      }
       return;
     }
 
@@ -329,7 +579,7 @@ export default function Calendar() {
 
     const petId = getPetId();
     if (!petId) {
-      alert("펫 정보가 없습니다. 다시 로그인해주세요.");
+      alert("반려동물을 먼저 등록해주세요.\n마이페이지에서 반려동물을 추가할 수 있습니다.");
       return;
     }
 
@@ -469,9 +719,10 @@ export default function Calendar() {
               <span className="profile__name">{username}</span>
             </Link>
 
-            <div className="icon-wrapper">
+            <div className="icon-wrapper bell">
               <button
-                className="icon-btn"
+                ref={notiBtnRef}
+                className="icon-btn bell__btn"
                 onClick={() => {
                   setShowBellPopup((v) => !v);
                   setShowChatPopup(false);
@@ -479,8 +730,63 @@ export default function Calendar() {
                 type="button"
               >
                 <img src={bell} alt="알림 아이콘" className="icon" />
+                {hasNewNotification && <span className="bell__dot" />}
               </button>
-              {showBellPopup && <div className="popup"><p>📢 새 알림이 없습니다.</p></div>}
+              {showBellPopup && (
+                <div ref={notiRef} className="noti">
+                  <div className="noti__header">
+                    <strong>알림</strong>
+                    <button
+                      className="noti__allread"
+                      onClick={markAllRead}
+                      disabled={!hasUnreadInList}
+                    >
+                      모두 읽음
+                    </button>
+                  </div>
+                  <ul className="noti__list">
+                    {loadingNoti && (
+                      <li className="noti__empty">알림 불러오는 중...</li>
+                    )}
+                    {!loadingNoti && notifications.length === 0 && (
+                      <li className="noti__empty">알림이 없습니다.</li>
+                    )}
+                    {!loadingNoti &&
+                      notifications.map((n) => (
+                        <li
+                          key={n.id}
+                          className={`noti__item ${
+                            !n.is_read ? "is-unread" : "is-read"
+                          }`}
+                          onClick={() => markRead(n.id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && markRead(n.id)
+                          }
+                          title="클릭하면 읽음 처리"
+                        >
+                          <div
+                            className="noti__avatar"
+                            style={{ background: n.avatarColor }}
+                          />
+                          <div className="noti__body">
+                            <div className="noti__text">
+                              <b>{n.user}</b>
+                              <span>{n.text}</span>
+                            </div>
+                            <div className="noti__meta">
+                              <span className="noti__time">{n.time}</span>
+                              {!n.is_read && (
+                                <span className="noti__badge">안 읽음</span>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div className="icon-wrapper">

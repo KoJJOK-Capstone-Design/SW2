@@ -121,7 +121,8 @@ const extractNickname = (message) => {
  */
 function HeaderComponent({
   username, openNoti, setOpenNoti, hasNewNotification, notifications, loadingNoti, 
-  hasUnreadInList, markAllRead, markRead, notiBtnRef, notiRef, setShowChatPopup
+  hasUnreadInList, markAllRead, markRead, notiBtnRef, notiRef, setShowChatPopup,
+  userProfileImage
 }) {
   // Chat.js에서 이미지를 import 했으므로 여기서는 props로 넘겨받지 않고 직접 사용
   // 만약 Header.js로 옮긴다면, 이 이미지들을 Header.js에서도 import 해야 합니다.
@@ -147,7 +148,7 @@ function HeaderComponent({
           <Link to="/mypage" className="profile">
             <div className="profile__avatar">
               <img
-                src="https://i.pravatar.cc/80?img=11"
+                src={userProfileImage || "https://i.pravatar.cc/80?img=11"}
                 alt="프로필"
               />
             </div>
@@ -287,7 +288,8 @@ export default function Chat() {
 
   // ===================== 로그인 유저 정보 =====================
   const [currentUser, setCurrentUser] = useState(null); 
-  const [username, setUsername] = useState("멍냥"); 
+  const [username, setUsername] = useState("멍냥");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11"); 
 
   // ===================== 쪽지/스레드 상태 =====================
   const [threads, setThreads] = useState([]); 
@@ -537,6 +539,44 @@ const markAllNotificationsReadOnServer = async () => {
   }, [selectedId, selected?.messages.length]);
 
 
+  // ===================== 프로필 이미지 로드 =====================
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    
+    // LocalStorage에서 저장된 프로필 이미지 URL을 먼저 확인
+    const storedImageUrl = localStorage.getItem("user_profile_image_url");
+    if (storedImageUrl) {
+      setUserProfileImage(storedImageUrl);
+    }
+    
+    if (token) {
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          // 프로필 이미지 우선순위: localStorage > API 응답 > 기본 이미지
+          const apiImageUrl = res.data?.profile_image || res.data?.avatar || res.data?.user_profile_image_url;
+          const finalImageUrl = storedImageUrl || 
+            (apiImageUrl 
+              ? (apiImageUrl.startsWith("http")
+                  ? apiImageUrl
+                  : `https://youngbin.pythonanywhere.com${apiImageUrl}`)
+              : null);
+          
+          if (finalImageUrl) {
+            setUserProfileImage(finalImageUrl);
+            if (!storedImageUrl && finalImageUrl) {
+              localStorage.setItem("user_profile_image_url", finalImageUrl);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+        });
+    }
+  }, []);
+
   // ===================== 프로필 + 쪽지 + 최초 알림 API 호출 =====================
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -568,6 +608,16 @@ const markAllNotificationsReadOnServer = async () => {
         setCurrentUser(user);
 
         setUsername(getDisplayName(user));
+        
+        // 프로필 이미지 업데이트 (API 응답에서)
+        const apiImageUrl = user?.profile_image || user?.avatar || user?.user_profile_image_url;
+        if (apiImageUrl) {
+          const finalImageUrl = apiImageUrl.startsWith("http")
+            ? apiImageUrl
+            : `https://youngbin.pythonanywhere.com${apiImageUrl}`;
+          setUserProfileImage(finalImageUrl);
+          localStorage.setItem("user_profile_image_url", finalImageUrl);
+        }
 
         // 최초 알림 로딩 시에는 loadingNoti 상태를 사용
         setLoadingNoti(true);
@@ -987,6 +1037,7 @@ const markAllNotificationsReadOnServer = async () => {
         notiBtnRef={notiBtnRef}
         notiRef={notiRef}
         setShowChatPopup={setShowChatPopup} // Chat.js에서는 false 고정으로 사용
+        userProfileImage={userProfileImage}
       />
       
       {/* (이하 생략: main, footer는 기존 코드 그대로 유지) */}
