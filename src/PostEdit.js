@@ -1,6 +1,6 @@
 // src/PostEdit.js
 import React, { useEffect, useState, useRef } from "react";
-import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./Home.css";
 import "./CommunityWrite.css";          // 작성 화면과 동일 CSS 재사용
@@ -281,12 +281,12 @@ export default function PostEdit() {
           {isLoggedIn ? (
             <nav className="menuicon">
               {/* 프로필 */}
-              <div className="profile">
+              <Link to="/mypage" className="profile">
                 <div className="profile__avatar">
                   <img src={userProfileImage} alt="프로필" />
                 </div>
                 <span className="profile__name">{username}</span>
-              </div>
+              </Link>
 
               {/* 알림 벨 */}
               <div className="icon-wrapper">

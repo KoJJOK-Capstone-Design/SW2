@@ -1,6 +1,6 @@
 // src/HomeLogin.jsx
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import axios from "axios";
 
 import "./Home.css";
@@ -146,7 +146,7 @@ export default function HomeLogin() {
 
           {/* 오른쪽 - 로그인 상태 (프로필 + 알림 + 채팅아이콘) */}
           <nav className="menuicon">
-            <div className="profile">
+            <Link to="/mypage" className="profile">
               <div className="profile__avatar">
                 <img
                   src="https://i.pravatar.cc/80?img=11"
@@ -154,7 +154,7 @@ export default function HomeLogin() {
                 />
               </div>
               <span className="profile__name">{username}</span>
-            </div>
+            </Link>
 
             {/* 알림 벨 */}
             <div className="icon-wrapper bell">

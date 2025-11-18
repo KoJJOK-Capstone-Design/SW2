@@ -922,12 +922,12 @@ const Health = ({ user, pet }) => {
           {isLoggedIn ? (
             <nav className="menuicon">
               {/* 프로필 */}
-              <div className="profile">
+              <Link to="/mypage" className="profile">
                 <div className="profile__avatar">
                   <img src={userProfileImage} alt="프로필" />
                 </div>
                 <span className="profile__name">{username}</span>
-              </div>
+              </Link>
 
               {/* 알림 벨 */}
               <div className="icon-wrapper">

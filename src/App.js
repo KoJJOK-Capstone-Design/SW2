@@ -15,6 +15,7 @@ import Chat from './Chat';
 import Health from './Health';
 import BcsTest from './BcsTest';
 import Homelogin from './Homelogin';
+import Mypage from './Mypage';
 
 
 export default function App(){
@@ -60,6 +61,7 @@ export default function App(){
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/Chat" element={<Chat />} />
         <Route path="/Homelogin" element={<Homelogin />} />
+        <Route path="/Mypage" element={<Mypage/>}/>
         {/* Health 페이지로 user와 pet 정보 전달 */}
         <Route 
           path="/Health" 

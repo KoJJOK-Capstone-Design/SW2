@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 import "./Dashboard.css";
@@ -143,7 +144,7 @@ function HeaderComponent({
 
         <nav className="menuicon">
           {/* 프로필 */}
-          <div className="profile">
+          <Link to="/mypage" className="profile">
             <div className="profile__avatar">
               <img
                 src="https://i.pravatar.cc/80?img=11"
@@ -151,7 +152,7 @@ function HeaderComponent({
               />
             </div>
             <span className="profile__name">{username}</span>
-          </div>
+          </Link>
 
           {/* 알림 벨 */}
           <div className="icon-wrapper bell">
