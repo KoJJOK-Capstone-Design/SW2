@@ -15,9 +15,6 @@ import chat from "./img/chat.png";
 import plusicon from "./img/plusicon.png"; 
 
 
-// =========================================================
-// 🧩 임시 그래프 렌더링 함수 (JSX 내에서 직접 사용)
-// =========================================================
 const renderActivityGraph = () => {
     return (
         <div className="activity-chart-placeholder">
