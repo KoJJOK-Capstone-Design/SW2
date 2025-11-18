@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Health.css";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
+import axios from "axios";
 
 import logoBlue from "./img/logo_blue.png";
 import logoGray from "./img/logo_gray.png";
@@ -27,6 +28,70 @@ import {
   Legend,
 } from "chart.js";
 
+// ====== API 설정 ======
+const API_BASE = "https://youngbin.pythonanywhere.com/api/v1/pets";
+
+// localStorage에서 pet_id / token 가져오기
+const getPetId = () => {
+  const stored = localStorage.getItem("pet_id");
+  const n = parseInt(stored, 10);
+  return Number.isNaN(n) ? 1 : n;
+};
+
+const getToken = () => localStorage.getItem("token");
+
+// 공통 API 요청 함수
+async function apiRequest(path, options = {}) {
+  const token = getToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(path, {
+    ...options,
+    headers,
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    console.error("API Error:", res.status, text);
+    
+    // JSON 응답인 경우 파싱해서 더 읽기 쉽게 표시
+    let errorMessage = text || "서버에서 에러 메시지를 보내지 않았습니다.";
+    try {
+      const errorJson = JSON.parse(text);
+      if (errorJson.error) {
+        errorMessage = errorJson.error;
+      } else if (errorJson.message) {
+        errorMessage = errorJson.message;
+      } else if (typeof errorJson === 'object') {
+        errorMessage = JSON.stringify(errorJson, null, 2);
+      }
+    } catch (e) {
+      // JSON이 아니면 원본 텍스트 사용
+    }
+    
+    // API 키 관련 오류인 경우 더 친절한 메시지
+    if (errorMessage.includes('GOOGLE_GEMINI_API_KEY') || errorMessage.includes('API_KEY')) {
+      errorMessage = "AI 분석 기능을 사용할 수 없습니다.\n서버 설정이 필요합니다.\n관리자에게 문의해주세요.";
+    }
+    
+    alert(`API 오류 (${res.status})\n${errorMessage}`);
+    throw new Error(`API Error ${res.status}`);
+  }
+
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -37,33 +102,243 @@ ChartJS.register(
   Legend
 );
 
-// ⭐️ [추가] Local Storage에서 저장된 건강 기록을 불러오는 함수
-const getInitialRecords = () => {
-  try {
-    const savedRecords = localStorage.getItem('petHealthRecords');
-    // 저장된 데이터가 있으면 JSON 파싱, 없으면 빈 배열 반환
-    return savedRecords ? JSON.parse(savedRecords) : [];
-  } catch (error) {
-    console.error("Local Storage에서 건강 기록을 불러오는 중 오류 발생:", error);
-    return [];
-  }
+// UI 값과 API 값 간 매핑
+const UI_TO_API_TYPE = {
+  visit: "병원 방문",
+  vax: "예방접종",
+  med: "투약",
 };
 
-const Health = ({ user, pet }) => {
-  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
-  // ⭐️ [변경] 초기값을 Local Storage에서 가져오도록 설정
-  const [records, setRecords] = useState(getInitialRecords);
-  const [activeTab, setActiveTab] = useState("all");
+const API_TO_UI_TYPE = {
+  "병원 방문": "visit",
+  "예방접종": "vax",
+  "투약": "med",
+  // 영문 값도 지원 (혹시 모를 경우)
+  hospital: "visit",
+  vaccination: "vax",
+  medication: "med",
+};
 
-  // ⭐️ [추가] records 상태가 변경될 때마다 Local Storage에 저장
+// API 응답을 UI 형식으로 변환하는 함수
+function mapHealthLogToRecord(log) {
+  const iconMap = { visit: "🏥", vax: "💉", med: "💊" };
+  const uiType = API_TO_UI_TYPE[log.log_type] || log.log_type;
+  return {
+    id: log.id,
+    type: uiType,
+    icon: iconMap[uiType] || "🏥",
+    title: log.content,
+    location: log.location || "",
+    date: log.log_date || (log.created_at ? log.created_at.slice(0, 10) : ""),
+  };
+}
+
+const Health = ({ user, pet }) => {
+  const location = useLocation();
+  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [loading, setLoading] = useState(false);
+  
+  // 펫 정보 상태 (서버에서 가져온 최신 정보)
+  const [petInfo, setPetInfo] = useState({
+    breed: pet?.breed || "미입력",
+    weight: pet?.weight || "미입력",
+    age: pet?.age || "미입력",
+    bcs: pet?.bcs || "미입력",
+  });
+
+  // 건강 페이지 정보 및 기록 목록 불러오기
   useEffect(() => {
-    try {
-      localStorage.setItem('petHealthRecords', JSON.stringify(records));
-    } catch (error) {
-      console.error("Local Storage에 건강 기록을 저장하는 중 오류 발생:", error);
+    loadHealthData(); // loadHealthData에서 pet_info도 함께 불러옴
+  }, []);
+
+  // 페이지 이동 시 펫 정보 다시 불러오기 (BCS 업데이트 반영)
+  useEffect(() => {
+    // 페이지가 마운트되거나 경로가 변경될 때마다 건강 페이지 정보 다시 불러오기
+    if (location.pathname === '/health' || location.pathname === '/Health') {
+      loadHealthData();
     }
-  }, [records]);
-  // --------------------------------------------------------
+  }, [location.pathname]);
+
+  // 페이지 포커스 시 펫 정보 다시 불러오기 (BCS 업데이트 반영)
+  useEffect(() => {
+    const handleFocus = () => {
+      loadHealthData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // 펫 정보 불러오기 (건강 페이지 정보 API에서 가져온 pet_info 사용)
+  async function loadPetInfo() {
+    // loadHealthData에서 이미 pet_info를 불러오므로 여기서는 별도로 호출하지 않음
+    // 필요시 loadHealthData를 다시 호출
+  }
+
+  async function loadHealthData() {
+    try {
+      setLoading(true);
+      const petId = getPetId();
+      
+      // 건강 페이지 정보 조회 (기록 목록 포함)
+      const data = await apiRequest(`${API_BASE}/health/${petId}/`, {
+        method: "GET",
+      });
+      
+      console.log("건강 페이지 정보 API 응답:", data); // 디버깅용
+      console.log("건강 페이지 정보 API 응답의 pet_info:", data?.pet_info); // 디버깅용
+      
+      // 최신 BCS 체크업 기록 확인 (잘못된 pet_info.bcs 대신 사용)
+      let latestBcsCheckup = null;
+      
+      // 방법 1: Health API 응답에 recent_bcs_checkups가 있는지 확인
+      if (data?.recent_bcs_checkups && Array.isArray(data.recent_bcs_checkups) && data.recent_bcs_checkups.length > 0) {
+        // 최신 BCS 체크업 기록 찾기 (날짜 기준)
+        latestBcsCheckup = data.recent_bcs_checkups.sort((a, b) => {
+          const dateA = new Date(a.checkup_date || a.created_at || 0);
+          const dateB = new Date(b.checkup_date || b.created_at || 0);
+          return dateB - dateA;
+        })[0];
+        console.log("최신 BCS 체크업 기록 (Health API):", latestBcsCheckup); // 디버깅용
+      }
+      
+      // 방법 2: Health API 응답에 없으면 로컬 스토리지에서 확인
+      if (!latestBcsCheckup) {
+        const storedBcs = localStorage.getItem('latest_bcs_score');
+        if (storedBcs) {
+          try {
+            const parsedBcs = JSON.parse(storedBcs);
+            if (parsedBcs.score && parsedBcs.timestamp) {
+              // 24시간 이내의 값만 사용
+              const now = Date.now();
+              const oneDay = 24 * 60 * 60 * 1000;
+              if (now - parsedBcs.timestamp < oneDay) {
+                latestBcsCheckup = { stage_number: parsedBcs.score };
+                console.log("최신 BCS 체크업 기록 (로컬 스토리지):", latestBcsCheckup); // 디버깅용
+              }
+            }
+          } catch (e) {
+            console.warn("로컬 스토리지 BCS 파싱 실패:", e);
+          }
+        }
+      }
+      
+      // 건강 페이지 정보에 펫 정보가 포함되어 있을 수 있음 (pet_info 또는 pet)
+      const petData = data?.pet_info || data?.pet;
+      if (petData) {
+        console.log("petData 전체:", petData); // 디버깅용
+        
+        // 나이 처리 - pet_info에는 이미 계산된 age가 있을 수 있음
+        let ageText = "미입력";
+        if (petData.age !== undefined && petData.age !== null) {
+          // 이미 계산된 나이 값이 있으면 사용
+          if (typeof petData.age === 'number') {
+            ageText = `${petData.age}세`;
+          } else if (typeof petData.age === 'string') {
+            ageText = petData.age;
+          }
+        } else if (petData.birth_date) {
+          // birth_date가 있으면 계산
+          const birthDate = new Date(petData.birth_date);
+          const today = new Date();
+          const ageInMonths = (today.getFullYear() - birthDate.getFullYear()) * 12 + 
+                              (today.getMonth() - birthDate.getMonth());
+          if (ageInMonths < 12) {
+            ageText = `${ageInMonths}개월`;
+          } else {
+            const years = Math.floor(ageInMonths / 12);
+            const months = ageInMonths % 12;
+            ageText = months > 0 ? `${years}세 ${months}개월` : `${years}세`;
+          }
+        }
+        
+        // 체중 처리 - current_weight 또는 weight
+        let weightText = "미입력";
+        const weightValue = petData.current_weight !== undefined ? petData.current_weight : petData.weight;
+        if (weightValue !== undefined && weightValue !== null && weightValue !== "") {
+          weightText = `${weightValue}kg`;
+        }
+        
+        // BCS 값 처리
+        // ⚠️ 중요: 최신 BCS 체크업 기록이 있으면 그것을 우선 사용 (pet_info.bcs는 BCS 체크업 API가 잘못 저장한 값일 수 있음)
+        let bcsValue = null;
+        
+        if (latestBcsCheckup && latestBcsCheckup.stage_number !== undefined && latestBcsCheckup.stage_number !== null) {
+          // 최신 BCS 체크업 기록의 stage_number 사용
+          bcsValue = latestBcsCheckup.stage_number;
+          console.log("최신 BCS 체크업 기록 사용:", bcsValue, "(pet_info.bcs 무시)"); // 디버깅용
+        } else {
+          // 최신 BCS 체크업 기록이 없으면 pet_info.bcs 사용
+          bcsValue = petData.bcs !== undefined ? petData.bcs : 
+                    petData.bcs_score !== undefined ? petData.bcs_score :
+                    petData.body_condition_score !== undefined ? petData.body_condition_score :
+                    null;
+          console.log("pet_info.bcs 사용:", bcsValue); // 디버깅용
+        }
+        
+        console.log("BCS 원본 값:", bcsValue, "타입:", typeof bcsValue); // 디버깅용
+        
+        let bcsText = "미입력";
+        if (bcsValue !== null && bcsValue !== undefined && bcsValue !== "") {
+          // 이미 "X단계" 형식인 문자열인지 확인
+          if (typeof bcsValue === 'string' && bcsValue.includes('단계')) {
+            // 이미 "X단계" 형식이면 그대로 사용
+            bcsText = bcsValue;
+          } else if (typeof bcsValue === 'number') {
+            // 숫자인 경우 "단계" 추가
+            bcsText = `${bcsValue}단계`;
+          } else if (typeof bcsValue === 'string') {
+            // 문자열이지만 "단계"가 없는 경우
+            // "측정 안함" 같은 특수 문자열 처리
+            if (bcsValue === '측정 안함' || bcsValue.toLowerCase() === 'null' || bcsValue === '') {
+              bcsText = "미입력";
+            } else {
+              // 숫자로 변환 가능한 문자열인지 확인
+              const numValue = parseFloat(bcsValue);
+              if (!isNaN(numValue) && isFinite(numValue)) {
+                bcsText = `${numValue}단계`;
+              } else {
+                // 숫자로 변환 불가능한 문자열이면 그대로 표시
+                bcsText = bcsValue;
+              }
+            }
+          }
+        }
+        
+        console.log("건강 페이지에서 가져온 값들:", {
+          weight: weightValue,
+          age: petData.age,
+          bcs: bcsValue,
+          "→ 표시": { weight: weightText, age: ageText, bcs: bcsText }
+        }); // 디버깅용
+        
+        setPetInfo({
+          breed: petData.breed || "미입력",
+          weight: weightText,
+          age: ageText,
+          bcs: bcsText,
+        });
+      }
+      
+      // 기록 목록이 배열로 오는 경우 (recent_health_logs 또는 logs)
+      const logs = data?.recent_health_logs || data?.logs;
+      if (logs && Array.isArray(logs)) {
+        const mapped = logs.map(mapHealthLogToRecord);
+        setRecords(mapped);
+      } else if (data && Array.isArray(data)) {
+        const mapped = data.map(mapHealthLogToRecord);
+        setRecords(mapped);
+      } else {
+        setRecords([]);
+      }
+    } catch (error) {
+      console.error("건강 데이터 불러오기 실패:", error);
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // 추가 모달
   const [showModal, setShowModal] = useState(false);
@@ -91,6 +366,46 @@ const Health = ({ user, pet }) => {
   // 헤더 팝업
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
+
+  // 로그인 상태 및 사용자 정보
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
+
+  // 로그인 상태 확인 및 사용자 정보 가져오기
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const name =
+            res.data?.nickname ||
+            res.data?.username ||
+            res.data?.id ||
+            "멍냥";
+          setUsername(name);
+          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
+          if (res.data?.profile_image || res.data?.avatar) {
+            const imgUrl = res.data.profile_image || res.data.avatar;
+            setUserProfileImage(
+              imgUrl.startsWith("http")
+                ? imgUrl
+                : `https://youngbin.pythonanywhere.com${imgUrl}`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+          setIsLoggedIn(false);
+        });
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
 
   // 증상 목록
   const symptoms = [
@@ -129,27 +444,42 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  const handleSave = () => {
-    if (!newRecord.type || !newRecord.title || !newRecord.location || !newRecord.date) {
-      alert("모든 내용을 입력해주세요!");
+  const handleSave = async () => {
+    if (!newRecord.type || !newRecord.title || !newRecord.date) {
+      alert("종류, 제목, 날짜는 필수 입력 항목입니다!");
       return;
     }
 
-    const iconMap = { visit: "🏥", vax: "💉", med: "💊" };
+    try {
+      const petId = getPetId();
+      // UI 값("visit", "vax", "med")을 API 값("병원 방문", "예방접종", "투약")으로 변환
+      const apiLogType = UI_TO_API_TYPE[newRecord.type] || newRecord.type;
+      const payload = {
+        log_type: apiLogType,
+        content: newRecord.title,
+        log_date: newRecord.date,
+      };
+      
+      if (newRecord.location) {
+        payload.location = newRecord.location;
+      }
 
-    const created = {
-      id: Date.now(),
-      type: newRecord.type,
-      icon: iconMap[newRecord.type],
-      title: newRecord.title,
-      location: newRecord.location,
-      date: newRecord.date,
-    };
+      const created = await apiRequest(`${API_BASE}/health/logs/${petId}/`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-    setRecords([created, ...records]);
-    setNewRecord({ type: "", title: "", location: "", date: "" });
-    setShowModal(false);
-    setIsDropdownOpen(false);
+      if (created && created.id) {
+        const newRecordMapped = mapHealthLogToRecord(created);
+        setRecords([newRecordMapped, ...records]);
+      }
+
+      setNewRecord({ type: "", title: "", location: "", date: "" });
+      setShowModal(false);
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error("건강 기록 생성 실패:", error);
+    }
   };
 
   const handleFormSubmit = (e) => {
@@ -171,22 +501,41 @@ const Health = ({ user, pet }) => {
     });
   };
 
-  const handleUpdateSave = () => {
-    if (!recordToEdit.type || !recordToEdit.title || !recordToEdit.location || !recordToEdit.date) {
-      alert("모든 내용을 입력해주세요!");
+  const handleUpdateSave = async () => {
+    if (!recordToEdit.type || !recordToEdit.title || !recordToEdit.date) {
+      alert("종류, 제목, 날짜는 필수 입력 항목입니다!");
       return;
     }
 
-    const iconMap = { visit: "🏥", vax: "💉", med: "💊" };
-    const updatedRecord = {
-      ...recordToEdit,
-      icon: iconMap[recordToEdit.type],
-    };
+    try {
+      // UI 값("visit", "vax", "med")을 API 값("병원 방문", "예방접종", "투약")으로 변환
+      const apiLogType = UI_TO_API_TYPE[recordToEdit.type] || recordToEdit.type;
+      const payload = {
+        log_type: apiLogType,
+        content: recordToEdit.title,
+        log_date: recordToEdit.date,
+      };
+      
+      if (recordToEdit.location) {
+        payload.location = recordToEdit.location;
+      }
 
-    setRecords(records.map((r) => (r.id === updatedRecord.id ? updatedRecord : r)));
-    setShowEditModal(false);
-    setRecordToEdit(null);
-    setIsEditDropdownOpen(false);
+      const updated = await apiRequest(`${API_BASE}/health/logs/items/${recordToEdit.id}/`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (updated && updated.id) {
+        const updatedRecordMapped = mapHealthLogToRecord(updated);
+        setRecords(records.map((r) => (r.id === updatedRecordMapped.id ? updatedRecordMapped : r)));
+      }
+
+      setShowEditModal(false);
+      setRecordToEdit(null);
+      setIsEditDropdownOpen(false);
+    } catch (error) {
+      console.error("건강 기록 수정 실패:", error);
+    }
   };
 
   const handleEditFormSubmit = (e) => {
@@ -209,14 +558,22 @@ const Health = ({ user, pet }) => {
     setRecordToDelete(null);
   };
 
-  const handleConfirmDelete = () => {
-    setRecords(records.filter((r) => r.id !== recordToDelete));
-    setShowDeleteModal(false);
-    setRecordToDelete(null);
+  const handleConfirmDelete = async () => {
+    try {
+      await apiRequest(`${API_BASE}/health/logs/items/${recordToDelete}/`, {
+        method: "DELETE",
+      });
+
+      setRecords(records.filter((r) => r.id !== recordToDelete));
+      setShowDeleteModal(false);
+      setRecordToDelete(null);
+    } catch (error) {
+      console.error("건강 기록 삭제 실패:", error);
+    }
   };
 
-  // ============= AI 분석 (더미) =============
-  const handleAnalyze = () => {
+  // ============= AI 분석 =============
+  const handleAnalyze = async () => {
     if (selectedSymptoms.length === 0) {
       alert("먼저 증상을 선택해주세요!");
       return;
@@ -225,23 +582,79 @@ const Health = ({ user, pet }) => {
     setIsLoading(true);
     setAnalysisResult(null);
 
-    setTimeout(() => {
-      const fakeResponse = {
-        illness_name: "복합적 문제",
-        illness_details: `선택하신 '${selectedSymptoms.join(
-          ", "
-        )}' 증상은 급성 위장염의 가능성을 시사합니다.`,
-        recommendations: [
-          "유산균을 급여하고 식단 점검",
-          "탈수 방지를 위해 물 섭취 유도",
-          "편안한 환경에서 휴식",
-          "24시간 내 호전 없으면 수의사 상담",
-        ],
+    try {
+      const petId = getPetId();
+      const payload = {
+        symptoms: selectedSymptoms,
       };
 
-      setAnalysisResult(fakeResponse);
+      const result = await apiRequest(`${API_BASE}/health/ai-checkup/${petId}/`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      console.log("AI 분석 API 응답:", result); // 디버깅용
+      console.log("AI 분석 API 응답의 모든 키:", result ? Object.keys(result) : "null"); // 디버깅용
+
+      if (result) {
+        // analysis_result 객체 안에 실제 데이터가 있음
+        const analysisData = result.analysis_result || result;
+        
+        console.log("analysis_result 내용:", analysisData); // 디버깅용
+        console.log("analysis_result의 모든 키:", analysisData ? Object.keys(analysisData) : "null"); // 디버깅용
+        
+        // analysis 객체 안에 질환 정보가 있을 수 있음
+        const analysis = analysisData.analysis || {};
+        console.log("analysis 객체 내용:", analysis); // 디버깅용
+        console.log("analysis 객체의 모든 키:", analysis ? Object.keys(analysis) : "null"); // 디버깅용
+        
+        // API 응답 구조에 맞게 필드명 확인 (analysis 객체 우선, 없으면 analysisData에서)
+        const illnessName = analysis.illness_name || 
+                           analysis.disease_name || 
+                           analysis.질환명 || 
+                           analysis.suspected_disease ||
+                           analysisData.illness_name || 
+                           analysisData.disease_name || 
+                           analysisData.질환명 || 
+                           analysisData.suspected_disease ||
+                           "의심 질환";
+        
+        const illnessDetails = analysis.illness_details || 
+                              analysis.details || 
+                              analysis.disease_details || 
+                              analysis.상세 || 
+                              analysis.description ||
+                              analysis.diagnosis ||
+                              analysisData.illness_details || 
+                              analysisData.details || 
+                              analysisData.disease_details || 
+                              analysisData.상세 || 
+                              analysisData.description ||
+                              analysisData.diagnosis ||
+                              "";
+        
+        const recommendations = analysisData.recommendations || 
+                                analysisData.recommendation || 
+                                analysisData.권장사항 || 
+                                analysisData.대처방안 ||
+                                analysisData.actions ||
+                                [];
+        
+        console.log("파싱된 결과:", { illnessName, illnessDetails, recommendations }); // 디버깅용
+        
+        setAnalysisResult({
+          illness_name: illnessName,
+          illness_details: illnessDetails,
+          recommendations: Array.isArray(recommendations) ? recommendations : (recommendations ? [recommendations] : []),
+        });
+      }
+    } catch (error) {
+      console.error("AI 분석 실패:", error);
+      // apiRequest에서 이미 alert를 표시하므로 여기서는 추가 알림 없음
+      // 필요시 더 구체적인 에러 메시지 표시 가능
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const filteredRecords =
@@ -506,32 +919,55 @@ const Health = ({ user, pet }) => {
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
 
-          <nav className="menuicon">
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowBellPopup((v) => !v);
-                  setShowChatPopup(false);
-                }}
-              >
-                <img src={bell} alt="알림 아이콘" className="icon" />
-              </button>
-              {showBellPopup && <div className="popup"><p>📢 새 알림이 없습니다.</p></div>}
-            </div>
+          {isLoggedIn ? (
+            <nav className="menuicon">
+              {/* 프로필 */}
+              <div className="profile">
+                <div className="profile__avatar">
+                  <img src={userProfileImage} alt="프로필" />
+                </div>
+                <span className="profile__name">{username}</span>
+              </div>
 
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowChatPopup((v) => !v);
-                  setShowBellPopup(false);
-                }}
-              >
-                <a href="/Chat"><img src={chat} alt="채팅 아이콘" className="icon" /></a>
-              </button>
-            </div>
-          </nav>
+              {/* 알림 벨 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowBellPopup((v) => !v);
+                    setShowChatPopup(false);
+                  }}
+                >
+                  <img src={bell} alt="알림 아이콘" className="icon" />
+                </button>
+                {showBellPopup && (
+                  <div className="popup">
+                    <p>📢 새 알림이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 채팅 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowChatPopup((v) => !v);
+                    setShowBellPopup(false);
+                  }}
+                >
+                  <NavLink to="/Chat">
+                    <img src={chat} alt="채팅 아이콘" className="icon" />
+                  </NavLink>
+                </button>
+              </div>
+            </nav>
+          ) : (
+            <nav className="menulink">
+              <NavLink to="/signup">회원가입</NavLink>
+              <NavLink to="/signin">로그인</NavLink>
+            </nav>
+          )}
         </div>
       </header>
 
@@ -543,13 +979,18 @@ const Health = ({ user, pet }) => {
           <h2 className="hw">나!님의 건강 정보</h2>
 
           <div className="info-grid">
-            <div><span>품종</span><b>{pet?.breed ?? "미입력"}</b></div>
-            <div><span>현재 체중</span><b>{pet?.weight ?? "미입력"}</b></div>
-            <div><span>나이</span><b>{pet?.age ?? "미입력"}</b></div>
+            <div><span>품종</span><b>{petInfo.breed}</b></div>
+            <div><span>현재 체중</span><b>{petInfo.weight}</b></div>
+            <div><span>나이</span><b>{petInfo.age}</b></div>
             <div>
               <span>BCS</span>
-              {pet?.bcs && pet.bcs !== "미입력" ? (
-                <b>{pet.bcs}</b>
+              {petInfo.bcs && petInfo.bcs !== "미입력" ? (
+                <>
+                  <b>{petInfo.bcs}</b>
+                  <span className="test" onClick={() => (window.location.href = "/BcsTest")}>
+                    다시 진단하기
+                  </span>
+                </>
               ) : (
                 <>
                   <b>미입력</b>
@@ -643,7 +1084,11 @@ const Health = ({ user, pet }) => {
             <h2 className="hw">AI 분석 결과</h2>
 
             <div className="result-box danger">
-              <span className="box-title">의심 질환 : {analysisResult.illness_name}</span>
+              <span className="box-title">
+                {analysisResult.illness_name && analysisResult.illness_name !== "의심 질환" 
+                  ? `의심 질환 : ${analysisResult.illness_name}` 
+                  : "의심 질환"}
+              </span>
               <p>{analysisResult.illness_details}</p>
             </div>
 
