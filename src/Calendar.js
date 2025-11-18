@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
@@ -18,20 +19,61 @@ import githubpic from "./img/github.png";
 import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 
-// ⭐️ [추가] Local Storage에서 저장된 일정 데이터를 불러오는 함수
-const getInitialEvents = () => {
-  try {
-    const savedEvents = localStorage.getItem('petCalendarEvents');
-    return savedEvents ? JSON.parse(savedEvents) : [];
-  } catch (error) {
-    console.error("Local Storage에서 캘린더 이벤트를 불러오는 중 오류 발생:", error);
-    return [];
+const API_BASE = "https://youngbin.pythonanywhere.com/api/v1/pets";
+
+// API 요청 헬퍼 함수
+const getToken = () => localStorage.getItem("token");
+const getPetId = () => localStorage.getItem("pet_id");
+
+async function apiRequest(path, options = {}) {
+  const token = getToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
-};
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    console.error("API Error:", res.status, text);
+    console.error("Request URL:", `${API_BASE}${path}`);
+    console.error("Request Method:", options.method || "GET");
+    const errorMsg = text || "서버에서 에러 메시지를 보내지 않았습니다.";
+    // 405 에러는 alert를 표시하지 않고 콘솔에만 출력 (너무 많은 alert 방지)
+    if (res.status !== 405) {
+      alert(`API 오류 (${res.status})\n${errorMsg}`);
+    }
+    throw new Error(`API Error ${res.status}`);
+  }
+
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
 
 const CustomDatePicker = ({ value, onChange, events }) => {
   const today = new Date();
-  const [current, setCurrent] = useState(value ? new Date(value) : new Date());
+  const initialDate = value ? new Date(value) : new Date();
+  const [current, setCurrent] = useState(initialDate);
+
+  // value prop이 변경되면 current 상태도 업데이트
+  useEffect(() => {
+    if (value) {
+      const newDate = new Date(value);
+      setCurrent(newDate);
+    }
+  }, [value]);
 
   const year = current.getFullYear();
   const month = current.getMonth();
@@ -66,7 +108,11 @@ const CustomDatePicker = ({ value, onChange, events }) => {
       <div className="calendar-header">
         <button
           type="button"
-          onClick={() => setCurrent(new Date(year, month - 1, 1))}
+          onClick={() => {
+            const newDate = new Date(year, month - 1, 1);
+            setCurrent(newDate);
+            onChange(formatDate(year, month - 1, 1));
+          }}
         >
           ‹
         </button>
@@ -75,7 +121,11 @@ const CustomDatePicker = ({ value, onChange, events }) => {
         </span>
         <button
           type="button"
-          onClick={() => setCurrent(new Date(year, month + 1, 1))}
+          onClick={() => {
+            const newDate = new Date(year, month + 1, 1);
+            setCurrent(newDate);
+            onChange(formatDate(year, month + 1, 1));
+          }}
         >
           ›
         </button>
@@ -137,14 +187,14 @@ function formatYMD(d) {
 /* ---------------- Main Calendar Component ---------------- */
 export default function Calendar() {
   const [date, setDate] = useState(new Date());
-  // ⭐️ [변경] 초기값을 Local Storage에서 불러오도록 설정
-  const [events, setEvents] = useState(getInitialEvents);
+  const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
-  const [form, setForm] = useState({ text: "", date: "", category: "병원" });
+  const [form, setForm] = useState({ text: "", date: "", category: "병원/약" });
   const [closing, setClosing] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -153,22 +203,45 @@ export default function Calendar() {
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
-  // ⭐️ [추가] events 상태가 변경될 때마다 Local Storage에 저장
+  // 프로필 정보
+  const [username, setUsername] = useState("멍냥");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
+
+  // 프로필 정보 가져오기
   useEffect(() => {
-    try {
-      localStorage.setItem('petCalendarEvents', JSON.stringify(events));
-    } catch (error) {
-      console.error("Local Storage에 캘린더 이벤트를 저장하는 중 오류 발생:", error);
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const name =
+            res.data?.nickname ||
+            res.data?.username ||
+            res.data?.id ||
+            "멍냥";
+          setUsername(name);
+          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
+          if (res.data?.profile_image || res.data?.avatar) {
+            const imgUrl = res.data.profile_image || res.data.avatar;
+            setUserProfileImage(
+              imgUrl.startsWith("http")
+                ? imgUrl
+                : `https://youngbin.pythonanywhere.com${imgUrl}`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+        });
     }
-  }, [events]);
-  // --------------------------------------------------------
+  }, []);
 
   const CATEGORY_OPTIONS = [
-    { value: "병원", label: "병원 / 약", color: "#ebc3bcff", icon: "🏥" },
-    { value: "쇼핑", label: "쇼핑", color: "#e1faeaff", icon: "🛒" },
+    { value: "병원/약", label: "병원/약", color: "#ebc3bcff", icon: "🏥" },
     { value: "미용", label: "미용", color: "#d6ebfaff", icon: "✂️" },
-    { value: "생일", label: "생일", color: "#fff9ecff", icon: "🎂" },
-    { value: "산책/나들이", label: "산책/나들이", color: "#EFE4FF", icon: "🌳" },
+    { value: "행사", label: "행사", color: "#fff9ecff", icon: "🎂" },
     { value: "기타", label: "기타", color: "#E9ECEF", icon: "⚫" },
   ];
 
@@ -176,6 +249,46 @@ export default function Calendar() {
     acc[cat.value] = { color: cat.color, icon: cat.icon };
     return acc;
   }, {});
+
+  // 월별 일정 조회 API 호출
+  const fetchCalendarEvents = useCallback(async (year, month) => {
+    const petId = getPetId();
+    if (!petId) {
+      console.warn("pet_id가 없습니다.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await apiRequest(
+        `/calendar/${petId}/?year=${year}&month=${month}`,
+        { method: "GET" }
+      );
+
+      // API 응답을 내부 이벤트 형식으로 변환
+      const transformedEvents = (data || []).map((schedule) => ({
+        id: schedule.id,
+        text: schedule.content,
+        date: schedule.schedule_date,
+        category: schedule.category,
+        color: categoryMeta[schedule.category]?.color || "#E9ECEF",
+      }));
+
+      setEvents(transformedEvents);
+    } catch (error) {
+      console.error("캘린더 일정 조회 실패:", error);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 현재 월의 일정 조회
+  useEffect(() => {
+    const currentYear = date.getFullYear();
+    const currentMonth = date.getMonth() + 1;
+    fetchCalendarEvents(currentYear, currentMonth);
+  }, [date, fetchCalendarEvents]);
 
   const getCategory = (value) =>
     CATEGORY_OPTIONS.find((cat) => cat.value === value) ||
@@ -186,7 +299,7 @@ export default function Calendar() {
 
   const openAddForm = () => {
     setEditingId(null);
-    setForm({ text: "", date: selectedDateStr, category: "병원" });
+    setForm({ text: "", date: selectedDateStr, category: "병원/약" });
     setShowForm(true);
   };
 
@@ -203,37 +316,69 @@ export default function Calendar() {
       setShowForm(false);
       setClosing(false);
       setEditingId(null);
-      setForm({ text: "", date: "", category: "병원" });
+      setForm({ text: "", date: "", category: "병원/약" });
     }, 200);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!form.text || !form.date || !form.category) {
       alert("일정 내용/날짜/카테고리를 모두 입력해주세요.");
       return;
     }
 
-    const meta = categoryMeta[form.category] || categoryMeta["기타"];
-    if (editingId) {
-      setEvents((prev) =>
-        prev.map((it) =>
-          it.id === editingId
-            ? { ...it, text: form.text, date: form.date, category: form.category, color: meta.color }
-            : it
-        )
-      );
-    } else {
-      const newEv = {
-        id: Date.now(),
-        text: form.text,
-        date: form.date,
-        category: form.category,
-        color: meta.color,
-      };
-      setEvents((prev) => [...prev, newEv]);
+    const petId = getPetId();
+    if (!petId) {
+      alert("펫 정보가 없습니다. 다시 로그인해주세요.");
+      return;
     }
-    closeForm();
+
+    try {
+      setLoading(true);
+      const meta = categoryMeta[form.category] || categoryMeta["기타"];
+
+      if (editingId) {
+        // 일정 수정 - 서버가 PUT/PATCH를 허용하지 않을 수 있으므로 POST로 시도
+        // 또는 실제 서버 엔드포인트가 다를 수 있음
+        console.log("일정 수정 시도 - schedule_id:", editingId);
+        await apiRequest(
+          `/calendar/schedules/items/${editingId}/`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              schedule_date: form.date,
+              content: form.text,
+              category: form.category,
+            }),
+          }
+        );
+      } else {
+        // 일정 생성
+        await apiRequest(
+          `/calendar/schedules/${petId}/`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              schedule_date: form.date,
+              content: form.text,
+              category: form.category,
+            }),
+          }
+        );
+      }
+
+      // 수정/생성 후 일정 목록 다시 불러오기
+      const currentYear = date.getFullYear();
+      const currentMonth = date.getMonth() + 1;
+      await fetchCalendarEvents(currentYear, currentMonth);
+
+      closeForm();
+    } catch (error) {
+      console.error("일정 저장 실패:", error);
+      // 에러가 이미 apiRequest에서 alert로 표시되었으므로 여기서는 추가 alert 없음
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteClick = (id) => {
@@ -246,12 +391,32 @@ export default function Calendar() {
     setRecordToDelete(null);
   };
 
-  const handleConfirmDelete = () => {
-    if (recordToDelete) {
-      setEvents((prev) => prev.filter((e) => e.id !== recordToDelete));
+  const handleConfirmDelete = async () => {
+    if (!recordToDelete) {
+      setShowDeleteModal(false);
+      setRecordToDelete(null);
+      return;
     }
-    setShowDeleteModal(false);
-    setRecordToDelete(null);
+
+    try {
+      setLoading(true);
+      await apiRequest(`/calendar/schedules/items/${recordToDelete}/`, {
+        method: "DELETE",
+      });
+
+      // 삭제 후 일정 목록 다시 불러오기
+      const currentYear = date.getFullYear();
+      const currentMonth = date.getMonth() + 1;
+      await fetchCalendarEvents(currentYear, currentMonth);
+
+      setShowDeleteModal(false);
+      setRecordToDelete(null);
+    } catch (error) {
+      console.error("일정 삭제 실패:", error);
+      // 에러가 이미 apiRequest에서 alert로 표시되었으므로 여기서는 추가 alert 없음
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategorySelect = (value) => {
@@ -296,6 +461,14 @@ export default function Calendar() {
           </nav>
 
           <nav className="menuicon">
+            {/* 프로필 */}
+            <div className="profile">
+              <div className="profile__avatar">
+                <img src={userProfileImage} alt="프로필" />
+              </div>
+              <span className="profile__name">{username}</span>
+            </div>
+
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
