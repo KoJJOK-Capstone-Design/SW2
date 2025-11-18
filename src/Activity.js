@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import "./Home.css";
 import "./Activity.css";
 import { NavLink, Link } from "react-router-dom";
+import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -129,6 +130,46 @@ function mapActivityToWalk(a) {
 export default function Activity() {
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
+  
+  // 로그인 상태 및 사용자 정보
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
+
+  // 로그인 상태 확인 및 사용자 정보 가져오기
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      axios
+        .get("https://youngbin.pythonanywhere.com/api/v1/users/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const name =
+            res.data?.nickname ||
+            res.data?.username ||
+            res.data?.id ||
+            "멍냥";
+          setUsername(name);
+          // 프로필 이미지가 있으면 사용, 없으면 기본 이미지
+          if (res.data?.profile_image || res.data?.avatar) {
+            const imgUrl = res.data.profile_image || res.data.avatar;
+            setUserProfileImage(
+              imgUrl.startsWith("http")
+                ? imgUrl
+                : `https://youngbin.pythonanywhere.com${imgUrl}`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("유저 정보 불러오기 실패:", err);
+          setIsLoggedIn(false);
+        });
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
   const [walks, setWalks] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -414,37 +455,55 @@ export default function Activity() {
             <NavLink to="/calendar">캘린더</NavLink>
             <NavLink to="/community">커뮤니티</NavLink>
           </nav>
-          <nav className="menuicon">
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowBellPopup((v) => !v);
-                  setShowChatPopup(false);
-                }}
-              >
-                <img src={bell} alt="알림 아이콘" className="icon" />
-              </button>
-              {showBellPopup && (
-                <div className="popup">
-                  <p>📢 새 알림이 없습니다.</p>
+          {isLoggedIn ? (
+            <nav className="menuicon">
+              {/* 프로필 */}
+              <div className="profile">
+                <div className="profile__avatar">
+                  <img src={userProfileImage} alt="프로필" />
                 </div>
-              )}
-            </div>
-            <div className="icon-wrapper">
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowChatPopup((v) => !v);
-                  setShowBellPopup(false);
-                }}
-              >
-                <a href="/Chat">
-                  <img src={chat} alt="채팅 아이콘" className="icon" />
-                </a>
-              </button>
-            </div>
-          </nav>
+                <span className="profile__name">{username}</span>
+              </div>
+
+              {/* 알림 벨 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowBellPopup((v) => !v);
+                    setShowChatPopup(false);
+                  }}
+                >
+                  <img src={bell} alt="알림 아이콘" className="icon" />
+                </button>
+                {showBellPopup && (
+                  <div className="popup">
+                    <p>📢 새 알림이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 채팅 */}
+              <div className="icon-wrapper">
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setShowChatPopup((v) => !v);
+                    setShowBellPopup(false);
+                  }}
+                >
+                  <NavLink to="/Chat">
+                    <img src={chat} alt="채팅 아이콘" className="icon" />
+                  </NavLink>
+                </button>
+              </div>
+            </nav>
+          ) : (
+            <nav className="menulink">
+              <NavLink to="/signup">회원가입</NavLink>
+              <NavLink to="/signin">로그인</NavLink>
+            </nav>
+          )}
         </div>
       </header>
 
