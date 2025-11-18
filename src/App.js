@@ -71,6 +71,7 @@ export default function App(){
           path="/BcsTest" 
           element={<BcsTest user={currentUser} onUpdateBcs={handleBcsUpdate} />} 
         />
+        <Route path = "/Mypage" element={<Mypage />} />
         
         {/* Fallback 경로 */}
         <Route path="*" element={<Navigate to="/" replace />} />
