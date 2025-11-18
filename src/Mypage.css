@@ -1,0 +1,674 @@
+/* ================================================
+   A. 공통 & 페이지 레이아웃
+================================================ */
+
+h1.title { 
+  font-size: 35px;
+  color : #222;
+  padding-bottom: 20px;
+}
+
+.mypage-container {
+  background-color: #f7f9fc; 
+  min-height: 100vh;
+}
+
+.mypage-main {
+  max-width: 1200px; 
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mypage-header-section {
+  margin-bottom: 40px;
+}
+
+.mypage-section.section--intro .title {
+  font-size: 20px;    
+  font-weight: 800;
+  color: #888;
+  margin: 0;
+}
+
+.mypage-section .description {
+  font-size: 1rem;
+  color: #222;
+  margin-bottom: 30px;
+}
+
+/* --- 사용자 정보 섹션 (상단) --- */
+.user-info-section { 
+  margin-bottom: 40px; 
+}
+.user-profile-card {
+  background-color: #fff; 
+  border-radius: 16px; 
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  padding: 40px 30px; 
+  display: flex; 
+  align-items: center; 
+  gap: 30px;
+}
+.user-avatar img { 
+  width: 120px; 
+  height: 120px; 
+  border-radius: 50%; 
+  background-color: #d1e5ff; 
+}
+.user-details { 
+  flex-grow: 1; 
+}
+.user-nickname { 
+  font-size: 1.8rem; 
+  font-weight: 700; 
+  color: #333; 
+  margin-bottom: 5px; 
+}
+.user-id { 
+  font-size: 1rem; 
+  color: #777; 
+  margin-bottom: 2px; 
+}
+.user-email { 
+  font-size: 0.9rem; 
+  color: #999; 
+}
+.btn-settings { 
+  background-color: #f0f4ff; 
+  color: #007bff; 
+  border: 1px solid #d1e5ff; 
+  padding: 8px 20px; 
+  border-radius: 20px; 
+  font-size: 15px; 
+}
+.btn-settings:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+}
+.btn-danger{
+  background-color: #ff005c; /* ⭐️ 이미지처럼 밝고 튀는 빨간색으로 변경 */
+  color: white;
+  
+  box-shadow: 0 4px 10px rgba(255, 0, 92, 0.3);
+}
+.btn-danger:hover{
+    background-color: #e50051;
+    transform: translateY(-2px);
+}
+
+/* ================================================
+   B. 나의 반려동물 섹션 (메인 화면)
+================================================ */
+
+/* "나의 반려동물" 파란색 막대 제목 */
+.section__title--no-bullet { 
+  font-size: 25px; 
+  font-weight: 600; 
+  color: #333; 
+  margin-bottom: 20px; 
+  position: relative;
+  padding-left: 15px; 
+}
+.section__title--no-bullet::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px; 
+  height: 100%; 
+  max-height: 25px; 
+  background-color: #3b82f6; 
+  border-radius: 3px;
+}
+
+.pet-management-section { 
+  margin-bottom: 60px; 
+}
+
+/* 1. 펫 목록 + 펫 상세 (전체 흰색 카드) */
+.pet-list-container { 
+  display: flex; 
+  gap: 30px; 
+  align-items: flex-start; 
+  width: 100%;
+  max-width: 1130px; 
+  flex-grow: 1;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); 
+  padding: 30px;
+  box-sizing: border-box; 
+}
+
+/* 2. 좌측 펫 목록 (냥냥이, 멍멍이...) */
+.pet-list { 
+  width: 200px; 
+  flex-shrink: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+}
+.pet-item { 
+  display: flex; 
+  align-items: center; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  border: 2px solid transparent; 
+  transition: all 0.2s ease-out;
+  gap: 12px;
+}
+.pet-item:not(.pet-item--active):hover {
+  background-color: #f9fafb; 
+}
+.pet-item--active { 
+  background-color: #eff6ff; 
+  border: 2px solid #3b82f6; 
+}
+.pet-item--active:hover { 
+  outline: none;
+  border-color: #2578ff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+.pet-name { 
+  font-size: 15px; 
+  color: #374151; 
+  font-weight: 500; 
+}
+.pet-item--active .pet-name {
+  color: #000000; 
+  font-weight: 600;
+}
+.pet-name--inactive {
+  color: #9ca3af; 
+}
+.pet-color-indicator { 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 8px; 
+  margin-bottom: 0; 
+}
+.pet-color-indicator--pink { background-color: #ff0090; }
+.pet-color-indicator--yellow { background-color: #ffe100; }
+.pet-list-thumbnail {
+  width: 40px; 
+  height: 40px; 
+  border-radius: 8px; /* pet-color-indicator와 동일한 모서리 둥글기 */
+  object-fit: cover; /* 이미지가 잘리지 않고 컨테이너를 채우도록 */
+  flex-shrink: 0; /* 크기가 줄어들지 않도록 고정 */
+}
+.pet-add-button { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px; 
+  background-color: transparent; 
+  border: 2px dashed #d1d5db; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  font-size: 1rem; 
+  color: #6b7280; 
+  cursor: pointer; 
+  transition: all 0.2s ease-out;
+}
+.pet-add-button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+.icon-plus-small {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* 3. 우측 펫 상세 정보 */
+.pet-detail-card-wrapper {
+  flex-grow: 1;
+  min-width: 0; 
+}
+.pet-name-and-edit { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 12px; 
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.pet-detail-name { 
+  font-size: 25px;
+  font-weight: 600; 
+  color: #111827; 
+}
+.btn-edit-pet { 
+  background-color: #f0f4ff; 
+  color: #007bff; 
+  border: 1px solid #d1e5ff; 
+  padding: 8px 20px; 
+  border-radius: 20px; 
+  font-size: 15px; 
+}
+.btn-edit-pet:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+}
+.pet-description-line { 
+  font-size: 16px;
+  color: #222;  
+  line-height: 1.6; 
+  margin-top: 0;
+  margin-bottom: 24px; 
+  text-align: center;
+}
+
+/* 4. 하단 2단 카드 (일정 & 활동 분석) */
+.pet-dashboard-summary { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 24px; 
+}
+.upcoming-events-mypage,
+.weekly-activity-mypage {
+  background-color: #f9fafb; 
+  border-radius: 12px;
+  padding: 20px; 
+  border: 1px solid #f3f4f6;
+  height: 100%; 
+  box-sizing: border-box;
+}
+/* '다가오는 일정' 카드만 패딩 다르게 (필요시 .upcoming-events-mypage padding 수정) */
+.upcoming-events-mypage {
+  padding: 10px;
+}
+
+/* 5. 카드 내부 헤더 (다가오는 일정, 주간 활동 분석) */
+.section-header-inline {
+  display: flex;
+  justify-content: space-between !important; 
+  align-items: baseline; 
+  margin-bottom: 15px; 
+}
+.section-header-inline > h3 {
+  font-size: 18px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  margin: 0; 
+  color: #1f2937;
+}
+
+/* 6. "자세히 보기" 링크 */
+.view-more { 
+  font-size: 13px;
+  color: #007bff; 
+  text-decoration: none; 
+  font-weight: 400; 
+  white-space: nowrap; 
+}
+.view-more:hover {
+  text-decoration: none;
+}
+
+/* '정기 검진일' 아이템 */
+.event-item-mypage--detail { 
+  background-color: #fff; 
+  border: 1px solid #e5e7eb; 
+  border-radius: 8px; 
+  padding: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); 
+}
+
+/* 7. 주간 활동 분석 차트 */
+.activity-chart-box {
+  position: relative; 
+  margin-top: 10px;
+  padding-left: 35px; 
+}
+.chart-y-axis-labels {
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-between; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  font-size: 12px;
+  color: #9ca3af; 
+  text-align: right;
+  width: 30px; 
+}
+.chart-x-labels-only {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+.chart-svg {
+  width: 100%;
+  height: 150px; 
+  display: block;
+}
+
+/* ================================================
+   C. 모달 공통 스타일
+================================================ */
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center; z-index: 1000; 
+}
+.modal-content {
+    width: 550px; 
+    height: 557px;
+    max-width: 90vw;
+    max-height: 90vh; 
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+    z-index: 10000;
+    overflow-y: auto; 
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 28px 28px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+
+    display: flex;            /* ⭐ 비율 배치 위해 반드시 필요 */
+    flex-direction: column;
+}
+.modal-title { 
+  font-size: 30px; 
+  font-weight: 600; 
+  margin-bottom: 25px; 
+  color: #333; 
+}
+.modal-close-btn { 
+  position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 2rem; color: #999; cursor: pointer; 
+}
+.modal-body form {
+  margin-top: 0; 
+  width: 100%;
+  max-height: 50vh;
+}
+.modal-body {
+  flex: 1;                               /* ⭐ 남는 공간을 모두 이 body에게 */
+  overflow-y: auto;                      /* 스크롤 여기만 */
+  max-height: calc(90vh - 120px);        /* 타이틀 높이 제외 */
+  padding-right: 15px;
+  margin-right: -15px;
+}
+/* ================================================
+   D. 모달 폼 내부 스타일 (섹션, 폼 그룹)
+================================================ */
+
+.modal-section-group {
+  margin-bottom: 24px; 
+}
+.modal-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px; 
+  font-size: 20px;
+  font-weight: 600;
+}
+.section-title-bar {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 22px;
+  background-color: #007bff;
+  border-radius: 3px;
+  margin-right: 8px;
+}
+.form-group {
+    margin-bottom: 16px;
+}
+.form-row-two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.form-row-two-cols .form-group {
+    margin-bottom:0;
+}
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222; 
+  margin-bottom: 8px; /* ⭐️ 라벨과 입력창 사이 간격 */
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB; 
+  border-radius: 6px; 
+  font-size: 15px;
+  box-sizing: border-box; 
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group textarea:focus {
+  border-color: #3b82f6; 
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); 
+  outline: none;
+}
+.form-group input[type="date"] {
+  color: #6B7280; 
+}
+.form-group input[type="date"]:valid {
+  color: #111827; 
+}
+
+/* 폼: 라디오 버튼 (버튼 스타일) */
+.radio-group-horizontal {
+  display: flex;
+  gap: 10px;
+}
+.radio-group-horizontal label {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  justify-content: center;
+  border-radius: 6px; 
+  cursor: pointer;
+  font-size: 13.4px;
+  font-weight: 500;
+  color: #374151; 
+  transition: all 0.2s;
+  flex-grow: 1; 
+  margin-bottom: 0; 
+}
+
+.radio-group-horizontal input[type="radio"]:checked + label {
+  background-color: #4a90e2; 
+  color: white; 
+  font-weight: 600;
+  align-items: center;
+}
+
+.radio-group-horizontal input[type="radio"]:checked + label:hover {
+  background-color: #4a90e2; 
+  
+}
+
+/* 폼: 파일 선택 버튼 (file-select-file) */
+.file-input-wrapper {
+  margin-top: 8px;
+}
+.file-input-wrapper input[type="file"] {
+  display: none;
+}
+.file-input-display-box {
+  display: flex;
+  align-items: center; 
+  gap: 12px; 
+}
+.file-select-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px; 
+  background-color: #2578ff; 
+  color: #fff !important;
+  border-radius: 20px; 
+  font-size: 15px;
+  font-weight: 400 !important; 
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.file-select-file:hover {
+  background-color: #1d68d9; 
+}
+.file-name-filedisplay {
+  font-size: 15px;
+  font-weight: 500; /* ⭐️ 500px 오타 수정 */
+  color: #888; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#petImage { 
+  display: none; 
+}
+
+
+/* ================================================
+   E. 모달 버튼 그룹 (하단)
+================================================ */
+
+/* 버튼 컨테이너 (공통) */
+.form-actions { 
+  display: flex; 
+  margin-top: 30px; 
+  gap: 10px; 
+  margin-bottom: 0px;
+  justify-content: center; /* ⭐️ 기본값 '가운데' 정렬 */
+  align-items: center; 
+}
+
+/* '계정 설정' 모달 버튼 (양쪽 끝 정렬) */
+.form-actions.form-actions-settings { 
+  justify-content: space-between;
+} 
+
+/* '정보 수정' 모달 버튼 (양쪽 끝 정렬) */
+.form-actions.form-actions-edit { 
+  justify-content: space-between; 
+}
+
+/* '회원 탈퇴' 모달 버튼 (가운데 정렬 - 기본값 상속) */
+.form-actions.form-actions-withdraw {
+  justify-content: center;
+} 
+
+/* '취소/저장' 묶음 그룹 */
+.button-group {
+  display: flex;
+  gap: 10px; 
+}
+
+/* 버튼 공통 스타일 (저장) */
+.btn-primary {
+  background: #2578ff;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(37,120,255,.25);
+  transition: all 0.2s ease-out;
+}
+.btn-primary:hover {
+  filter: brightness(0.98);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37,120,255,.30);
+}
+
+/* 버튼 공통 스타일 (취소) */
+.btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  transition: all 0.2s ease-out;
+}
+.btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* '탈퇴하기' 텍스트 버튼 */
+.btn.btn-red-text { 
+  background: none; 
+  border: none; 
+  color: #ff0000; 
+  font-size: 15px; 
+  cursor: pointer; 
+  text-align: left; 
+  font-weight: 700;
+}
+
+/* '회원 탈퇴' 모달 내부 텍스트 */
+.withdraw-info h3, .withdraw-info p {
+  text-align: center;
+}
+.withdraw-info h3 {
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+.withdraw-info p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+.withdraw-form{
+    display:nome;
+}
+.btn-cancel--withdraw{
+    background-color: #f3f4f6 !important
+}
+.btn-cancel--withdraw:hover{
+    background-color:#e5e7eb !important
+}
+/* '반려 동물 삭제' 모달 텍스트 */
+.delete-pet-prompt {
+  color: #222;
+  font-size: 20px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pet-info-header {
+  color: #222;
+  font-size: 16px;
+  margin-bottom: 10px;
+
+  text-align: center;
+}
+
+/* ================================================
+   F. 스크롤바 스타일
+================================================ */
+
+::-webkit-scrollbar {
+  width: 8px; 
+  height: 8px; 
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1; 
+  background-clip: content-box;
+  border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; 
+}
