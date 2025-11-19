@@ -91,7 +91,7 @@ body {
 
 .section__title {
   display: flex; align-items: center; gap: 10px;
-  margin: 0 0 24px; font-size: 25px; font-weight: 600;
+  margin: 0 0 24px; font-size: 25px; font-weight: 700;
 }
 .section__bullet { width: 5px; height: 22px; border-radius: 3px; display: inline-block; font-weight: 500; }
 .section__bullet--blue { background: #1e90ff; }
@@ -108,7 +108,7 @@ body {
  * 5) Todo Card
  ******************************************/
 .todolist {
-  font-size: 25px; font-weight: 500;
+  font-size: 25px; font-weight: 600;
   padding-top: 10px; padding-bottom: 20px;
   margin: 0 40px;
 }
@@ -155,8 +155,8 @@ body {
 
 /* PNG/SVG 아이콘을 회색→파랑으로 */
 .icon-img{
-  width: 20px;
-  height: 20px;
+  width: 18px !important;
+  height: 18px !important;
   display: block;
   opacity: .65;
   filter: brightness(0) saturate(100%)
@@ -185,7 +185,12 @@ body {
 }
 .todo__input {
   flex: 1; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px;
-  padding: 0 10px; background: rgba(169,199,242,.09);
+  padding: 0 10px; background: rgba(255, 255, 255, 0.09);
+}
+.todo__input:focus {
+  outline: none;
+  border-color: #2578ff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 .todo__addbtn {
   position: relative; width: 30px; height: 30px;
@@ -216,8 +221,26 @@ body {
 
 /* 일정 카드(좌측) */
 .card--event {
-  background: transparent; border: 0; padding: 0;
-  display: flex; flex-direction: column; gap: 20px;
+ background: transparent; border: 0; padding: 0;
+ display: flex; flex-direction: column; gap: 20px;
+ 
+ /* 🌟 이 부분을 추가했습니다! 🌟 */
+ max-height: 350px; /* 차트 높이에 맞추거나 적절한 높이 설정 */
+ overflow-y: auto; /* 세로 스크롤 활성화 */
+ padding-right: 12px; /* 스크롤바 공간 확보를 위해 오른쪽 패딩 추가 */
+}
+
+/* 스크롤바 스타일 (선택 사항) */
+.card--event::-webkit-scrollbar {
+ width: 8px; /* 스크롤바 너비 */
+}
+.card--event::-webkit-scrollbar-thumb {
+ background-color: #cbd5e1; /* 스크롤바 색상 */
+ border-radius: 4px;
+}
+.card--event::-webkit-scrollbar-track {
+ background-color: #f1f5f9; /* 트랙 색상 */
+ border-radius: 4px;
 }
 .event {
   display: flex; align-items: center; gap: 12px;
@@ -237,7 +260,7 @@ body {
 /* 차트 카드(우측) */
 .card--chart { padding: 16px; height: 350px;}
 .chart__header { margin: 8px; gap: 10px;}
-.chart__caption { color: #64748b; font-size: 13px; }
+.chart__caption { color: #888; font-size: 16px; font-weight: 600; }
 .text--green { color: #16a34a; }
 
 .dashboard .card--chart .chart {
@@ -297,8 +320,8 @@ body {
 }
 
 .food-group__title { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
-.food-group__title--ok { color: #0a7d45; }
-.food-group__title--no { color: #cf1f1f; }
+.food-group__title--ok { color: #0a7d45; padding-top:20px; }
+.food-group__title--no { color: #cf1f1f; padding-top:20px; }
 
 /* 그룹 안의 카드 그리드 */
 .food-grid {
@@ -309,7 +332,7 @@ body {
 
 .food-card {
   border: 1px solid #eaeef3; border-radius: 12px;
-  padding: 16px; position: relative; background: #fff;
+  padding: 20px; position: relative; background: #fff;
 }
 .food-card--ok { background: #edfdf3; border-color: #d7f1df; }
 .food-card--no { background: #fff1f1; border-color: #ffd8d8; }
@@ -320,8 +343,9 @@ body {
   position: absolute; right: 12px; bottom: 12px;
   padding: 6px 10px; border-radius: 999px; font-size: 12px;
 }
-.badge--ok { background: #daf7e6; color: #0a7d45; }
-.badge--no { background: #ffdede; color: #c81e1e; }
+
+    .badge--ok { background: #daf7e6; color: #0a7d45; }
+    .badge--no { background: #ffdede; color: #c81e1e; }
 
 /******************************************
  * 8) Footer

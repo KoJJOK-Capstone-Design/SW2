@@ -41,7 +41,6 @@ const getTimeAgo = (dateString) => {
     minute: "2-digit",
   });
 };
-
 const cleanAlertText = (message) => {
   if (!message) return "새 알림";
   const match = message.match(/^'[^']+'님으로부터 (.*)/);
