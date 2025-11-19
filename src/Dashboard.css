@@ -214,7 +214,7 @@ body {
   align-items: start;
 }
 
-/* 일정 카드(좌측) */
+/* 일정 카드 */
 .card--event {
   background: transparent; border: 0; padding: 0;
   display: flex; flex-direction: column; gap: 20px;
