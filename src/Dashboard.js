@@ -144,6 +144,19 @@ const CALENDAR_STORAGE_KEY = "calendarEvents"; // Calendar.jsx와 동일한 키
 const TODO_STORAGE_KEY = "dashboardTasks";
 const NEWTASK_STORAGE_KEY = "dashboardNewTaskDraft";
 
+// 카테고리 옵션 (마이페이지와 동일)
+const CATEGORY_OPTIONS = [
+  { value: "병원/약", label: "병원/약", color: "#ebc3bcff", icon: "🏥" },
+  { value: "미용", label: "미용", color: "#d6ebfaff", icon: "✂️" },
+  { value: "행사", label: "행사", color: "#fff9ecff", icon: "🎂" },
+  { value: "기타", label: "기타", color: "#E9ECEF", icon: "⚫" },
+];
+
+const getCategoryDetails = (categoryValue) => {
+  // 값에 해당하는 옵션을 찾고, 없으면 '기타'를 기본값으로 사용
+  return CATEGORY_OPTIONS.find(opt => opt.value === categoryValue) || CATEGORY_OPTIONS.find(opt => opt.value === "기타") || CATEGORY_OPTIONS[3];
+};
+
 /**
  * 날짜 문자열을 받아 오늘로부터의 D-day를 계산합니다.
  * @param {string} dateStr 'YYYY-MM-DD' 형식의 날짜
@@ -310,22 +323,124 @@ export default function Dashboard() {
     setNewTask("");
   }, [newTask, setTasks, setNewTask]);
 
-  // ================== 건강 추세 그래프 데이터 (Chart.js용) ==================
+  // ================== 주차 계산 함수 ==================
+  const getWeekOfMonth = (dateString) => {
+    if (!dateString) return 0;
+    
+    // 날짜 문자열을 Date 객체로 변환
+    let date;
+    if (typeof dateString === 'string') {
+      // "2025-11-15" 형식 또는 "11월" 형식 처리
+      if (dateString.includes('-')) {
+        date = new Date(dateString);
+      } else {
+        // "11월" 형식인 경우 현재 년도와 해당 월의 첫째 날로 처리
+        const monthMatch = dateString.match(/(\d+)월/);
+        if (monthMatch) {
+          const month = parseInt(monthMatch[1]) - 1;
+          const currentYear = new Date().getFullYear();
+          date = new Date(currentYear, month, 1);
+        } else {
+          return 0;
+        }
+      }
+    } else {
+      date = new Date(dateString);
+    }
+    
+    if (isNaN(date.getTime())) return 0;
+    
+    // 해당 월의 첫째 날
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    // 첫째 날의 요일 (0=일요일, 6=토요일)
+    const firstDayOfWeek = firstDay.getDay();
+    // 해당 날짜가 그 달의 몇 번째 날인지
+    const dayOfMonth = date.getDate();
+    
+    // 주차 계산: (날짜 + 첫째 날의 요일) / 7을 올림
+    const weekNumber = Math.ceil((dayOfMonth + firstDayOfWeek) / 7);
+    
+    return weekNumber;
+  };
+
+  // ================== 건강 추세 그래프 데이터 (Chart.js용) - 주차별로 변환 ==================
   const healthTrendChartData = useMemo(() => {
     if (!healthTrend?.graph_data || healthTrend.graph_data.length === 0) {
       return null;
     }
 
-    const labels = healthTrend.graph_data.map((d, idx) => {
-      // 백엔드에서 month가 "11월" 이런 식으로 온다고 가정
-      return d.month || d.label || `${idx + 1}회차`;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const currentYear = currentDate.getFullYear();
+
+    // 현재 월의 데이터만 필터링하고 주차별로 그룹화
+    const weeklyData = {};
+    
+    healthTrend.graph_data.forEach((d) => {
+      // 날짜 정보 추출
+      let date;
+      let weight = Number(d.weight ?? d.value ?? d.current_weight);
+      
+      if (isNaN(weight)) return;
+      
+      // 날짜 파싱
+      if (d.date) {
+        date = new Date(d.date);
+      } else if (d.month) {
+        // "11월" 형식인 경우
+        const monthMatch = d.month.match(/(\d+)월/);
+        if (monthMatch) {
+          const month = parseInt(monthMatch[1]);
+          // 현재 월과 일치하는지 확인
+          if (month === currentMonth) {
+            // 날짜가 없으면 해당 월의 중간 날짜로 설정 (예: 15일)
+            date = new Date(currentYear, month - 1, 15);
+          } else {
+            return; // 현재 월이 아니면 스킵
+          }
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
+      
+      if (isNaN(date.getTime())) return;
+      
+      // 현재 월인지 확인
+      if (date.getMonth() + 1 !== currentMonth || date.getFullYear() !== currentYear) {
+        return; // 현재 월이 아니면 스킵
+      }
+      
+      // 주차 계산
+      const weekNumber = getWeekOfMonth(date);
+      if (weekNumber < 1 || weekNumber > 5) return; // 유효한 주차 범위 체크
+      
+      // 주차별로 데이터 그룹화 (같은 주차의 경우 평균값 사용)
+      if (!weeklyData[weekNumber]) {
+        weeklyData[weekNumber] = { weights: [], date: date };
+      }
+      weeklyData[weekNumber].weights.push(weight);
     });
 
-    const weights = healthTrend.graph_data
-      .map((d) => Number(d.weight ?? d.value ?? d.current_weight))
-      .filter((v) => !Number.isNaN(v));
+    // 1-5주차 고정 레이블 생성
+    const labels = ["1주차", "2주차", "3주차", "4주차", "5주차"];
+    
+    // 1-5주차에 대한 데이터 배열 생성 (데이터가 없으면 null)
+    const weights = [];
+    for (let week = 1; week <= 5; week++) {
+      if (weeklyData[week] && weeklyData[week].weights.length > 0) {
+        // 해당 주차에 데이터가 있으면 평균값 계산
+        const avgWeight = weeklyData[week].weights.reduce((sum, w) => sum + w, 0) / weeklyData[week].weights.length;
+        weights.push(avgWeight);
+      } else {
+        // 데이터가 없으면 null로 설정 (Chart.js가 자동으로 건너뛰고 라인 연결)
+        weights.push(null);
+      }
+    }
 
-    if (weights.length === 0) return null;
+    // 모든 데이터가 null이면 그래프를 표시하지 않음
+    if (weights.every(w => w === null)) return null;
 
     return {
       labels,
@@ -342,6 +457,10 @@ export default function Dashboard() {
           pointBorderWidth: 2,
           pointRadius: 4,
           pointHoverRadius: 6,
+          spanGaps: true, // null 값이 있어도 라인 연결
+          // null 값인 경우 점을 표시하지 않음
+          pointRadius: weights.map(w => w === null ? 0 : 4),
+          pointHoverRadius: weights.map(w => w === null ? 0 : 6),
         },
       ],
     };
@@ -351,6 +470,9 @@ export default function Dashboard() {
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: 0, // 그래프 전체 패딩 제거
+      },
       plugins: {
         legend: {
           display: false,
@@ -381,10 +503,16 @@ export default function Dashboard() {
           grid: {
             color: "#e5e7eb",
           },
+          ticks: {
+            padding: 0, // y축 레이블 패딩 제거
+          },
         },
         x: {
           grid: {
             display: false,
+          },
+          ticks: {
+            padding: 0, // x축 레이블 패딩 제거
           },
         },
       },
@@ -428,24 +556,23 @@ export default function Dashboard() {
           return;
         }
 
-        // 1. 로컬 캘린더 일정 불러오기 및 가공
+        // 1. 로컬 캘린더 일정 불러오기 및 가공 (오늘 날짜만)
         let combinedSchedules = [];
         try {
           const savedEvents = localStorage.getItem(CALENDAR_STORAGE_KEY);
           if (savedEvents) {
             const events = JSON.parse(savedEvents);
-            const todayDDay = getDDay(
-              new Date().toISOString().slice(0, 10)
-            );
+            const todayStr = new Date().toISOString().slice(0, 10);
 
             const localSchedules = events
+              .filter((event) => event.date === todayStr) // 오늘 날짜만 필터링
               .map((event) => ({
                 id: `local-${event.id}`,
-                content: `[${event.category}] ${event.text}`,
+                content: event.text,
                 schedule_date: event.date,
-                d_day: getDDay(event.date),
-              }))
-              .filter((schedule) => schedule.d_day >= todayDDay);
+                category: event.category || "기타",
+                d_day: 0, // 오늘 날짜이므로 항상 0
+              }));
 
             combinedSchedules = localSchedules;
           }
@@ -475,17 +602,55 @@ export default function Dashboard() {
           );
         }
 
-        // API 일정 추가
-        if (Array.isArray(data.upcoming_schedules)) {
-          const apiSchedules = data.upcoming_schedules.map((s) => ({
-            ...s,
-            id: `api-${s.id}`,
-          }));
+        // 2. 캘린더 API를 사용하여 오늘 날짜의 일정 가져오기
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const todayStr = `${year}-${String(month).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        
+        try {
+          const calendarRes = await axios.get(
+            `https://youngbin.pythonanywhere.com/api/v1/pets/calendar/${petId}/?year=${year}&month=${month}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          
+          if (calendarRes.data && Array.isArray(calendarRes.data)) {
+            // 오늘 날짜의 일정만 필터링
+            const todayApiSchedules = calendarRes.data
+              .filter(schedule => schedule.schedule_date === todayStr)
+              .map(schedule => ({
+                id: `api-${schedule.id}`,
+                content: schedule.content,
+                schedule_date: schedule.schedule_date,
+                category: schedule.category || "기타",
+                d_day: 0, // 오늘 날짜이므로 항상 0
+              }));
 
-          combinedSchedules = [...combinedSchedules, ...apiSchedules];
+            // 로컬 일정과 API 일정 합치기
+            combinedSchedules = [...combinedSchedules, ...todayApiSchedules];
+          }
+        } catch (calendarErr) {
+          console.error("캘린더 일정 불러오기 실패:", calendarErr);
+          // 캘린더 API 실패 시 기존 방식으로 fallback
+          if (Array.isArray(data.upcoming_schedules)) {
+            const apiSchedules = data.upcoming_schedules
+              .filter(s => {
+                const scheduleDate = new Date(s.schedule_date);
+                scheduleDate.setHours(0, 0, 0, 0);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                return scheduleDate.getTime() === todayDate.getTime();
+              })
+              .map((s) => ({
+                ...s,
+                id: `api-${s.id}`,
+                d_day: 0,
+              }));
+
+            combinedSchedules = [...combinedSchedules, ...apiSchedules];
+          }
         }
-
-        combinedSchedules.sort((a, b) => a.d_day - b.d_day);
+        
         setUpcomingSchedules(combinedSchedules);
 
         // health_trend
@@ -873,47 +1038,44 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* 다가오는 일정 & 건강 추세 */}
+        {/* 오늘의 일정 & 건강 추세 */}
         <section className="section">
           <h2 className="section__title">
             <span className="section__bullet section__bullet--blue" />
-            다가오는 일정 & 건강 추세
+            오늘의 일정 & 건강 추세
           </h2>
 
           {/* 2열 그리드 */}
           <div className="section--grid">
             {/* 좌측: 일정 리스트 */}
             <div className="card card--event">
-              {upcomingSchedules.length === 0 ? (
-                <p className="event__empty">등록된 일정이 없어요.</p>
-              ) : (
-                upcomingSchedules.map((s) => (
-                  <div key={s.id} className="event">
-                    <span className="event__icon event__icon--steth" />
-                    <div className="event__body">
-                      <div className="event__title">{s.content}</div>
-                      <div className="event__date">{s.schedule_date}</div>
-                    </div>
-                    <div className={getDDayClass(s.d_day)}>
-                      {getDDayLabel(s.d_day)}
-                    </div>
-                  </div>
-                ))
-              )}
+              <div className="event-list-container-dashboard">
+                {upcomingSchedules.length === 0 ? (
+                  <p className="event__empty">오늘의 일정이 없어요.</p>
+                ) : (
+                  upcomingSchedules.map((s) => {
+                    const { icon, color } = getCategoryDetails(s.category || "기타");
+                    return (
+                      <div key={s.id} className="event event--dashboard">
+                        <div className="event-icon-box-dashboard" style={{ backgroundColor: color }}>
+                          <span className="event-icon-emoji-dashboard">{icon}</span>
+                        </div>
+                        <div className="event__body">
+                          <div className="event__title">{s.content}</div>
+                          <div className="event__date">{s.schedule_date}</div>
+                        </div>
+                        <div className={getDDayClass(s.d_day)}>
+                          {getDDayLabel(s.d_day)}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             {/* 우측: Chart.js 건강 추세 그래프 */}
             <div className="card card--chart">
-              <div className="chart__header">
-                <span className="chart__caption">
-                  최근 1개월간{" "}
-                  <b className="text--green">
-                    {healthTrend?.recent_change || "변동 없음"}
-                  </b>
-                  했어요.
-                </span>
-              </div>
-
               <div className="graph-box">
                 {healthTrendChartData ? (
                   <Line
