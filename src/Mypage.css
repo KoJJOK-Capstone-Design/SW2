@@ -280,6 +280,18 @@ h1.title {
 /* '다가오는 일정' 카드만 패딩 다르게 (필요시 .upcoming-events-mypage padding 수정) */
 .upcoming-events-mypage {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 일정 목록 스크롤 컨테이너 - 4개까지만 보이도록 설정 */
+.event-list-container-mypage {
+  flex: 1;
+  overflow-y: auto;
+  /* 일정 항목 높이 계산: min-height(68px) * 4개 + margin-bottom(12px) * 3개 = 272px + 36px = 308px */
+  max-height: calc(68px * 4 + 12px * 3);
+  padding-right: 5px;
+  min-height: 0;
 }
 
 /* 5. 카드 내부 헤더 (다가오는 일정, 주간 활동 분석) */
@@ -703,6 +715,8 @@ h1.title {
 
   padding: 14px 18px;
   border-radius: 12px;
+  min-height: 68px; /* 아이콘(40px) + padding 상하(28px) = 68px, 텍스트는 추가 공간 사용 */
+  box-sizing: border-box;
 
   border: 1px solid #dbeafe;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
@@ -728,6 +742,8 @@ h1.title {
     border: 1px solid #eaeef3;
     border-radius: 12px;
     margin-bottom: 12px;
+    min-height: 68px; /* 일정 항목 최소 높이 고정 */
+    box-sizing: border-box;
 }
 /* 2. 아이콘과 텍스트 그룹: 가로 정렬 */
 .event-item-left {
