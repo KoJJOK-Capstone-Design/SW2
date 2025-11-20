@@ -17,14 +17,70 @@ import chat from "./img/chat.png";
 import circle from "./img/circle.png";
 import plusicon from "./img/plusicon.png";
 
+// ✅ Chart.js - 라인 그래프용
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+// Chart.js에 필요한 모듈 등록
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+// ================== Custom Hook: Local Storage 상태 관리 ==================
+/**
+ * LocalStorage에 값을 저장하고 불러오는 useState 대체 훅
+ * @param {string} key LocalStorage에 저장할 키
+ * @param {any} initialValue 초기 값
+ * @returns {[any, (value: any) => void]} [상태, 상태 설정 함수]
+ */
+function useLocalStorageState(key, initialValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const storedValue = window.localStorage.getItem(key);
+      if (storedValue) {
+        return JSON.parse(storedValue);
+      }
+      return initialValue;
+    } catch (error) {
+      console.error(`Error reading localStorage key “${key}”:`, error);
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+    } catch (error) {
+      console.error(`Error setting localStorage key “${key}”:`, error);
+    }
+  }, [key, state]);
+
+  return [state, setState];
+}
+
 // 알림 관련 헬퍼 함수들
 const getTimeAgo = (dateString) => {
   const now = new Date();
   const past = new Date(dateString);
   if (Number.isNaN(past.getTime())) return dateString;
-  
+
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return `${diffInSeconds}초 전`;
   } else if (diffInSeconds < 3600) {
@@ -41,6 +97,7 @@ const getTimeAgo = (dateString) => {
     minute: "2-digit",
   });
 };
+
 const cleanAlertText = (message) => {
   if (!message) return "새 알림";
   const match = message.match(/^'[^']+'님으로부터 (.*)/);
@@ -65,11 +122,11 @@ const extractNickname = (message) => {
 // Interval Custom Hook
 function useInterval(callback, delay) {
   const savedCallback = useRef();
-  
+
   useEffect(() => {
     savedCallback.current = callback;
   }, [callback]);
-  
+
   useEffect(() => {
     function tick() {
       savedCallback.current();
@@ -82,7 +139,10 @@ function useInterval(callback, delay) {
 }
 
 // ================== Local Storage 캘린더 관련 상수 및 함수 ==================
-const CALENDAR_STORAGE_KEY = 'calendarEvents'; // Calendar.jsx와 동일한 키
+const CALENDAR_STORAGE_KEY = "calendarEvents"; // Calendar.jsx와 동일한 키
+// To-Do 리스트와 입력 내용에 사용할 Local Storage 키
+const TODO_STORAGE_KEY = "dashboardTasks";
+const NEWTASK_STORAGE_KEY = "dashboardNewTaskDraft";
 
 /**
  * 날짜 문자열을 받아 오늘로부터의 D-day를 계산합니다.
@@ -93,19 +153,17 @@ const getDDay = (dateStr) => {
   if (!dateStr) return 9999; // 유효하지 않은 날짜는 뒤로 보냄
 
   const today = new Date();
-  // 시간 정보를 초기화하여 정확한 날짜 차이만 계산
   today.setHours(0, 0, 0, 0);
 
   const scheduleDate = new Date(dateStr);
   scheduleDate.setHours(0, 0, 0, 0);
 
   const diffTime = scheduleDate.getTime() - today.getTime();
-  // Math.round를 사용하여 시간대 차이로 인한 반올림 오류 방지
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 };
-// =======================================================================
 
+// =======================================================================
 
 export default function Dashboard() {
   // ================== 오늘 날짜 ==================
@@ -117,6 +175,11 @@ export default function Dashboard() {
 
   // ================== 헤더 - 로그인 유저 이름 ==================
   const [username, setUsername] = useState("멍냥");
+
+  // 프로필 이미지 상태
+  const [userProfileImage, setUserProfileImage] = useState(
+    "https://i.pravatar.cc/80?img=11"
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -132,7 +195,7 @@ export default function Dashboard() {
         if (storedImageUrl) {
           setUserProfileImage(storedImageUrl);
         }
-        
+
         const res = await axios.get(
           "https://youngbin.pythonanywhere.com/api/v1/users/profile/",
           {
@@ -149,16 +212,20 @@ export default function Dashboard() {
           "멍냥";
 
         setUsername(name);
-        
+
         // 프로필 이미지 우선순위: localStorage > API 응답 > 기본 이미지
-        const apiImageUrl = res.data?.profile_image || res.data?.avatar || res.data?.user_profile_image_url;
-        const finalImageUrl = storedImageUrl || 
-          (apiImageUrl 
-            ? (apiImageUrl.startsWith("http")
-                ? apiImageUrl
-                : `https://youngbin.pythonanywhere.com${apiImageUrl}`)
+        const apiImageUrl =
+          res.data?.profile_image ||
+          res.data?.avatar ||
+          res.data?.user_profile_image_url;
+        const finalImageUrl =
+          storedImageUrl ||
+          (apiImageUrl
+            ? apiImageUrl.startsWith("http")
+              ? apiImageUrl
+              : `https://youngbin.pythonanywhere.com${apiImageUrl}`
             : null);
-        
+
         if (finalImageUrl) {
           setUserProfileImage(finalImageUrl);
           if (!storedImageUrl && finalImageUrl) {
@@ -179,10 +246,7 @@ export default function Dashboard() {
   // ================== 팝업 상태 ==================
   const [showBellPopup, setShowBellPopup] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
-  
-  // 프로필 이미지 상태
-  const [userProfileImage, setUserProfileImage] = useState("https://i.pravatar.cc/80?img=11");
-  
+
   // 알림 관련 상태
   const [notifications, setNotifications] = useState([]);
   const [loadingNoti, setLoadingNoti] = useState(false);
@@ -192,14 +256,16 @@ export default function Dashboard() {
   const notiRef = useRef(null);
 
   // ================== 대시보드 데이터 상태 ==================
-  // 할 일 목록 (백엔드 care_list.items -> tasks 로 매핑)
-  const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");
+  // 할 일 목록 (Local Storage에 상태 유지)
+  const [tasks, setTasks] = useLocalStorageState(TODO_STORAGE_KEY, []);
+
+  // 새로운 할 일 입력창 (Local Storage에 상태 유지)
+  const [newTask, setNewTask] = useLocalStorageState(NEWTASK_STORAGE_KEY, "");
 
   // 다가오는 일정 (Local Storage 일정 포함)
   const [upcomingSchedules, setUpcomingSchedules] = useState([]);
 
-  // 건강 추세
+  // 건강 추세 (백엔드 dashboard API에서 가져옴)
   const [healthTrend, setHealthTrend] = useState(null);
 
   // 음식 가이드
@@ -220,47 +286,111 @@ export default function Dashboard() {
   }, [tasks]);
 
   // 체크박스 토글 (프론트에서만 동작, 아직 백엔드 동기화 없음)
-  const toggleTask = (id) =>
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+  const toggleTask = useCallback(
+    (id) =>
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+      ),
+    [setTasks]
+  );
 
-  const removeTask = (id) =>
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const removeTask = useCallback(
+    (id) => setTasks((prev) => prev.filter((t) => t.id !== id)),
+    [setTasks]
+  );
 
-  const addTask = () => {
+  const addTask = useCallback(() => {
     const text = newTask.trim();
     if (!text) return;
+
     setTasks((prev) => [
       ...prev,
-      { id: prev.at(-1)?.id + 1 || 1, text, done: false },
+      { id: Date.now(), text, done: false },
     ]);
     setNewTask("");
-  };
+  }, [newTask, setTasks, setNewTask]);
 
-  // ================== 체중 그래프 path 계산 ==================
-  const chartPath = useMemo(() => {
+  // ================== 건강 추세 그래프 데이터 (Chart.js용) ==================
+  const healthTrendChartData = useMemo(() => {
     if (!healthTrend?.graph_data || healthTrend.graph_data.length === 0) {
-      // 데이터 없으면 가로선 표시
-      return "M5,45 L95,45";
+      return null;
     }
 
-    const data = healthTrend.graph_data;
-    const weights = data.map((d) => d.weight);
-    const minW = Math.min(...weights);
-    const maxW = Math.max(...weights);
-    const range = maxW - minW || 1;
+    const labels = healthTrend.graph_data.map((d, idx) => {
+      // 백엔드에서 month가 "11월" 이런 식으로 온다고 가정
+      return d.month || d.label || `${idx + 1}회차`;
+    });
 
-    return data
-      .map((d, i) => {
-        const x =
-          data.length === 1 ? 50 : 5 + (90 * i) / (data.length - 1);
-        const norm = (d.weight - minW) / range;
-        const y = 50 - norm * 40; // 10~50 사이
-        return `${i === 0 ? "M" : "L"}${x},${y}`;
-      })
-      .join(" ");
+    const weights = healthTrend.graph_data
+      .map((d) => Number(d.weight ?? d.value ?? d.current_weight))
+      .filter((v) => !Number.isNaN(v));
+
+    if (weights.length === 0) return null;
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "체중 (kg)",
+          data: weights,
+          borderColor: "#4b7bec",
+          tension: 0.4,
+          fill: true,
+          backgroundColor: "rgba(75, 123, 236, 0.12)",
+          pointBackgroundColor: "#ffffff",
+          pointBorderColor: "#4b7bec",
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
   }, [healthTrend]);
+
+  const healthTrendChartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: "#dfebfaff",
+          titleColor: "#000000ff",
+          bodyColor: "#0c0c0cff",
+          padding: 12,
+          cornerRadius: 8,
+          borderColor: "#dfebfaff",
+          borderWidth: 2,
+          caretSize: 0,
+          displayColors: false,
+          bodyFont: {
+            size: 13,
+            family: "Pretendard",
+          },
+          titleFont: {
+            size: 11,
+            family: "Pretendard",
+          },
+        },
+      },
+      scales: {
+        y: {
+          grid: {
+            color: "#e5e7eb",
+          },
+        },
+        x: {
+          grid: {
+            display: false,
+          },
+        },
+      },
+    }),
+    []
+  );
 
   // ================== D-day 표시 ==================
   const getDDayLabel = (d) => {
@@ -301,39 +431,40 @@ export default function Dashboard() {
         // 1. 로컬 캘린더 일정 불러오기 및 가공
         let combinedSchedules = [];
         try {
-            const savedEvents = localStorage.getItem(CALENDAR_STORAGE_KEY);
-            if (savedEvents) {
-                const events = JSON.parse(savedEvents);
-                const todayDDay = getDDay(new Date().toISOString().slice(0, 10)); // 오늘 D-day (0)
+          const savedEvents = localStorage.getItem(CALENDAR_STORAGE_KEY);
+          if (savedEvents) {
+            const events = JSON.parse(savedEvents);
+            const todayDDay = getDDay(
+              new Date().toISOString().slice(0, 10)
+            );
 
-                const localSchedules = events
-                    .map(event => ({
-                        // 로컬 일정 ID 충돌 방지를 위해 접두사 추가
-                        id: `local-${event.id}`, 
-                        content: `[${event.category}] ${event.text}`,
-                        schedule_date: event.date,
-                        d_day: getDDay(event.date), // D-day 계산
-                    }))
-                    .filter(schedule => schedule.d_day >= todayDDay); // 오늘 또는 미래 일정만 포함
+            const localSchedules = events
+              .map((event) => ({
+                id: `local-${event.id}`,
+                content: `[${event.category}] ${event.text}`,
+                schedule_date: event.date,
+                d_day: getDDay(event.date),
+              }))
+              .filter((schedule) => schedule.d_day >= todayDDay);
 
-                combinedSchedules = localSchedules;
-            }
+            combinedSchedules = localSchedules;
+          }
         } catch (localErr) {
-            console.error("Local Calendar events load error:", localErr);
+          console.error("Local Calendar events load error:", localErr);
         }
 
         const url = `https://youngbin.pythonanywhere.com/api/v1/pets/dashboard/${petId}/`;
 
         const res = await axios.get(url, {
           headers: {
-            Authorization: `Bearer ${token}`, // SimpleJWT
+            Authorization: `Bearer ${token}`,
           },
         });
 
         const data = res.data;
         console.log("📌 대시보드 응답:", data);
 
-        // care_list → tasks로 세팅
+        // care_list → tasks로 세팅 (API 데이터가 있으면 로컬 덮어쓰기)
         if (data.care_list && Array.isArray(data.care_list.items)) {
           setTasks(
             data.care_list.items.map((item) => ({
@@ -344,22 +475,17 @@ export default function Dashboard() {
           );
         }
 
-        // 2. API 일정 불러와 로컬 일정과 병합 및 정렬
+        // API 일정 추가
         if (Array.isArray(data.upcoming_schedules)) {
-            // API 일정에도 충돌 방지 접두사 추가 (선택 사항이지만 안전함)
-            const apiSchedules = data.upcoming_schedules.map(s => ({
-                ...s,
-                id: `api-${s.id}` 
-            }));
-            
-            // API 일정 병합
-            combinedSchedules = [...combinedSchedules, ...apiSchedules];
+          const apiSchedules = data.upcoming_schedules.map((s) => ({
+            ...s,
+            id: `api-${s.id}`,
+          }));
+
+          combinedSchedules = [...combinedSchedules, ...apiSchedules];
         }
 
-        // d_day 기준으로 정렬 (가장 가까운 일정부터)
         combinedSchedules.sort((a, b) => a.d_day - b.d_day);
-        
-        // 최종적으로 upcomingSchedules 상태 업데이트
         setUpcomingSchedules(combinedSchedules);
 
         // health_trend
@@ -394,7 +520,7 @@ export default function Dashboard() {
     };
 
     fetchDashboard();
-  }, []);
+  }, [setTasks]);
 
   // 알림 읽음 처리 함수들
   const markNotificationAsReadOnServer = async (id) => {
@@ -442,6 +568,8 @@ export default function Dashboard() {
     () => notifications.some((n) => !n.is_read),
     [notifications]
   );
+
+  
 
   // 알림 패널 외부 클릭/ESC로 닫기
   useEffect(() => {
@@ -505,11 +633,12 @@ export default function Dashboard() {
 
       setNotifications(mappedNotifications);
 
-      // 새 알림 감지
       const currentIds = new Set(mappedNotifications.map((n) => n.id));
       const prevIds = lastKnownNotiIds.current;
-      const hasNew = mappedNotifications.some((n) => !n.is_read) ||
-        (prevIds.size > 0 && Array.from(currentIds).some((id) => !prevIds.has(id)));
+      const hasNew =
+        mappedNotifications.some((n) => !n.is_read) ||
+        (prevIds.size > 0 &&
+          Array.from(currentIds).some((id) => !prevIds.has(id)));
 
       setHasNewNotification(hasNew);
       lastKnownNotiIds.current = currentIds;
@@ -545,10 +674,10 @@ export default function Dashboard() {
       {/* 헤더 */}
       <header className="nav">
         <div className="nav-inner">
-          <div className="brand">
+          <Link to="/dashboard" className="brand">
             <img src={logoBlue} alt="paw logo" className="paw" />
             <span className="brand-text">멍냥멍냥</span>
-          </div>
+          </Link>
 
           <nav className="menu">
             <a href="/activity">활동</a>
@@ -558,17 +687,15 @@ export default function Dashboard() {
           </nav>
 
           <nav className="menuicon">
-            {/* 🔹 프로필 영역 */}
+            {/* 프로필 */}
             <Link to="/mypage" className="profile">
               <div className="profile__avatar">
-                <img
-                  src={userProfileImage}
-                  alt="프로필"
-                />
+                <img src={userProfileImage} alt="프로필" />
               </div>
               <span className="profile__name">{username}</span>
             </Link>
 
+            {/* 알림 벨 */}
             <div className="icon-wrapper bell">
               <button
                 ref={notiBtnRef}
@@ -639,6 +766,7 @@ export default function Dashboard() {
               )}
             </div>
 
+            {/* 채팅 */}
             <div className="icon-wrapper">
               <button
                 className="icon-btn"
@@ -656,7 +784,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* 본문 이하 그대로 */}
+      {/* 본문 */}
       <main className="main">
         {/* 인트로 */}
         <section className="section section--intro">
@@ -672,7 +800,9 @@ export default function Dashboard() {
           </h2>
 
           <div className="card card--todo">
-            <div className="todolist">오늘 할 일</div>
+            <div className="todolist">
+              오늘 할 일 ({tasks.filter((t) => t.done).length}/{tasks.length})
+            </div>
             <div className="progress">
               <div
                 className="progress__bar"
@@ -710,6 +840,17 @@ export default function Dashboard() {
                   </button>
                 </li>
               ))}
+              {tasks.length === 0 && (
+                <li
+                  className="todo__item"
+                  style={{
+                    justifyContent: "center",
+                    color: "#94a3b8",
+                  }}
+                >
+                  할 일을 추가해 주세요.
+                </li>
+              )}
             </ul>
 
             <div className="todo__add">
@@ -750,7 +891,6 @@ export default function Dashboard() {
                   <div key={s.id} className="event">
                     <span className="event__icon event__icon--steth" />
                     <div className="event__body">
-                      {/* Local Storage 이벤트는 [카테고리] 접두사가 이미 붙어있습니다. */}
                       <div className="event__title">{s.content}</div>
                       <div className="event__date">{s.schedule_date}</div>
                     </div>
@@ -762,7 +902,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* 우측: 차트 */}
+            {/* 우측: Chart.js 건강 추세 그래프 */}
             <div className="card card--chart">
               <div className="chart__header">
                 <span className="chart__caption">
@@ -773,37 +913,22 @@ export default function Dashboard() {
                   했어요.
                 </span>
               </div>
-              <div className="dashboard">
-                <div className="chart">
-                  <div className="chart__grid" />
-                  <svg
-                    viewBox="0 0 100 60"
-                    preserveAspectRatio="none"
-                    className="chart__svg"
-                    aria-hidden
-                  >
-                    <defs>
-                      <linearGradient
-                        id="lineGrad"
-                        x1="0"
-                        y1="0"
-                        x2="1"
-                        y2="0"
-                      >
-                        <stop offset="0" stopColor="#3b82f6" />
-                        <stop offset="1" stopColor="#60a5fa" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d={chartPath}
-                      fill="none"
-                      stroke="url(#lineGrad)"
-                      strokeWidth="2.2"
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
+
+              <div className="graph-box">
+                {healthTrendChartData ? (
+                  <Line
+                    options={healthTrendChartOptions}
+                    data={healthTrendChartData}
+                  />
+                ) : (
+                  <p className="event__empty">
+                    아직 건강 추세 데이터가 없어요.
+                    <br />
+                    건강 페이지에서 체중 기록을 남기면
+                    <br />
+                    이곳에 그래프로 보여드릴게요.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -817,7 +942,7 @@ export default function Dashboard() {
           </h2>
 
           <div className="food-guide">
-            <div className="food-group">
+            <div className="food-group food-group--ok">
               <h3 className="food-group__title food-group__title--ok">
                 먹어도 괜찮아요!
               </h3>
@@ -838,7 +963,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="food-group">
+            <div className="food-group food-group--no">
               <h3 className="food-group__title food-group__title--no">
                 절대 주면 안돼요!
               </h3>
@@ -875,7 +1000,10 @@ export default function Dashboard() {
               <div className="col">
                 <h3>Hyeona Kim</h3>
                 <p>UI/UX Design</p>
-                <a href="https://github.com/ouskxk" className="github-link">
+                <a
+                  href="https://github.com/ouskxk"
+                  className="github-link"
+                >
                   <img
                     src={githubpic}
                     alt="GitHub Logo"
@@ -902,7 +1030,10 @@ export default function Dashboard() {
               <div className="col">
                 <h3>Seungbeom Han</h3>
                 <p>Front-End Dev</p>
-                <a href="https://github.com/hsb9838" className="github-link">
+                <a
+                  href="https://github.com/hsb9838"
+                  className="github-link"
+                >
                   <img
                     src={githubpic}
                     alt="GitHub Logo"
@@ -912,7 +1043,7 @@ export default function Dashboard() {
                 </a>
               </div>
               <div className="col">
-                <h3>Munjin Yang</h3>
+                <h3>Munjun Yang</h3>
                 <p>Back-End Dev</p>
                 <a
                   href="https://github.com/munjun0608"
@@ -929,7 +1060,10 @@ export default function Dashboard() {
               <div className="col">
                 <h3>Youngbin Kang</h3>
                 <p>Back-End Dev</p>
-                <a href="https://github.com/0bini" className="github-link">
+                <a
+                  href="https://github.com/0bini"
+                  className="github-link"
+                >
                   <img
                     src={githubpic}
                     alt="GitHub Logo"
@@ -942,8 +1076,16 @@ export default function Dashboard() {
 
             <div className="tech-stack">
               <h3>TECH STACK</h3>
-              <img src={reactpic} alt="React Logo" className="react-icon" />
-              <img src={djangopic} alt="Django Logo" className="django-icon" />
+              <img
+                src={reactpic}
+                alt="React Logo"
+                className="react-icon"
+              />
+              <img
+                src={djangopic}
+                alt="Django Logo"
+                className="django-icon"
+              />
             </div>
           </div>
         </div>
