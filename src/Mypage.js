@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
-import { Link, NavLink, useNavigate } from "react-router-dom"; 
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import "./Dashboard.css";
-import "./Mypage.css"; 
+import "./Mypage.css";
 
 // 이미지들 불러오기
 import logoBlue from "./img/logo_blue.png";
@@ -13,10 +13,51 @@ import reactpic from "./img/react.png";
 import djangopic from "./img/django.png";
 import bell from "./img/bell.png";
 import chat from "./img/chat.png";
-import plusicon from "./img/plusicon.png"; 
+import plusicon from "./img/plusicon.png";
 
 
-// 알림 관련 헬퍼 함수들
+// =========================================================
+// 🌟 공통 상수 및 헬퍼 함수 정의
+// =========================================================
+
+const CATEGORY_OPTIONS = [
+    { value: "병원/약", label: "병원/약", color: "#ebc3bcff", icon: "🏥" },
+    { value: "미용", label: "미용", color: "#d6ebfaff", icon: "✂️" },
+    { value: "행사", label: "행사", color: "#fff9ecff", icon: "🎂" },
+    { value: "기타", label: "기타", color: "#E9ECEF", icon: "⚫" },
+];
+
+const getCategoryDetails = (categoryValue) => {
+    // 값에 해당하는 옵션을 찾고, 없으면 '기타'를 기본값으로 사용
+    return CATEGORY_OPTIONS.find(opt => opt.value === categoryValue) || CATEGORY_OPTIONS.find(opt => opt.value === "기타") || CATEGORY_OPTIONS[3];
+};
+
+const getDDay = (dateStr) => {
+    if (!dateStr || dateStr.includes('D-')) return 9999; 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const scheduleDate = new Date(dateStr);
+    scheduleDate.setHours(0, 0, 0, 0);
+    const diffTime = scheduleDate.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+    return diffDays;
+};
+
+const getDDayLabel = (d) => {
+    if (d === 0) return "오늘";
+    if (d === 1) return "D-1";
+    if (d > 1) return `D-${d}`;
+    return "지남";
+};
+
+const getDDayClass = (d) => {
+    // 뱃지 색상을 결정하는 클래스
+    if (d <= 0) return "event-badge--danger"; // 오늘 또는 지남
+    if (d <= 3) return "event-badge--soft"; // 3일 이내
+    return "event-badge--default";
+};
+
+// 알림 관련 헬퍼 함수들 (기존 코드 유지)
 const getTimeAgo = (dateString) => {
     const now = new Date();
     const past = new Date(dateString);
@@ -328,7 +369,7 @@ const MyPageModal = ({
                             **{petInfo.name}**의 정보를 해제하시겠습니까?
                         </p>
                         <div className="pet-detail-card pet-detail-card--delete-confirm">
-                             <div className="pet-info-header">
+                            <div className="pet-info-header">
                                 <span className="pet-name-and-type">
                                     {petInfo.name} ({petInfo.species === 'cat' ? '고양이' : '강아지'})
                                 </span>
@@ -363,7 +404,7 @@ const MyPageModal = ({
 };
 
 // =========================================================
-// ⭐️ 메인 컴포넌트
+// 🌟 메인 컴포넌트
 // =========================================================
 
 export default function MyPage() {
@@ -408,7 +449,11 @@ export default function MyPage() {
     const [petInfo, setPetInfo] = useState({
         id: 1, name: "냥냥이", species: "cat", breed: "코리안숏헤어", age: 2, 
         neutered: true, weight: 4.2, 
-        upcoming: [{ id: 101, content: "정기 검진일", date: "D-1", color: '#f59e0b' }],
+        // 🚨 테스트 데이터: 필터링 전 데이터를 가정하여 포함
+        upcoming: [
+            { id: 101, content: "정기 검진일", date: "2025-11-20", category: "병원/약" }, 
+            { id: 102, content: "미용 예약", date: "2025-11-21", category: "미용" }
+        ],
         activityGraph: [{ value: 1 }, { value: 3 }, { value: 2 }, { value: 4 }, { value: 3 }, { value: 5 }] 
     });
     
@@ -442,29 +487,16 @@ export default function MyPage() {
         return age;
     };
 
-    // 일정 날짜 포맷팅 함수
+    // 일정 날짜 포맷팅 함수 (YYYY-MM-DD -> YYYY-MM-DD 형식으로 변환)
     const formatScheduleDate = (dateString) => {
         if (!dateString) return "";
-        const date = new Date(dateString);
-        const today = new Date();
-        const diffTime = date - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays < 0) return "지난 일정";
-        if (diffDays === 0) return "오늘";
-        if (diffDays === 1) return "내일";
-        return `D-${diffDays}`;
-    };
-
-    // 카테고리별 색상 반환 함수
-    const getCategoryColor = (category) => {
-        const colors = {
-            "병원/약": "#f59e0b",
-            "예방접종": "#ef4444",
-            "검진": "#3b82f6",
-            "기타": "#10b981"
-        };
-        return colors[category] || "#6b7280";
+        try {
+            const date = new Date(dateString);
+            // ISO-8601 형식으로 변환 후 시간 부분 제거
+            return date.toISOString().slice(0, 10);
+        } catch (e) {
+            return dateString;
+        }
     };
 
     // API 호출: 닉네임, ID, 이미지 URL 가져오기
@@ -489,7 +521,6 @@ export default function MyPage() {
                 
                 const fetchedUsername = res.data?.nickname || res.data?.username || "멍냥";
                 const fetchedUserId = res.data?.username || "DogAndCatDAC"; 
-                // API 응답 URL이 있다면 사용, 없으면 LocalStorage URL 사용
                 const fetchedProfileImage = res.data?.user_profile_image_url || storedImageUrl || "https://i.pravatar.cc/120?img=11";
 
                 setUsername(fetchedUsername);
@@ -527,7 +558,8 @@ export default function MyPage() {
                     // localStorage에 pet_id 저장 (다른 페이지에서 사용)
                     localStorage.setItem("pet_id", String(firstPet.id));
                     // 선택된 반려동물 정보 설정
-                    setPetInfo({
+                    setPetInfo(prev => ({
+                        ...prev, // 기존 upcoming, activityGraph 데이터는 유지
                         id: firstPet.id,
                         name: firstPet.name,
                         species: firstPet.species === "고양이" ? "cat" : "dog",
@@ -535,9 +567,7 @@ export default function MyPage() {
                         age: calculateAge(firstPet.birth_date),
                         neutered: firstPet.is_neutered,
                         weight: firstPet.weight,
-                        upcoming: [],
-                        activityGraph: []
-                    });
+                    }));
                     // 폼 데이터도 업데이트
                     setPetFormData(prev => ({
                         ...prev,
@@ -574,16 +604,32 @@ export default function MyPage() {
                 );
                 
                 if (res.data?.upcoming_schedules) {
-                    setUpcomingSchedules(res.data.upcoming_schedules);
+                    const incomingSchedules = res.data.upcoming_schedules;
+                    
+                    // 1. D-day 계산 필드 추가
+                    const processedSchedules = incomingSchedules.map(schedule => ({
+                        id: schedule.id,
+                        content: schedule.content,
+                        date: schedule.schedule_date, // YYYY-MM-DD
+                        category: schedule.category,
+                        d_day: getDDay(schedule.schedule_date), // D-day 계산
+                    }));
+                    
+                    // 2. 오늘 (0) 또는 미래 일정 (> 0)만 필터링
+                    const futureSchedules = processedSchedules.filter(s => s.d_day >= 0);
+                    
+                    // 3. D-day 순으로 정렬 (가까운 순)
+                    futureSchedules.sort((a, b) => a.d_day - b.d_day);
+                    
+                    // 4. 최대 7개의 항목만 표시하도록 슬라이싱 (일주일 분량)
+                    const limitedSchedules = futureSchedules.slice(0, 7);
+
+                    setUpcomingSchedules(incomingSchedules); 
+
                     // petInfo의 upcoming 업데이트
                     setPetInfo(prev => ({
                         ...prev,
-                        upcoming: res.data.upcoming_schedules.map(schedule => ({
-                            id: schedule.id,
-                            content: schedule.content,
-                            date: formatScheduleDate(schedule.schedule_date),
-                            color: getCategoryColor(schedule.category)
-                        }))
+                        upcoming: limitedSchedules // 필터링되고 제한된 데이터 사용
                     }));
                 }
             } catch (err) {
@@ -607,24 +653,19 @@ export default function MyPage() {
                 );
                 
                 if (res.data?.weekly_analysis) {
-                    // 일요일부터 순서대로 정렬
                     const dayOrder = ['일', '월', '화', '수', '목', '금', '토'];
                     const dayOrderEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                    const dayOrderNum = [0, 1, 2, 3, 4, 5, 6]; // 일요일=0, 월요일=1, ...
+                    const dayOrderNum = [0, 1, 2, 3, 4, 5, 6]; 
                     
-                    // weekly_analysis를 일요일부터 순서대로 정렬
                     const sortedActivity = [...res.data.weekly_analysis].sort((a, b) => {
                         const getDayIndex = (item) => {
                             if (item.day) {
                                 const dayStr = String(item.day).toLowerCase();
-                                // 한국어 요일
                                 const koIndex = dayOrder.findIndex(d => dayStr.includes(d));
                                 if (koIndex !== -1) return koIndex;
-                                // 영어 요일
                                 const enIndex = dayOrderEn.findIndex(d => dayStr.includes(d.toLowerCase()));
                                 if (enIndex !== -1) return enIndex;
                             }
-                            // day_of_week 필드가 숫자인 경우
                             if (item.day_of_week !== undefined) {
                                 return item.day_of_week;
                             }
@@ -633,10 +674,8 @@ export default function MyPage() {
                         return getDayIndex(a) - getDayIndex(b);
                     });
                     
-                    // 만약 정렬이 제대로 안 되었다면, day_of_week나 인덱스 기반으로 재정렬
                     let finalActivity = sortedActivity;
                     if (sortedActivity.length === 7) {
-                        // day_of_week 필드가 있으면 그것을 사용
                         const hasDayOfWeek = sortedActivity.some(item => item.day_of_week !== undefined);
                         if (hasDayOfWeek) {
                             finalActivity = dayOrderNum.map(dayNum => 
@@ -646,7 +685,6 @@ export default function MyPage() {
                                 { duration: 0, day: dayOrder[dayNum] }
                             );
                         } else {
-                            // day 필드로 정렬 시도
                             finalActivity = dayOrder.map(day => 
                                 sortedActivity.find(item => String(item.day).includes(day)) ||
                                 sortedActivity.find(item => String(item.day).includes(dayOrderEn[dayOrder.indexOf(day)])) ||
@@ -670,7 +708,7 @@ export default function MyPage() {
         fetchActivities();
     }, [selectedPetId]);
     
-    // 알림 읽음 처리 함수들
+    // 알림 읽음 처리 함수들 (기존 로직 유지)
     const markNotificationAsReadOnServer = async (id) => {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -906,7 +944,8 @@ export default function MyPage() {
                                 : `https://youngbin.pythonanywhere.com${updatedPet.profile_photo}`)
                             : null;
                         
-                        setPetInfo({
+                        setPetInfo(prev => ({
+                            ...prev,
                             id: updatedPet.id,
                             name: updatedPet.name,
                             species: updatedPet.species === "고양이" ? "cat" : "dog",
@@ -914,9 +953,7 @@ export default function MyPage() {
                             age: calculateAge(updatedPet.birth_date),
                             neutered: updatedPet.is_neutered,
                             weight: updatedPet.weight,
-                            upcoming: petInfo.upcoming,
-                            activityGraph: petInfo.activityGraph
-                        });
+                        }));
                         
                         // localStorage에 pet_id 저장 (업데이트된 반려동물)
                         localStorage.setItem("pet_id", String(updatedPet.id));
@@ -1355,7 +1392,8 @@ export default function MyPage() {
                                                 setSelectedPetId(pet.id);
                                                 // localStorage에 pet_id 저장 (다른 페이지에서 사용)
                                                 localStorage.setItem("pet_id", String(pet.id));
-                                                setPetInfo({
+                                                setPetInfo(prev => ({
+                                                    ...prev,
                                                     id: pet.id,
                                                     name: pet.name,
                                                     species: pet.species === "고양이" ? "cat" : "dog",
@@ -1365,7 +1403,7 @@ export default function MyPage() {
                                                     weight: pet.weight,
                                                     upcoming: [],
                                                     activityGraph: []
-                                                });
+                                                }));
                                                 setPetFormData(prev => ({
                                                     ...prev,
                                                     name: pet.name,
@@ -1421,198 +1459,208 @@ export default function MyPage() {
                                         {petInfo.breed}, {petInfo.age}살, {petInfo.neutered ? "중성화 완료" : "중성화 안함"}, {petInfo.weight}kg
                                     </p>
 
-                                <div className="pet-dashboard-summary">
-                                    {/* 다가오는 일정 */}
-                                    <div className="upcoming-events-mypage">
-                                        <div className="section-header-inline">
-                                            <h3>다가오는 일정</h3>
-                                            <Link to="/calendar" className="view-more">자세히 보기</Link>
-                                        </div>
-                                        {petInfo.upcoming && petInfo.upcoming.length > 0 ? (
-                                            petInfo.upcoming.map((event) => (
-                                                <div key={event.id} className="event-item-mypage event-item-mypage--detail">
-                                                    <div className="event-icon-box">
-                                                        <span className="event-icon-emoji">🏥</span>
-                                                    </div>
-                                                    <div className="event-item-text">
-                                                        <span className="event-title">{event.content}</span>
-                                                        <span className="event-date">{event.date}</span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
-                                        )}
-                                    </div>
-
-                                    {/* 주간 활동 분석 */}
-                                    <div className="weekly-activity-mypage">
-                                        <div className="section-header-inline">
-                                            <h3>주간 활동 분석</h3>
-                                            <Link to="/activity" className="view-more">자세히 보기</Link>
-                                        </div>
-                                        {/* <div className="activity-chart-box">
-                                            <div className="chart-y-axis-labels">
-                                                <span>3.50</span><span>3.45</span><span>3.40</span><span>3.35</span><span>3.30</span><span>3.25</span><span>3.20</span>
+                                    <div className="pet-dashboard-summary">
+                                        {/* 다가오는 일정 */}
+                                        <div className="upcoming-events-mypage">
+                                            <div className="section-header-inline">
+                                                <h3>다가오는 일정</h3>
+                                                <Link to="/calendar" className="view-more">자세히 보기</Link>
                                             </div>
-                                            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart-svg">
-                                                <path d="M 10 90 L 30 70 L 50 60 L 70 80 L 90 50" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-                                            </svg>
-                                            <div className="chart-x-labels-only">
-                                                <span>9월</span><span>10월</span><span>11월</span><span>12월</span><span>1일</span><span>2일</span><span>3일</span><span>4일</span><span>5일</span>
-                                            </div> 
-                                        </div> */}
-                                        {weeklyActivity && weeklyActivity.length > 0 ? (
-                                            <div className="activity-chart-box-mypage">
-                                                <svg viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet" className="chart-svg-mypage">
-                                                    {/* 그리드 라인 */}
-                                                    <defs>
-                                                        <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                            <stop offset="0%" stopColor="#D6E4FF" stopOpacity="0.3" />
-                                                            <stop offset="100%" stopColor="#D6E4FF" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    
-                                                    {/* Y축 그리드 라인 */}
-                                                    {[0, 1, 2, 3, 4].map((i) => (
-                                                        <line
-                                                            key={`grid-y-${i}`}
-                                                            x1="30"
-                                                            y1={20 + (i * 20)}
-                                                            x2="280"
-                                                            y2={20 + (i * 20)}
-                                                            stroke="#F0F0F0"
-                                                            strokeWidth="1"
-                                                        />
-                                                    ))}
-                                                    
-                                                    {/* 최대값 계산 */}
-                                                    {(() => {
-                                                        const maxValue = Math.max(...weeklyActivity.map(item => item.duration || 0));
-                                                        const maxY = maxValue > 0 ? maxValue : 100;
-                                                        const step = maxY / 4;
+                                            {petInfo.upcoming && petInfo.upcoming.length > 0 ? (
+                                                petInfo.upcoming.map((event) => {
+                                                    // 🌟 1. D-day 및 카테고리 정보 계산
+                                                    const dDayValue = getDDay(event.date); // event.date는 YYYY-MM-DD 형태
+                                                    const badgeClass = getDDayClass(dDayValue);
+                                                    const badgeLabel = getDDayLabel(dDayValue);
+                                                    const { icon, color } = getCategoryDetails(event.category || "기타"); 
+
+                                                    return (
+                                                        <div key={event.id} className="event-item-mypage event-item-mypage--detail">
+                                                            {/* 🌟 좌측 컨테이너: 아이콘 + 텍스트를 묶습니다. */}
+                                                            <div className="event-item-left"> 
+                                                                
+                                                                {/* 🌟 2. 동적 아이콘 및 배경색 적용 */}
+                                                                <div className="event-icon-box" style={{ backgroundColor: color }}>
+                                                                    <span className="event-icon-emoji">{icon}</span>
+                                                                </div>
+                                                                
+                                                                <div className="event-item-text">
+                                                                    {/* 제목 */}
+                                                                    <span className="event-title">{event.content}</span>
+                                                                    {/* 날짜 (YYYY-MM-DD 포맷) */}
+                                                                    <span className="event-date">{formatScheduleDate(event.date)}</span> 
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* 🌟 3. D-day 뱃지 추가 (오른쪽 끝에 배치됨) */}
+                                                            <div className={`event-badge-mypage ${badgeClass}`}>
+                                                                {badgeLabel}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })
+                                            ) : (
+                                                <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
+                                            )}
+                                        </div>
+
+                                        {/* 주간 활동 분석 */}
+                                        <div className="weekly-activity-mypage">
+                                            <div className="section-header-inline">
+                                                <h3>주간 활동 분석</h3>
+                                                <Link to="/activity" className="view-more">자세히 보기</Link>
+                                            </div>
+                                            {weeklyActivity && weeklyActivity.length > 0 ? (
+                                                <div className="activity-chart-box-mypage">
+                                                    <svg viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet" className="chart-svg-mypage">
+                                                        {/* 그리드 라인 */}
+                                                        <defs>
+                                                            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                                <stop offset="0%" stopColor="#D6E4FF" stopOpacity="0.3" />
+                                                                <stop offset="100%" stopColor="#D6E4FF" stopOpacity="0" />
+                                                            </linearGradient>
+                                                        </defs>
                                                         
-                                                        return (
-                                                            <>
-                                                                {/* Y축 레이블 */}
-                                                                {[0, 1, 2, 3, 4].map((i) => {
-                                                                    const value = Math.round(maxY - (i * step));
-                                                                    return (
-                                                                        <text
-                                                                            key={`y-label-${i}`}
-                                                                            x="25"
-                                                                            y={25 + (i * 20)}
-                                                                            textAnchor="end"
-                                                                            fontSize="10"
-                                                                            fill="#666"
-                                                                        >
-                                                                            {value}
-                                                                        </text>
-                                                                    );
-                                                                })}
-                                                                
-                                                                {/* 데이터 영역 채우기 */}
-                                                                <path
-                                                                    d={`M 30 ${100} ${weeklyActivity.map((item, idx) => {
-                                                                        const x = 30 + (idx * 35);
-                                                                        const value = item.duration || 0;
-                                                                        const y = 100 - (value / maxY * 80);
-                                                                        return `L ${x} ${y}`;
-                                                                    }).join(" ")} L ${30 + ((weeklyActivity.length - 1) * 35)} ${100} Z`}
-                                                                    fill="url(#areaGradient)"
-                                                                />
-                                                                
-                                                                {/* 데이터 라인 */}
-                                                                <path
-                                                                    d={`M ${weeklyActivity.map((item, idx) => {
-                                                                        const x = 30 + (idx * 35);
-                                                                        const value = item.duration || 0;
-                                                                        const y = 100 - (value / maxY * 80);
-                                                                        return idx === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-                                                                    }).join(" ")}`}
-                                                                    fill="none"
-                                                                    stroke="#3b82f6"
-                                                                    strokeWidth="2.5"
-                                                                    strokeLinejoin="round"
-                                                                    strokeLinecap="round"
-                                                                />
-                                                                
-                                                                {/* 데이터 포인트 */}
-                                                                {weeklyActivity.map((item, idx) => {
-                                                                    const x = 30 + (idx * 35);
-                                                                    const value = item.duration || 0;
-                                                                    const y = 100 - (value / maxY * 80);
-                                                                    return (
-                                                                        <g key={`point-${idx}`}>
-                                                                            <circle
-                                                                                cx={x}
-                                                                                cy={y}
-                                                                                r="4"
-                                                                                fill="#3b82f6"
-                                                                                stroke="#fff"
-                                                                                strokeWidth="2"
-                                                                            />
-                                                                            {/* 값 표시 */}
+                                                        {/* Y축 그리드 라인 */}
+                                                        {[0, 1, 2, 3, 4].map((i) => (
+                                                            <line
+                                                                key={`grid-y-${i}`}
+                                                                x1="30"
+                                                                y1={20 + (i * 20)}
+                                                                x2="280"
+                                                                y2={20 + (i * 20)}
+                                                                stroke="#F0F0F0"
+                                                                strokeWidth="1"
+                                                            />
+                                                        ))}
+                                                        
+                                                        {/* 최대값 계산 및 데이터 렌더링 */}
+                                                        {(() => {
+                                                            const maxValue = Math.max(...weeklyActivity.map(item => item.duration || 0));
+                                                            const maxY = maxValue > 0 ? maxValue : 100;
+                                                            const step = maxY / 4;
+                                                            
+                                                            return (
+                                                                <>
+                                                                    {/* Y축 레이블 */}
+                                                                    {[0, 1, 2, 3, 4].map((i) => {
+                                                                        const value = Math.round(maxY - (i * step));
+                                                                        return (
                                                                             <text
-                                                                                x={x}
-                                                                                y={y - 8}
-                                                                                textAnchor="middle"
-                                                                                fontSize="9"
-                                                                                fill="#3b82f6"
-                                                                                fontWeight="600"
+                                                                                key={`y-label-${i}`}
+                                                                                x="25"
+                                                                                y={25 + (i * 20)}
+                                                                                textAnchor="end"
+                                                                                fontSize="10"
+                                                                                fill="#666"
                                                                             >
                                                                                 {value}
                                                                             </text>
-                                                                        </g>
-                                                                    );
-                                                                })}
-                                                            </>
-                                                        );
-                                                    })()}
-                                                    
-                                                    {/* X축 레이블 - 일요일부터 순서대로 */}
-                                                    {weeklyActivity.map((item, idx) => {
-                                                        const x = 30 + (idx * 35);
-                                                        const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
-                                                        // item.day가 있으면 사용, 없으면 dayLabels의 인덱스 사용
-                                                        let dayLabel = item.day;
-                                                        if (!dayLabel || dayLabel === '') {
-                                                            dayLabel = dayLabels[idx % 7];
-                                                        } else {
-                                                            // 영어 요일을 한국어로 변환
-                                                            const dayMap = {
-                                                                'Sun': '일', 'Sunday': '일',
-                                                                'Mon': '월', 'Monday': '월',
-                                                                'Tue': '화', 'Tuesday': '화',
-                                                                'Wed': '수', 'Wednesday': '수',
-                                                                'Thu': '목', 'Thursday': '목',
-                                                                'Fri': '금', 'Friday': '금',
-                                                                'Sat': '토', 'Saturday': '토'
-                                                            };
-                                                            const dayStr = String(dayLabel);
-                                                            dayLabel = dayMap[dayStr] || dayLabels[idx % 7];
-                                                        }
-                                                        return (
-                                                            <text
-                                                                key={`x-label-${idx}`}
-                                                                x={x}
-                                                                y={115}
-                                                                textAnchor="middle"
-                                                                fontSize="11"
-                                                                fill="#666"
-                                                                fontWeight="500"
-                                                            >
-                                                                {dayLabel}
-                                                            </text>
-                                                        );
-                                                    })}
-                                                </svg>
-                                            </div>
-                                        ) : (
-                                            <span className="event-empty">최근 일주일간 활동이 없습니다.</span>
-                                        )}
+                                                                        );
+                                                                    })}
+                                                                    
+                                                                    {/* 데이터 영역 채우기 */}
+                                                                    <path
+                                                                        d={`M 30 ${100} ${weeklyActivity.map((item, idx) => {
+                                                                            const x = 30 + (idx * 35);
+                                                                            const value = item.duration || 0;
+                                                                            const y = 100 - (value / maxY * 80);
+                                                                            return `L ${x} ${y}`;
+                                                                        }).join(" ")} L ${30 + ((weeklyActivity.length - 1) * 35)} ${100} Z`}
+                                                                        fill="url(#areaGradient)"
+                                                                    />
+                                                                    
+                                                                    {/* 데이터 라인 */}
+                                                                    <path
+                                                                        d={`M ${weeklyActivity.map((item, idx) => {
+                                                                            const x = 30 + (idx * 35);
+                                                                            const value = item.duration || 0;
+                                                                            const y = 100 - (value / maxY * 80);
+                                                                            return idx === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+                                                                        }).join(" ")}`}
+                                                                        fill="none"
+                                                                        stroke="#3b82f6"
+                                                                        strokeWidth="2.5"
+                                                                        strokeLinejoin="round"
+                                                                        strokeLinecap="round"
+                                                                    />
+                                                                    
+                                                                    {/* 데이터 포인트 */}
+                                                                    {weeklyActivity.map((item, idx) => {
+                                                                        const x = 30 + (idx * 35);
+                                                                        const value = item.duration || 0;
+                                                                        const y = 100 - (value / maxY * 80);
+                                                                        return (
+                                                                            <g key={`point-${idx}`}>
+                                                                                <circle
+                                                                                    cx={x}
+                                                                                    cy={y}
+                                                                                    r="4"
+                                                                                    fill="#3b82f6"
+                                                                                    stroke="#fff"
+                                                                                    strokeWidth="2"
+                                                                                />
+                                                                                {/* 값 표시 */}
+                                                                                <text
+                                                                                    x={x}
+                                                                                    y={y - 8}
+                                                                                    textAnchor="middle"
+                                                                                    fontSize="9"
+                                                                                    fill="#3b82f6"
+                                                                                    fontWeight="600"
+                                                                                >
+                                                                                    {value}
+                                                                                </text>
+                                                                            </g>
+                                                                        );
+                                                                    })}
+                                                                    
+                                                                    {/* X축 레이블 - 일요일부터 순서대로 */}
+                                                                    {weeklyActivity.map((item, idx) => {
+                                                                        const x = 30 + (idx * 35);
+                                                                        const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+                                                                        let dayLabel = item.day;
+                                                                        if (!dayLabel || dayLabel === '') {
+                                                                            dayLabel = dayLabels[idx % 7];
+                                                                        } else {
+                                                                            // 영어 요일을 한국어로 변환
+                                                                            const dayMap = {
+                                                                                'Sun': '일', 'Sunday': '일',
+                                                                                'Mon': '월', 'Monday': '월',
+                                                                                'Tue': '화', 'Tuesday': '화',
+                                                                                'Wed': '수', 'Wednesday': '수',
+                                                                                'Thu': '목', 'Thursday': '목',
+                                                                                'Fri': '금', 'Friday': '금',
+                                                                                'Sat': '토', 'Saturday': '토'
+                                                                            };
+                                                                            const dayStr = String(dayLabel);
+                                                                            dayLabel = dayMap[dayStr] || dayLabels[idx % 7];
+                                                                        }
+                                                                        return (
+                                                                            <text
+                                                                                key={`x-label-${idx}`}
+                                                                                x={x}
+                                                                                y={115}
+                                                                                textAnchor="middle"
+                                                                                fontSize="11"
+                                                                                fill="#666"
+                                                                                fontWeight="500"
+                                                                            >
+                                                                                {dayLabel}
+                                                                            </text>
+                                                                        );
+                                                                    })}
+                                                                </>
+                                                            );
+                                                        })()}
+                                                        
+                                                    </svg>
+                                                </div>
+                                            ) : (
+                                                <span className="event-empty">최근 일주일간 활동이 없습니다.</span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             ) : (
                                 <div className="pet-detail-card-wrapper">
