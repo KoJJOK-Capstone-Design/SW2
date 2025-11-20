@@ -591,53 +591,51 @@ export default function MyPage() {
         fetchPets();
     }, []);
 
-    // 선택된 반려동물의 다가오는 일정 가져오기
+    // 선택된 반려동물의 오늘의 일정 가져오기 (캘린더 API 사용)
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token || !selectedPetId) return;
 
-        const fetchDashboard = async () => {
+        const fetchTodaySchedules = async () => {
             try {
+                // 오늘 날짜 정보
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth() + 1;
+                const todayStr = `${year}-${String(month).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                
+                // 캘린더 API를 사용하여 현재 월의 일정 가져오기
                 const res = await axios.get(
-                    `https://youngbin.pythonanywhere.com/api/v1/pets/dashboard/${selectedPetId}/`,
+                    `https://youngbin.pythonanywhere.com/api/v1/pets/calendar/${selectedPetId}/?year=${year}&month=${month}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 
-                if (res.data?.upcoming_schedules) {
-                    const incomingSchedules = res.data.upcoming_schedules;
-                    
-                    // 1. D-day 계산 필드 추가
-                    const processedSchedules = incomingSchedules.map(schedule => ({
-                        id: schedule.id,
-                        content: schedule.content,
-                        date: schedule.schedule_date, // YYYY-MM-DD
-                        category: schedule.category,
-                        d_day: getDDay(schedule.schedule_date), // D-day 계산
-                    }));
-                    
-                    // 2. 오늘 (0) 또는 미래 일정 (> 0)만 필터링
-                    const futureSchedules = processedSchedules.filter(s => s.d_day >= 0);
-                    
-                    // 3. D-day 순으로 정렬 (가까운 순)
-                    futureSchedules.sort((a, b) => a.d_day - b.d_day);
-                    
-                    // 4. 최대 7개의 항목만 표시하도록 슬라이싱 (일주일 분량)
-                    const limitedSchedules = futureSchedules.slice(0, 7);
+                if (res.data && Array.isArray(res.data)) {
+                    // 오늘 날짜의 일정만 필터링
+                    const todaySchedules = res.data
+                        .filter(schedule => schedule.schedule_date === todayStr)
+                        .map(schedule => ({
+                            id: schedule.id,
+                            content: schedule.content,
+                            date: schedule.schedule_date,
+                            category: schedule.category,
+                            d_day: 0, // 오늘 날짜이므로 항상 0
+                        }));
 
-                    setUpcomingSchedules(incomingSchedules); 
+                    setUpcomingSchedules(todaySchedules); 
 
-                    // petInfo의 upcoming 업데이트
+                    // petInfo의 upcoming 업데이트 (오늘의 일정만 표시)
                     setPetInfo(prev => ({
                         ...prev,
-                        upcoming: limitedSchedules // 필터링되고 제한된 데이터 사용
+                        upcoming: todaySchedules // 오늘 날짜의 모든 일정 표시
                     }));
                 }
             } catch (err) {
-                console.error("다가오는 일정 불러오기 실패:", err.response?.data || err.message);
+                console.error("오늘의 일정 불러오기 실패:", err.response?.data || err.message);
             }
         };
 
-        fetchDashboard();
+        fetchTodaySchedules();
     }, [selectedPetId]);
 
     // 선택된 반려동물의 주간 활동 분석 가져오기
@@ -1460,12 +1458,13 @@ export default function MyPage() {
                                     </p>
 
                                     <div className="pet-dashboard-summary">
-                                        {/* 다가오는 일정 */}
+                                        {/* 오늘의 일정 */}
                                         <div className="upcoming-events-mypage">
                                             <div className="section-header-inline">
-                                                <h3>다가오는 일정</h3>
+                                                <h3>오늘의 일정</h3>
                                                 <Link to="/calendar" className="view-more">자세히 보기</Link>
                                             </div>
+                                            <div className="event-list-container-mypage">
                                             {petInfo.upcoming && petInfo.upcoming.length > 0 ? (
                                                 petInfo.upcoming.map((event) => {
                                                     // 🌟 1. D-day 및 카테고리 정보 계산
@@ -1500,8 +1499,9 @@ export default function MyPage() {
                                                     )
                                                 })
                                             ) : (
-                                                <span className="event-empty">최근 일주일간 일정이 없습니다.</span>
+                                                <span className="event-empty">오늘의 일정이 없습니다.</span>
                                             )}
+                                            </div>
                                         </div>
 
                                         {/* 주간 활동 분석 */}
