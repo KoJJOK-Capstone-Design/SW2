@@ -223,7 +223,7 @@ body {
 .card--event {
  background: transparent; border: 0; padding: 0;
  display: flex; flex-direction: column;
- height: 400px; /* 건강 추세 카드와 동일한 높이 */
+ height: 550px; /* 건강 추세 카드와 동일한 높이 */
  box-sizing: border-box;
 }
 
@@ -239,15 +239,31 @@ body {
  background-color: #f1f5f9; /* 트랙 색상 */
  border-radius: 4px;
 }
+
+.card--event .event { /* 💡 .card--event 내부의 .event 선택자로 우선순위 확보 */
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; /* 텍스트와 뱃지를 양 끝으로 분리 */
+    gap: 12px;
+    border-radius: 12px;
+    padding: 14px 18px; 
+    background: #fff;
+    min-height: 68px;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* 🌟 그림자 효과 강화 */
+    margin-bottom: 12px; /* 🌟 항목 아래 간격 추가 */
+    border: 1px dashed #e2e8f0; /* 기존의 dashed border를 살립니다. */
+}
 /* 일정 목록 스크롤 컨테이너 - 5개까지만 보이도록 설정 */
 .event-list-container-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 25px;
   overflow-y: auto;
   /* 일정 항목 높이 계산: min-height(68px) * 5개 + gap(12px) * 4개 = 340px + 48px = 388px */
-  max-height: calc(68px * 5 + 12px * 4);
+  max-height: calc(80px * 6 + 12px * 6);
   padding-right: 5px;
+  height:550px;
 }
 
 /* 스크롤바 스타일 */
@@ -265,7 +281,7 @@ body {
 
 .event {
   display: flex; align-items: center; gap: 12px;
-  border: 1px solid #dbeafe; border-radius: 12px;
+  border-radius: 12px;
   padding: 14px 18px; background: #fff;
   min-height: 68px;
   box-sizing: border-box;
@@ -282,7 +298,7 @@ body {
 .event-icon-box-dashboard {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -303,43 +319,53 @@ body {
 .event__badge--soft   { background: #eef6ff; color: #3467ff; }
 .event__badge--danger { background: #ffe5e5; color: #d92d20; }
 
-/* 차트 카드(우측) - 정사각형으로 설정 */
-.card--chart { 
-  padding: 0 !important; 
-  width: 400px;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin-left: auto; /* 오른쪽으로 정렬 */
-  justify-content: center;
-  align-items: center;
-  overflow: hidden; /* border-radius와 함께 사용하여 여백 제거 */
+/******************************************
+ * 6) Upcoming & Trend (2열 그리드)
+ ******************************************/
+
+/* 그리드 래퍼 */
+.section--grid {
+  /* ... (기존 그리드 설정 유지) ... */
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 24px;
+  align-items: start;
 }
 
+
+/* 차트 카드(우측) - 정사각형으로 설정 */
+.card--chart { 
+    padding: 20px; /* 내부 여백 확보 */
+    height: auto !important; /* 🚨 중요: 고정 높이 해제 (그래프 잘림 방지) */
+    min-height: 350px; /* 최소 높이만 지정 */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: visible;  
+}
+
+.chart__header {
+    margin-bottom: 20px;
+}
 /* 그래프 박스 - 정사각형으로 설정 (카드 전체를 채우도록) */
 .graph-box {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 0;
-  box-sizing: border-box;
+    width: 100%;
+    height: 100px; /* 차트 높이 지정 (이 안에서 그려짐) */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Chart.js 캔버스가 정사각형으로 그려지도록 설정 */
 .graph-box canvas {
   width: 100% !important;
   height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
 }
 
 .dashboard .card--chart .chart {
   width: 90%;
-  height: 80px; /* 🌟 예시: 너비를 90%로 줄입니다. */
+  height: 80%; /* 🌟 예시: 너비를 90%로 줄입니다. */
   margin: 0 auto; /* 중앙 정렬 */
   position: relative;
   border: 1px solid #eaeef3;
@@ -378,9 +404,6 @@ body {
 /******************************************
  * 7) Food Guide (가로 2열)
  ******************************************/
-/******************************************
- * 7) Food Guide (가로 2열)
- ******************************************/
 .food-guide {
   display: grid;
   grid-template-columns: 1fr 1fr; /* 그룹 두 개를 가로로 */
@@ -403,7 +426,7 @@ body {
   /* 이미지에 맞춰 폰트 크기 키우고 볼드하게 */
   margin: 0 0 16px;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
 }
 .food-group__title--ok {
   color: #0a7d45;
@@ -454,7 +477,7 @@ body {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600; /* 볼드하게 */
+  font-weight: 400; /* 볼드하게 */
 }
 
 .badge--ok {
