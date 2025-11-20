@@ -219,16 +219,12 @@ body {
   align-items: start;
 }
 
-/* 일정 카드(좌측) */
-/* 일정 카드(좌측) */
+/* 일정 카드(좌측) - 건강 추세 카드와 높이 맞추기 */
 .card--event {
  background: transparent; border: 0; padding: 0;
- display: flex; flex-direction: column; gap: 20px;
- 
- /* 🌟 스크롤 기능을 위한 핵심 수정 🌟 */
- max-height: 350px; /* 차트 높이에 맞춘 적절한 최대 높이 설정 */
- overflow-y: auto; /* 내용이 넘칠 경우 세로 스크롤 활성화 */
- padding-right: 12px; /* 스크롤바 공간 확보를 위해 오른쪽 패딩 추가 */
+ display: flex; flex-direction: column;
+ height: 400px; /* 건강 추세 카드와 동일한 높이 */
+ box-sizing: border-box;
 }
 
 /* 스크롤바 스타일 (선택 사항 - 미관 개선) */
@@ -243,26 +239,103 @@ body {
  background-color: #f1f5f9; /* 트랙 색상 */
  border-radius: 4px;
 }
+/* 일정 목록 스크롤 컨테이너 - 5개까지만 보이도록 설정 */
+.event-list-container-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  /* 일정 항목 높이 계산: min-height(68px) * 5개 + gap(12px) * 4개 = 340px + 48px = 388px */
+  max-height: calc(68px * 5 + 12px * 4);
+  padding-right: 5px;
+}
+
+/* 스크롤바 스타일 */
+.event-list-container-dashboard::-webkit-scrollbar {
+  width: 8px;
+}
+.event-list-container-dashboard::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+.event-list-container-dashboard::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+  border-radius: 4px;
+}
+
 .event {
   display: flex; align-items: center; gap: 12px;
-  border: 1px dashed #e2e8f0; border-radius: 12px;
-  padding: 12px; background: #fff;
+  border: 1px solid #dbeafe; border-radius: 12px;
+  padding: 14px 18px; background: #fff;
+  min-height: 68px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
+
+.event--dashboard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 일정 아이콘 박스 (마이페이지와 동일한 스타일) */
+.event-icon-box-dashboard {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.event-icon-emoji-dashboard {
+  font-size: 20px;
+}
+
 .event__icon { width: 40px; height: 40px; border-radius: 10px; background: #f1f5f9; }
 .event__icon--cart  { background: #ecfeff; }
 .event__icon--steth { background: #fef3c7; }
-.event__body  { flex: 1; }
-.event__title { font-weight: 600; font-size: 15px; }
+.event__body  { flex: 1; min-width: 0; }
+.event__title { font-weight: 600; font-size: 15px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .event__date  { color: #64748b; font-size: 13px; margin-top: 3px; }
-.event__badge { font-size: 12px; padding: 6px 10px; border-radius: 999px; }
+.event__badge { font-size: 10px; padding: 4px 10px; border-radius: 12px; min-width: 32px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
 .event__badge--soft   { background: #eef6ff; color: #3467ff; }
 .event__badge--danger { background: #ffe5e5; color: #d92d20; }
 
-/* 차트 카드(우측) */
-.card--chart { padding: 16px; }
-.chart__header { margin: 8px; gap: 10px;}
-.chart__caption { color: #888; font-size: 16px; font-weight: 400; }
-.text--green { color: #125b02; }
+/* 차트 카드(우측) - 정사각형으로 설정 */
+.card--chart { 
+  padding: 0 !important; 
+  width: 400px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-left: auto; /* 오른쪽으로 정렬 */
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* border-radius와 함께 사용하여 여백 제거 */
+}
+
+/* 그래프 박스 - 정사각형으로 설정 (카드 전체를 채우도록) */
+.graph-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Chart.js 캔버스가 정사각형으로 그려지도록 설정 */
+.graph-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
 
 .dashboard .card--chart .chart {
   width: 90%;
