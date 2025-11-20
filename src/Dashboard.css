@@ -341,9 +341,6 @@ body {
   padding-top: initial;
 }
 
-/* 그룹 안의 카드 그리드 (이 부분은 이미지와 구조가 다르므로 카드를 목록처럼 보이게 수정) */
-/* 이미지에서 내부 카드는 그리드보다는 세로 목록처럼 보이지만,
-   기존 CSS 구조를 유지하며 스타일만 조정합니다. */
 .food-grid {
   display: flex; /* flex로 변경하여 세로 목록처럼 보이게 */
   flex-direction: column;
