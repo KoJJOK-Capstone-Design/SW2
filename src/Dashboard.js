@@ -465,7 +465,7 @@ export default function Dashboard() {
         console.log("📌 대시보드 응답:", data);
 
         // care_list → tasks로 세팅 (API 데이터가 있으면 로컬 덮어쓰기)
-        if (data.care_list && Array.isArray(data.care_list.items)) {
+        if (data.care_list && Array.isArray(data.care_list.items) && tasks.length === 0) {
           setTasks(
             data.care_list.items.map((item) => ({
               id: item.id,
