@@ -80,7 +80,7 @@ export default function Home() {
             </a>
         </div>
         <div className="col">
-            <h3>Munjin Yang</h3>
+            <h3>Munjun Yang</h3>
             <p>Back-End Dev</p>
             <a href="https://github.com/munjun0608" className="github-link">
                 <img src={githubpic} alt="GitHub Logo" className="github-icon" />
