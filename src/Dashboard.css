@@ -125,12 +125,12 @@ body {
 
 .todo { list-style: none; margin: 0; padding: 0; }
 .todo__item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 4px; margin: 10px 40px 0;
+  display: flex; align-items: left; justify-content: space-between;
+  padding: 8px 4px; margin: 10px 30px 0; font-weight: 400;
 }
 .todo__label { display: flex; align-items: center; gap: 10px; }
 .todo__checkbox { width: 16px; height: 16px; }
-.todo__text { font-size: 14px; }
+.todo__text { font-size: 16px; gap:5px;}
 .todo__text.is-done { color: #94a3b8; text-decoration: line-through; }
 /* 아이콘 버튼(동일 동작 복제) */
 .icon-btn {
@@ -184,7 +184,7 @@ body {
   margin: 30px 40px 0;
 }
 .todo__input {
-  flex: 1; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px;
+  flex: 1; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; font: weight 400;
   padding: 0 10px; background: rgba(255, 255, 255, 0.09);
 }
 .todo__input:focus {
@@ -220,17 +220,18 @@ body {
 }
 
 /* 일정 카드(좌측) */
+/* 일정 카드(좌측) */
 .card--event {
  background: transparent; border: 0; padding: 0;
  display: flex; flex-direction: column; gap: 20px;
  
- /* 🌟 이 부분을 추가했습니다! 🌟 */
- max-height: 350px; /* 차트 높이에 맞추거나 적절한 높이 설정 */
- overflow-y: auto; /* 세로 스크롤 활성화 */
+ /* 🌟 스크롤 기능을 위한 핵심 수정 🌟 */
+ max-height: 350px; /* 차트 높이에 맞춘 적절한 최대 높이 설정 */
+ overflow-y: auto; /* 내용이 넘칠 경우 세로 스크롤 활성화 */
  padding-right: 12px; /* 스크롤바 공간 확보를 위해 오른쪽 패딩 추가 */
 }
 
-/* 스크롤바 스타일 (선택 사항) */
+/* 스크롤바 스타일 (선택 사항 - 미관 개선) */
 .card--event::-webkit-scrollbar {
  width: 8px; /* 스크롤바 너비 */
 }
@@ -258,13 +259,15 @@ body {
 .event__badge--danger { background: #ffe5e5; color: #d92d20; }
 
 /* 차트 카드(우측) */
-.card--chart { padding: 16px; height: 350px;}
+.card--chart { padding: 16px; }
 .chart__header { margin: 8px; gap: 10px;}
-.chart__caption { color: #888; font-size: 16px; font-weight: 600; }
-.text--green { color: #16a34a; }
+.chart__caption { color: #888; font-size: 16px; font-weight: 400; }
+.text--green { color: #125b02; }
 
 .dashboard .card--chart .chart {
-  height: 200px;
+  width: 90%;
+  height: 80px; /* 🌟 예시: 너비를 90%로 줄입니다. */
+  margin: 0 auto; /* 중앙 정렬 */
   position: relative;
   border: 1px solid #eaeef3;
   border-radius: 12px;
@@ -302,6 +305,9 @@ body {
 /******************************************
  * 7) Food Guide (가로 2열)
  ******************************************/
+/******************************************
+ * 7) Food Guide (가로 2열)
+ ******************************************/
 .food-guide {
   display: grid;
   grid-template-columns: 1fr 1fr; /* 그룹 두 개를 가로로 */
@@ -312,41 +318,83 @@ body {
 
 /* 그룹 박스 */
 .food-group {
-  background: #fff;
+  /* 기존 스타일 유지: box-shadow: 0 4px 10px rgba(15,23,42,.05); */
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 10px rgba(15,23,42,.05);
 }
 
-.food-group__title { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
-.food-group__title--ok { color: #0a7d45; padding-top:20px; }
-.food-group__title--no { color: #cf1f1f; padding-top:20px; }
 
-/* 그룹 안의 카드 그리드 */
+.food-group__title {
+  /* 이미지에 맞춰 폰트 크기 키우고 볼드하게 */
+  margin: 0 0 16px;
+  font-size: 24px;
+  font-weight: 700;
+}
+.food-group__title--ok {
+  color: #0a7d45;
+  padding-top: initial;
+}
+.food-group__title--no {
+  color: #cf1f1f;
+  padding-top: initial;
+}
+
+/* 그룹 안의 카드 그리드 (이 부분은 이미지와 구조가 다르므로 카드를 목록처럼 보이게 수정) */
+/* 이미지에서 내부 카드는 그리드보다는 세로 목록처럼 보이지만,
+   기존 CSS 구조를 유지하며 스타일만 조정합니다. */
 .food-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: flex; /* flex로 변경하여 세로 목록처럼 보이게 */
+  flex-direction: column;
+  gap: 16px; /* 카드 간 간격 */
 }
 
 .food-card {
-  border: 1px solid #eaeef3; border-radius: 12px;
-  padding: 20px; position: relative; background: #fff;
+  /* 내부 카드는 배경색을 흰색으로 변경하고, 테두리만 색상 구분 */
+  border: 1px solid #eaeef3;
+  border-radius: 12px;
+  padding: 16px; /* 패딩 조정 */
+  position: relative;
+  background: #fff; /* 내부 카드는 흰색 배경 */
+  box-shadow: 0 1px 3px rgba(0,0,0,.05); /* 은은한 그림자 추가 */
 }
-.food-card--ok { background: #edfdf3; border-color: #d7f1df; }
-.food-card--no { background: #fff1f1; border-color: #ffd8d8; }
-.food-card__name { font-weight: 600; margin-bottom: 6px; }
-.food-card__note { color: #64748b; font-size: 13px; }
+.food-card--ok {
+  background: #fff; /* 흰색 배경 */
+}
+.food-card--no {
+  background: #fff; /* 흰색 배경 */
+}
+.food-card__name {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 16px; /* 폰트 크기 조정 */
+}
+.food-card__note {
+  color: #64748b;
+  font-size: 14px; /* 폰트 크기 조정 */
+}
 
+/* 뱃지 위치 및 스타일 조정 */
 .badge {
-  position: absolute; right: 12px; bottom: 12px;
-  padding: 6px 10px; border-radius: 999px; font-size: 12px;
+  position: absolute;
+  right: 16px; /* 오른쪽 패딩에 맞게 조정 */
+  top: 50%;
+  transform: translateY(-50%); /* 세로 중앙 정렬 */
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600; /* 볼드하게 */
 }
 
-    .badge--ok { background: #daf7e6; color: #0a7d45; }
-    .badge--no { background: #ffdede; color: #c81e1e; }
-
+.badge--ok {
+  background: #daf7e6;
+  color: #0a7d45;
+}
+.badge--no {
+  background: #ffdede;
+  color: #c81e1e;
+}
 /******************************************
  * 8) Footer
  ******************************************/
