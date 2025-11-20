@@ -683,3 +683,111 @@ h1.title {
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8; 
 }
+
+.event-item-mypage--detail { 
+  background-color: #fff; 
+  border: 1px solid #e5e7eb; 
+  border-radius: 8px; 
+  padding: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); 
+}
+
+/* '정기 검진일' / 오늘 일정 강조 카드 */
+.event-item-mypage--detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 18px;
+  border-radius: 12px;
+
+  border: 1px solid #dbeafe;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.15s ease-out;
+}
+
+/* 호버 시 살짝 떠오르는 느낌 */
+.event-item-mypage--detail:hover {
+  transform: translateY(-1px);
+}
+
+/* 1. 일정 항목 컨테이너: D-day 뱃지를 오른쪽 끝으로 보내기 */
+.event-item-mypage {
+    display: flex;
+    justify-content: space-between; /* 아이콘/텍스트와 뱃지를 양 끝으로 분리 */
+    align-items: center; /* 세로 중앙 정렬 */
+    padding: 12px 16px;
+    border: 1px solid #eaeef3;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+/* 2. 아이콘과 텍스트 그룹: 가로 정렬 */
+.event-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 아이콘과 텍스트 사이 간격 */
+    flex: 1; 
+    min-width: 0; /* 텍스트가 넘칠 때 밖으로 튀어나가지 않도록 설정 */
+}
+/* 3. 아이콘 박스 */
+.event-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px; /* 둥근 사각형 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* 아이콘 크기가 줄어들지 않도록 고정 */
+}
+
+/* 4. 텍스트 영역 */
+.event-item-text {
+    display: flex;
+    flex-direction: column; /* 제목과 날짜를 세로로 나열 */
+    min-width: 0; /* 부모 요소의 min-width: 0과 연계하여 텍스트 넘침 방지 */
+}
+
+/* 5. 텍스트 스타일 */
+.event-title {
+    font-weight: 600;
+    font-size: 15px;
+    overflow: hidden;
+    white-space: nowrap; /* 제목 줄바꿈 방지 */
+    text-overflow: ellipsis; /* 넘칠 경우 ... 표시 */
+}
+
+.event-date {
+    color: #888;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* 기본 배지 스타일 */
+.event-badge-mypage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 4px 10px;
+  min-width: 32px;
+  height: 20px;
+
+  font-size: 10px;           /* 글씨 살짝 줄임 */
+  font-weight: 400;
+  color: #ffffff;
+
+ background: #ffe5e5;
+ color: #d92d20;
+ border-radius: 12px;       /* 완전 둥글게 */
+
+
+  transition: all 0.15s ease-out;
+}
