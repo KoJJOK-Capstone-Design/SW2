@@ -118,6 +118,7 @@ export default function PostDetail() {
 
   // 좋아요
   const [liked, setLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false); // 좋아요 처리 중 상태
 
   // 댓글
   const [commentText, setCommentText] = useState("");
@@ -349,6 +350,55 @@ export default function PostDetail() {
     }
   }, []);
 
+  // 좋아요 상태 확인 여부 추적 (게시글 ID별로)
+  const hasCheckedLikeStatus = useRef(false);
+  const lastPostId = useRef(null);
+  
+  // 좋아요 상태 확인 함수
+  const checkLikeStatus = useCallback((postData, user) => {
+    if (!user || !postData) {
+      setLiked(false);
+      return;
+    }
+    
+    console.log("좋아요 상태 확인:", {
+      postDataLikes: postData.likes,
+      postDataLikedBy: postData.likedBy,
+      currentUserId: user.id,
+      currentUsername: user.username,
+      postDataKeys: Object.keys(postData)
+    });
+    
+    // likes 배열이나 likedBy 배열에서 사용자 확인
+    const likesArray = postData.likes || postData.likedBy || [];
+    
+    console.log("좋아요 배열 확인:", {
+      likesArray: likesArray,
+      likesArrayLength: likesArray.length,
+      isArray: Array.isArray(likesArray),
+      firstItem: likesArray[0]
+    });
+    
+    if (Array.isArray(likesArray) && likesArray.length > 0) {
+      const userLiked = likesArray.some((u) => {
+        const userId = typeof u === "object" ? (u.id || u.pk || u.user_id || u.user) : u;
+        const result = String(userId) === String(user.id);
+        console.log("좋아요 확인:", { 
+          userId, 
+          currentUserId: user.id, 
+          result,
+          userObj: typeof u === "object" ? u : null
+        });
+        return result;
+      });
+      console.log("✅ 최종 좋아요 상태:", userLiked);
+      setLiked(userLiked);
+    } else {
+      console.log("⚠️ 좋아요 배열이 비어있거나 없음, false로 설정");
+      setLiked(false);
+    }
+  }, []);
+
   // 게시글 상세 및 댓글 로드
   useEffect(() => {
     if (!id) return;
@@ -385,9 +435,17 @@ export default function PostDetail() {
         }
         
         // author 필드가 없는 경우 author_id 필드 확인
-        if (!authorId && postData.author_id) {
-          authorId = postData.author_id;
+        if (!authorId) {
+          authorId = postData.author_id || postData.authorId || postData.user_id || postData.user || null;
         }
+        
+        console.log("게시글 작성자 정보 추출:", {
+          authorId: authorId,
+          authorName: authorName,
+          postDataAuthor: postData.author,
+          postDataAuthorId: postData.author_id,
+          postDataKeys: Object.keys(postData)
+        });
         
         const normalized = {
           id: postData.id,
@@ -397,8 +455,12 @@ export default function PostDetail() {
           authorId: authorId,
           createdAt: postData.created_at,
           updatedAt: postData.updated_at,
-          likes: postData.like_count || (Array.isArray(postData.likes) ? postData.likes.length : 0),
-          likedBy: Array.isArray(postData.likes) ? postData.likes : [],
+          likes: postData.like_count !== undefined ? postData.like_count : 
+                 (postData.likes_count !== undefined ? postData.likes_count :
+                 (Array.isArray(postData.likes) ? postData.likes.length : 0)),
+          likedBy: Array.isArray(postData.likes) ? postData.likes : 
+                   (Array.isArray(postData.liked_by) ? postData.liked_by : 
+                   (Array.isArray(postData.likedBy) ? postData.likedBy : [])),
           image: (() => {
             // 모든 가능한 필드명 확인
             const img = postData.image || 
@@ -507,6 +569,8 @@ export default function PostDetail() {
           currentUser: currentUser,
           currentUserId: currentUser?.id,
           currentUserIdType: typeof currentUser?.id,
+          likes: normalized.likes,
+          likedBy: normalized.likedBy,
           image: normalized.image,
           rawPostData: postData, // 전체 API 응답 확인
         });
@@ -521,13 +585,49 @@ export default function PostDetail() {
           loadImageAsBlob(normalized.image);
         }
         setPost(normalized);
-        // 현재 사용자가 좋아요를 눌렀는지 확인
-        if (currentUser && Array.isArray(postData.likes)) {
-          const userLiked = postData.likes.some(
-            (u) =>
-              (typeof u === "object" ? u.id : u) === currentUser.id
-          );
-          setLiked(userLiked);
+        
+        // 게시글 ID가 바뀌면 상태 확인 리셋
+        if (lastPostId.current !== normalized.id) {
+          hasCheckedLikeStatus.current = false;
+          lastPostId.current = normalized.id;
+        }
+        
+        // 게시글 로드 시 좋아요 상태 확인 (게시글이 바뀌었거나 아직 확인하지 않았을 때)
+        if (!hasCheckedLikeStatus.current && currentUser) {
+          console.log("게시글 로드 시 좋아요 상태 확인:", {
+            postId: normalized.id,
+            postDataLikes: postData.likes,
+            normalizedLikedBy: normalized.likedBy,
+            currentUserId: currentUser.id,
+            postDataKeys: Object.keys(postData)
+          });
+          // normalized 객체의 likedBy를 사용하여 좋아요 상태 확인
+          // 여러 필드에서 좋아요 정보 확인
+          const likesForCheck = normalized.likedBy && normalized.likedBy.length > 0 
+            ? normalized.likedBy 
+            : (Array.isArray(postData.likes) ? postData.likes : 
+               (Array.isArray(postData.liked_by) ? postData.liked_by : 
+                (Array.isArray(postData.likedBy) ? postData.likedBy : [])));
+          
+          console.log("게시글 로드 시 좋아요 배열 확인:", {
+            normalizedLikedBy: normalized.likedBy,
+            normalizedLikedByLength: normalized.likedBy?.length,
+            postDataLikes: postData.likes,
+            postDataLikesLength: postData.likes?.length,
+            postDataLikedBy: postData.liked_by,
+            likesForCheck: likesForCheck,
+            likesForCheckLength: likesForCheck.length,
+            currentUserId: currentUser.id
+          });
+          
+          checkLikeStatus({ 
+            likes: likesForCheck,
+            likedBy: likesForCheck
+          }, currentUser);
+          hasCheckedLikeStatus.current = true;
+        } else if (!currentUser) {
+          // currentUser가 없으면 나중에 확인하도록 리셋
+          hasCheckedLikeStatus.current = false;
         }
       } catch (error) {
         console.error("게시글 로딩 실패:", error);
@@ -536,7 +636,43 @@ export default function PostDetail() {
     };
 
     loadPost();
-  }, [id, nav, currentUser]);
+  }, [id, nav, currentUser, checkLikeStatus]);
+
+  // 게시글 ID가 바뀌면 상태 확인 리셋
+  useEffect(() => {
+    if (id && lastPostId.current !== id) {
+      console.log("게시글 ID 변경 감지:", { oldId: lastPostId.current, newId: id });
+      hasCheckedLikeStatus.current = false;
+      lastPostId.current = id;
+    }
+  }, [id]);
+
+  // currentUser가 로드되면 좋아요 상태 확인 (단, 좋아요 토글 중이 아닐 때만)
+  useEffect(() => {
+    // 게시글 ID가 바뀌면 상태 확인 리셋
+    if (post?.id && lastPostId.current !== post.id) {
+      console.log("게시글 ID 변경 감지 (useEffect):", { oldId: lastPostId.current, newId: post.id });
+      hasCheckedLikeStatus.current = false;
+      lastPostId.current = post.id;
+    }
+    
+    if (post && currentUser && !isLiking && !hasCheckedLikeStatus.current) {
+      // 게시글에서 좋아요 정보 다시 확인
+      console.log("currentUser 로드 후 좋아요 상태 재확인:", {
+        postId: post.id,
+        likedBy: post.likedBy,
+        likedByLength: post.likedBy?.length,
+        currentUserId: currentUser.id,
+        isLiking: isLiking
+      });
+      // post 객체의 likedBy 배열을 사용하여 좋아요 상태 확인
+      checkLikeStatus({ 
+        likes: post.likedBy || [],
+        likedBy: post.likedBy || []
+      }, currentUser);
+      hasCheckedLikeStatus.current = true;
+    }
+  }, [currentUser?.id, post?.id, checkLikeStatus, isLiking]); // 게시글이나 사용자가 바뀔 때만 재확인
 
   // 이미지를 fetch로 가져와서 blob URL로 변환 (인증 헤더 포함)
   // 백엔드 URL 문제일 수 있으므로 원본 URL을 직접 사용
@@ -595,12 +731,27 @@ export default function PostDetail() {
   }, [confirmOpen]);
 
   const isAuthor = useMemo(() => {
-    if (!post || !currentUser) {
-      console.log("isAuthor check:", { hasPost: !!post, hasCurrentUser: !!currentUser });
+    if (!post) {
+      console.log("isAuthor check: post가 없음");
       return false;
     }
+    
+    if (!currentUser) {
+      console.log("isAuthor check: currentUser가 없음", { hasPost: !!post });
+      return false;
+    }
+    
+    console.log("isAuthor 계산 시작:", {
+      postAuthorId: post.authorId,
+      postAuthor: post.author,
+      currentUserId: currentUser.id,
+      currentUsername: currentUser.username,
+      post: post,
+      currentUser: currentUser
+    });
+    
     // authorId가 있으면 그것을 사용 (타입 변환 포함)
-    if (post.authorId != null) {
+    if (post.authorId != null && post.authorId !== undefined) {
       const result = String(post.authorId) === String(currentUser.id);
       console.log("isAuthor by ID:", { 
         postAuthorId: post.authorId, 
@@ -611,14 +762,25 @@ export default function PostDetail() {
       });
       return result;
     }
+    
     // authorId가 없는 경우 author 문자열과 비교 (하위 호환성)
-    const result = String(post.author) === String(currentUser.username);
-    console.log("isAuthor by name:", { 
-      postAuthor: post.author, 
-      currentUsername: currentUser.username, 
-      result 
+    if (post.author && currentUser.username) {
+      const result = String(post.author).trim() === String(currentUser.username).trim();
+      console.log("isAuthor by name:", { 
+        postAuthor: post.author, 
+        currentUsername: currentUser.username, 
+        result 
+      });
+      return result;
+    }
+    
+    console.log("isAuthor: 모든 조건 실패", {
+      hasAuthorId: post.authorId != null,
+      hasAuthor: !!post.author,
+      hasCurrentUserId: !!currentUser.id,
+      hasCurrentUsername: !!currentUser.username
     });
-    return result;
+    return false;
   }, [post, currentUser]);
 
   const askDelete = () => setConfirmOpen(true);
@@ -639,16 +801,163 @@ export default function PostDetail() {
 
   // ------- 좋아요 토글 -------
   const handleToggleLike = async () => {
+    // 중복 클릭 방지
+    if (isLiking) {
+      console.log("좋아요 처리 중입니다...");
+      return;
+    }
+    
+    if (!currentUser) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    
+    // 현재 상태 저장 (원복용)
+    const prevLiked = liked;
+    const prevLikeCount = post.likes;
+    
+    // 낙관적 업데이트 (즉시 UI 업데이트)
+    const newLiked = !liked;
+    const newLikeCount = liked ? Math.max(0, post.likes - 1) : post.likes + 1;
+    
+    setIsLiking(true); // 처리 시작
+    
+    // 즉시 UI 업데이트 (낙관적 업데이트)
+    console.log("좋아요 토글 시작:", { 
+      prevLiked, 
+      newLiked, 
+      prevLikeCount, 
+      newLikeCount 
+    });
+    
+    // 상태 업데이트를 명시적으로 수행
+    setLiked(newLiked);
+    setPost({
+      ...post,
+      likes: newLikeCount,
+    });
+    
     try {
       const result = await toggleLike(post.id);
-      // API 응답에 따라 좋아요 상태 업데이트
-      setLiked(!liked);
-      setPost({
-        ...post,
-        likes: liked ? post.likes - 1 : post.likes + 1,
-      });
+      console.log("좋아요 토글 API 응답:", result); // 디버깅용
+      
+      // 좋아요 토글 후 게시글 정보 다시 가져오기 (최신 좋아요 개수 확인)
+      try {
+        const updatedPostData = await getPostApi(post.id);
+        console.log("좋아요 토글 후 게시글 정보:", updatedPostData); // 디버깅용
+        
+        // 기존 게시글 로드 로직과 동일하게 작성자 정보 추출 (authorId 유지를 위해)
+        let authorId = post.authorId; // 기존 authorId 유지
+        let authorName = post.author; // 기존 author 유지
+        
+        if (updatedPostData?.author !== undefined) {
+          if (typeof updatedPostData.author === "object" && updatedPostData.author !== null) {
+            authorId = updatedPostData.author.id || updatedPostData.author.pk || updatedPostData.author.user_id || authorId;
+            authorName = updatedPostData.author.username || updatedPostData.author.nickname || updatedPostData.author.name || authorName;
+          } else if (typeof updatedPostData.author === "number") {
+            authorId = updatedPostData.author;
+          } else if (typeof updatedPostData.author === "string") {
+            authorName = updatedPostData.author;
+          }
+        }
+        
+        if (updatedPostData?.author_id !== undefined) {
+          authorId = updatedPostData.author_id;
+        }
+        
+        // 기존 게시글 로드 로직과 동일하게 좋아요 개수 계산
+        const serverLikeCount = updatedPostData?.like_count !== undefined 
+          ? updatedPostData.like_count 
+          : (Array.isArray(updatedPostData?.likes) ? updatedPostData.likes.length : newLikeCount);
+        
+        console.log("서버 좋아요 개수:", serverLikeCount, "클라이언트 예상:", newLikeCount); // 디버깅용
+        
+        // 서버에서 가져온 실제 값으로 업데이트 (authorId와 author 유지)
+        const updatedPost = {
+          ...post,
+          authorId: authorId,
+          author: authorName,
+          likes: serverLikeCount,
+          likedBy: Array.isArray(updatedPostData?.likes) ? updatedPostData.likes : [],
+        };
+        
+        setPost(updatedPost);
+        
+        // 좋아요 상태 확인 - 서버 응답에서 직접 확인
+        // 서버에서 좋아요 정보를 가져와서 현재 사용자가 좋아요를 눌렀는지 확인
+        let serverLiked = newLiked; // 기본값은 낙관적 업데이트 값 (토글한 값)
+        
+        if (currentUser) {
+          // 여러 필드에서 좋아요 정보 확인
+          const likesArray = updatedPostData?.likes || updatedPostData?.liked_by || [];
+          
+          if (Array.isArray(likesArray) && likesArray.length > 0) {
+            const foundLiked = likesArray.some((u) => {
+              const userId = typeof u === "object" ? (u.id || u.pk || u.user_id || u.user) : u;
+              const result = String(userId) === String(currentUser.id);
+              console.log("좋아요 사용자 확인:", { 
+                userId, 
+                currentUserId: currentUser.id, 
+                result,
+                userObj: typeof u === "object" ? u : null,
+                likesArrayLength: likesArray.length
+              });
+              return result;
+            });
+            // 서버에서 확인한 값 사용
+            serverLiked = foundLiked;
+            console.log("서버에서 좋아요 상태 확인:", { serverLiked, newLiked });
+          } else {
+            // likes 배열이 없거나 비어있으면 낙관적 업데이트 값 유지
+            console.log("서버 응답에 likes 배열이 없거나 비어있음, 낙관적 업데이트 값 유지:", newLiked);
+            serverLiked = newLiked;
+          }
+        } else {
+          // currentUser가 없으면 낙관적 업데이트 값 유지
+          console.log("currentUser가 없음, 낙관적 업데이트 값 유지:", newLiked);
+          serverLiked = newLiked;
+        }
+        
+        console.log("✅ 좋아요 상태 최종 설정:", {
+          serverLiked,
+          newLiked,
+          prevLiked,
+          likesArray: updatedPostData?.likes,
+          currentUserId: currentUser?.id
+        });
+        
+        // 서버에서 확인한 좋아요 상태로 업데이트 (명시적으로 설정)
+        setLiked(serverLiked);
+        
+        console.log("게시글 업데이트 완료:", {
+          authorId: updatedPost.authorId,
+          author: updatedPost.author,
+          likes: updatedPost.likes,
+          likedBy: updatedPost.likedBy,
+          liked: serverLiked
+        });
+      } catch (refreshError) {
+        console.error("게시글 정보 새로고침 실패:", refreshError);
+        // 새로고침 실패 시 낙관적 업데이트 유지 (이미 설정된 상태 유지)
+        console.log("새로고침 실패, 낙관적 업데이트 상태 유지:", newLiked);
+      }
+      
+      // 커뮤니티 목록 갱신을 위한 플래그 설정
+      localStorage.setItem("community_refresh_needed", "true");
     } catch (error) {
       console.error("좋아요 토글 실패:", error);
+      // 실패 시 원래 상태로 되돌리기
+      setLiked(prevLiked);
+      setPost({
+        ...post,
+        likes: prevLikeCount,
+      });
+      alert("좋아요 처리에 실패했습니다.");
+    } finally {
+      // 처리 완료 후 상태 확인이 다시 호출되지 않도록 약간의 지연 추가
+      setTimeout(() => {
+        setIsLiking(false); // 처리 완료
+      }, 100);
     }
   };
 
@@ -700,6 +1009,8 @@ export default function PostDetail() {
         commentsArr: [...post.commentsArr, comment],
       });
       setCommentText("");
+      // 커뮤니티 목록 갱신을 위한 플래그 설정
+      localStorage.setItem("community_refresh_needed", "true");
     } catch (error) {
       console.error("댓글 작성 실패:", error);
       alert("댓글 작성에 실패했습니다.");
@@ -712,6 +1023,8 @@ export default function PostDetail() {
       await deleteCommentApi(cid);
       const updatedArr = post.commentsArr.filter((c) => c.id !== cid);
       setPost({ ...post, commentsArr: updatedArr });
+      // 커뮤니티 목록 갱신을 위한 플래그 설정
+      localStorage.setItem("community_refresh_needed", "true");
     } catch (error) {
       console.error("댓글 삭제 실패:", error);
       alert("댓글 삭제에 실패했습니다.");
@@ -942,8 +1255,14 @@ export default function PostDetail() {
 
         {/* 좋아요 / 댓글(아이콘 + 숫자) */}
         <div className="detail-stats">
-          <button className="stat-item stat-like" onClick={handleToggleLike}>
+          <button 
+            className="stat-item stat-like" 
+            onClick={handleToggleLike}
+            disabled={isLiking}
+            style={{ opacity: isLiking ? 0.6 : 1, cursor: isLiking ? "not-allowed" : "pointer" }}
+          >
             <img
+              key={`heart-${liked ? 'liked' : 'not-liked'}-${post.id}-${post.likes}`}
               src={liked ? favoriteRedIcon : favoriteIcon}
               alt="좋아요"
               className="stat-icon"
