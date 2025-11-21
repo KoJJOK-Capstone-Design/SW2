@@ -1294,7 +1294,7 @@ const Health = ({ user, pet }) => {
 
         {/* 펫 정보 */}
         <section className="health-info">
-          <h2 className="hw">나!님의 건강 정보</h2>
+          <h2 className="hw">건강 정보</h2>
 
           <div className="info-grid">
             <div><span>품종</span><b>{petInfo.breed}</b></div>
